@@ -1,0 +1,40 @@
+name: 功能建议
+description: 提出新的工具、平台或界面改进
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 想解决什么问题
+      description: 描述使用场景，而不只是实现方式
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 建议方案
+      description: 可以包含交互草图、参考产品或替代方案
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: 相关区域
+      options:
+        - 骰子
+        - 转转盘
+        - 弹幕投票
+        - 平台连接
+        - 控制台 / 界面
+        - 打包 / 发布
+        - 其他
+    validations:
+      required: true
+  - type: checkboxes
+    id: constraints
+    attributes:
+      label: 约束
+      options:
+        - label: 这个建议不要求登录、绕过平台限制或伪造观众
+          required: true

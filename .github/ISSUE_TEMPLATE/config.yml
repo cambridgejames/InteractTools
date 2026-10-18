@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 使用问题与讨论
+    url: https://github.com/cambridgejames/interact-tools/discussions
+    about: 先查文档，再到 Discussions 提问
+  - name: 私密报告安全漏洞
+    url: https://github.com/cambridgejames/interact-tools/security/advisories/new
+    about: 不要公开披露安全漏洞

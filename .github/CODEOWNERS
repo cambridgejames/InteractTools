@@ -1,0 +1,6 @@
+# Single maintainer. These paths carry data/contract invariants; discuss in an issue first.
+* @cambridgejames
+
+/src/contracts/ @cambridgejames
+/src/kernel/    @cambridgejames
+/src/main/      @cambridgejames

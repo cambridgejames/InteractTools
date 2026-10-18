@@ -3,9 +3,25 @@
   "version": "0.1.0",
   "private": true,
   "description": "互动工坊：直播间弹幕互动工具集",
+  "keywords": [
+    "electron",
+    "vue",
+    "bilibili",
+    "danmaku",
+    "live-stream",
+    "interaction"
+  ],
   "main": "./out/main/index.js",
-  "author": "powerinv",
-  "license": "UNLICENSED",
+  "author": "CambridgeJames",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cambridgejames/interact-tools.git"
+  },
+  "bugs": {
+    "url": "https://github.com/cambridgejames/interact-tools/issues"
+  },
+  "homepage": "https://github.com/cambridgejames/interact-tools#readme",
   "engines": {
     "node": ">=22.12.0"
   },

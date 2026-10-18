@@ -1,5 +1,11 @@
 # 互动工坊
 
+[![Verify](https://github.com/cambridgejames/interact-tools/actions/workflows/verify.yml/badge.svg)](https://github.com/cambridgejames/interact-tools/actions/workflows/verify.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-c8ff3d.svg)](LICENSE)
+[![Node](https://img.shields.io/badge/node-%E2%89%A522.12-339933.svg)](package.json)
+
+[English overview](README.en.md)
+
 <img src="build/icon.png" alt="互动工坊图标" width="96" />
 
 直播间弹幕互动工具集，Electron 桌面应用。多平台统一接入，玩法以工具插件扩展。
@@ -29,7 +35,7 @@ npm run dev
 
 ## 当前状态
 
-可运行原型：控制台、本地模拟、B站匿名适配器、骰子、转转盘、弹幕投票、真实物理、面板内动画、应用内结果弹窗 + 彩带烟花、可折叠/隐藏弹幕栏、工具预设、冒烟截图、Windows 打包配置。
+可运行原型：控制台、本地模拟、B站匿名适配器、骰子、转转盘、弹幕投票、真实物理、面板内动画、应用内结果弹窗 + 彩带烟花、可折叠/隐藏弹幕栏、工具预设、多显示器窗口位置、冒烟截图、Windows 打包配置。
 
 B站弹幕已通过 WBI 签名 + WSS 认证真连：房间 6、21144080 均可连接，弹幕条数随房间活跃度变化。连接后状态会显示「直播中 / 轮播 / 未开播」；未开播时连接仍在，只是不会收到新弹幕。`-352` 会自动刷新 WBI 密钥重试一次。
 
@@ -43,6 +49,10 @@ B站弹幕已通过 WBI 签名 + WSS 认证真连：房间 6、21144080 均可�
 - [docs/roadmap.md](docs/roadmap.md) — 进度
 - [docs/testing.md](docs/testing.md) — 测试策略
 - [docs/verification.md](docs/verification.md) — 实机验证记录
+- [CONTRIBUTING.md](CONTRIBUTING.md) — 贡献流程与自检
+- [CHANGELOG.md](CHANGELOG.md) — 版本变更
+- [SECURITY.md](SECURITY.md) — 安全问题与安全模型
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) — 行为准则
 
 ## 命令
 
@@ -56,13 +66,17 @@ npm run smoke        # 启动 Electron 并截图到 artifacts/smoke
 npm run package:win  # Windows 安装包
 ```
 
+## 参与贡献
+
+欢迎 Issue 和 PR。开始前请读 [CONTRIBUTING.md](CONTRIBUTING.md) 与 [AGENTS.md](AGENTS.md)；安全问题请走私密报告，不要开公开 Issue。
+
 ## 目录
 
 ```
 src/contracts   公共契约（类型 + zod）
 src/kernel      平台无关内核
 src/platforms   B站 / 本地模拟
-src/tools       互动工具（当前：dice）
+src/tools       互动工具（dice / wheel / vote）
 src/main        Electron 组合根与 Surface
 src/renderer    控制台、面板内动画与应用内结果弹窗
 ```
