@@ -1,8 +1,12 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 import { IPC, type ResultApi } from '@contracts/ipc'
-import type { DiceResultPresentation, WheelResultPresentation } from '@contracts/presentation'
+import type {
+  DiceResultPresentation,
+  VoteResultPresentation,
+  WheelResultPresentation
+} from '@contracts/presentation'
 
-type ResultPayload = DiceResultPresentation | WheelResultPresentation
+type ResultPayload = DiceResultPresentation | WheelResultPresentation | VoteResultPresentation
 
 const api: ResultApi = {
   onPresentation(listener) {

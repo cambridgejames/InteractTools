@@ -1,6 +1,11 @@
 import type { EngineEvent } from './engine'
 import type { PlatformId } from './platform'
-import type { DiceResultPresentation, Presentation, WheelResultPresentation } from './presentation'
+import type {
+  DiceResultPresentation,
+  Presentation,
+  VoteResultPresentation,
+  WheelResultPresentation
+} from './presentation'
 import type { ToolAction } from './tool'
 import type { EngineSnapshot } from './view'
 
@@ -32,7 +37,7 @@ export interface InjectedChat {
 export interface RendererApi {
   snapshot(): Promise<EngineSnapshot>
   onEvent(listener: (event: EngineEvent) => void): () => void
-  /** 结果动画直接在主窗口播放，不再开独立窗口。 */
+  /** 动画 presentation（dice.roll / dismiss）发到控制台面板。 */
   onPresentation(listener: (presentation: Presentation) => void): () => void
 
   connectPlatform(id: PlatformId): Promise<void>
@@ -53,7 +58,9 @@ export interface RendererApi {
 
 export interface ResultApi {
   onPresentation(
-    listener: (result: DiceResultPresentation | WheelResultPresentation) => void
+    listener: (
+      result: DiceResultPresentation | WheelResultPresentation | VoteResultPresentation
+    ) => void
   ): () => void
   ready(): void
   dismiss(): void
