@@ -24,6 +24,7 @@ export class ResultSurface implements SurfaceHost {
         return
       case 'dice.result':
       case 'wheel.result':
+      case 'vote.result':
         this.open = true
         this.result.moveTo(this.control.browserWindow.getBounds())
         this.result.present(presentation.payload)

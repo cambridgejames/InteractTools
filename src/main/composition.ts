@@ -2,6 +2,7 @@ import { app } from 'electron'
 import { join } from 'node:path'
 import { DiceTool } from '@tools/dice/tool'
 import { WheelTool } from '@tools/wheel/tool'
+import { VoteTool } from '@tools/vote/tool'
 import { Engine } from '@kernel/engine'
 import { MathRandom } from '@kernel/random'
 import { bilibiliAdapterFactory } from '@platforms/bilibili'
@@ -49,7 +50,7 @@ export async function createApplication(): Promise<Application> {
     historyFactory: (toolId) => new JsonHistoryStore(join(userData, 'history', toolId + '.json'), logger),
     surface,
     platformFactories: [mockAdapterFactory, bilibiliAdapterFactory],
-    tools: [new DiceTool(), new WheelTool()],
+    tools: [new DiceTool(), new WheelTool(), new VoteTool()],
     onEvent: (event) => controlWindow.send(event)
   })
 

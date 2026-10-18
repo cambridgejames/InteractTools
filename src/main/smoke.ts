@@ -2,7 +2,7 @@ import { app } from 'electron'
 import { join } from 'node:path'
 import type { Application } from './composition'
 
-/** --smoke：启动、截图、预览骰子与转盘，退出。只用于本地验收与 CI。 */
+/** --smoke：启动、截图、走一遍投票/骰子/转盘，退出。只用于本地验收与 CI。 */
 export async function runSmoke(application: Application): Promise<void> {
   const output = join(process.cwd(), 'artifacts', 'smoke')
 
@@ -24,6 +24,30 @@ export async function runSmoke(application: Application): Promise<void> {
   await application.controlWindow.browserWindow.webContents.executeJavaScript(
     "document.querySelectorAll('.nav-item')[0]?.click()"
   )
+  await delay(300)
+
+  await application.controlWindow.browserWindow.webContents.executeJavaScript(
+    "document.querySelectorAll('.tool-tab')[2]?.click()"
+  )
+  await delay(250)
+  await application.controlWindow.capture(join(output, 'control-vote.png'))
+
+  await application.engine.updateToolConfig('vote', {
+    question: '今晚玩什么？',
+    options: ['继续主线', '打副本', '聊天'],
+    countdownSeconds: 5
+  })
+  await application.engine.toolAction('vote', { type: 'start' })
+  await application.engine.simulateChat({ userName: '小满', text: '!投票 1' })
+  await application.engine.simulateChat({ userName: '阿七', text: '投票 打副本' })
+  await application.engine.simulateChat({ userName: '团子', text: '投票 3' })
+  await application.engine.simulateChat({ userName: '小满', text: '投票 聊天' })
+  await delay(350)
+  await application.controlWindow.capture(join(output, 'control-vote-collecting.png'))
+  await application.engine.toolAction('vote', { type: 'end' })
+  await waitForResult(application)
+  await application.resultWindow.capture(join(output, 'result-vote.png'))
+  await application.engine.dismissOverlay()
   await delay(300)
 
   await application.controlWindow.browserWindow.webContents.executeJavaScript(

@@ -243,6 +243,8 @@ Electron main
 
 转盘是另一条链路：主播在控制台点「开始旋转」→ `Engine.toolAction('wheel', { type: 'spin' })` → `WheelTool` 用 `RandomSource` 选格 → `WheelToolView.currentSpin` 驱动 `WheelPanel` 原地 CSS 旋转 → 停稳后 `wheel.result` 弹结果小窗。它**不经过 CommandBus**，也没有物理模拟。
 
+投票是第三条链路：`VoteTool` 在倒计时内解析 `投票 1` / `投票 选项文字`，按 `userKey` 只保留最后一票；`view()` 把实时票数给 `VotePanel`，倒计时结束或「提前结束」后统计并列最高票，发 `vote.result` 给结果窗。它不物理、不随机、不写弹幕。
+
 ## 7. 骰子领域
 
 ### 7.1 配置
@@ -335,6 +337,12 @@ idle ──start──▶ collecting ──timeout──▶ rolling ──frames
     "wheel": {
       "segments": ["一等奖", "二等奖", "三等奖", "谢谢参与"],
       "spinDurationSeconds": 5
+    },
+    "vote": {
+      "question": "今晚玩什么？",
+      "options": ["方案 A", "方案 B", "方案 C"],
+      "countdownSeconds": 30,
+      "commandAliases": ["投票", "vote"]
     }
   }
 }

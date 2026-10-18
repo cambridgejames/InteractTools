@@ -5,14 +5,16 @@ import AppIcon from './AppIcon.vue'
 defineProps<{ tools: readonly ToolView[]; activeId: string }>()
 const emit = defineEmits<{ select: [toolId: string] }>()
 
-function iconOf(icon: string): 'dice' | 'wheel' | 'tools' {
+function iconOf(icon: string): 'dice' | 'wheel' | 'vote' | 'tools' {
   if (icon === 'dice') return 'dice'
   if (icon === 'wheel') return 'wheel'
+  if (icon === 'vote') return 'vote'
   return 'tools'
 }
 
 function modeOf(tool: ToolView): string {
   if (tool.toolId === 'dice') return '弹幕互动'
+  if (tool.toolId === 'vote') return '弹幕互动'
   if (tool.toolId === 'wheel') return '主播手动'
   return '工具'
 }

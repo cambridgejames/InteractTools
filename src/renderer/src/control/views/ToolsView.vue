@@ -10,6 +10,10 @@ const wheel = computed(() => {
   const tool = selectTool(state.snapshot, 'wheel')
   return tool?.toolId === 'wheel' ? tool : null
 })
+const vote = computed(() => {
+  const tool = selectTool(state.snapshot, 'vote')
+  return tool?.toolId === 'vote' ? tool : null
+})
 
 function openTool(toolId: string): void {
   actions.selectTool(toolId)
@@ -69,19 +73,21 @@ function openTool(toolId: string): void {
       </footer>
     </section>
 
-    <section class="tool-card muted-card">
+    <section class="tool-card active">
       <header>
-        <span class="icon"><AppIcon name="users" :size="20" /></span>
-        <span class="status soon">即将推出</span>
+        <span class="icon"><AppIcon name="vote" :size="20" /></span>
+        <span class="status">已启用</span>
       </header>
       <h2>弹幕投票</h2>
-      <p>扣 1 计数、选项投票、实时排行，复用同一套命令与呈现协议。</p>
+      <p>观众发「投票 1」或选项文字，实时统计；倒计时结束弹出结果，同一观众以最后一票为准。</p>
       <div class="tags">
-        <span class="tag">投票</span>
-        <span class="tag">排行</span>
+        <span class="tag">弹幕互动</span>
+        <span class="tag">2–8 项</span>
+        <span class="tag">实时票数</span>
       </div>
       <footer>
-        <span class="meta">规划中</span>
+        <span class="meta">{{ vote ? vote.history.length + ' 条记录' : '加载中' }}</span>
+        <button class="open" @click="openTool('vote')">去控制台</button>
       </footer>
     </section>
   </div>

@@ -2,9 +2,13 @@ import { BrowserWindow, screen } from 'electron'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { IPC } from '@contracts/ipc'
-import type { DiceResultPresentation, WheelResultPresentation } from '@contracts/presentation'
+import type {
+  DiceResultPresentation,
+  VoteResultPresentation,
+  WheelResultPresentation
+} from '@contracts/presentation'
 
-export type ResultPayload = DiceResultPresentation | WheelResultPresentation
+export type ResultPayload = DiceResultPresentation | WheelResultPresentation | VoteResultPresentation
 
 const WIDTH = 760
 const HEIGHT = 540

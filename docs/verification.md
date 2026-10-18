@@ -10,7 +10,7 @@
 | --- | --- | --- |
 | 类型 | `npm run typecheck` | 通过 |
 | 静态检查 | `npm run lint` | 通过（ESLint + 依赖边界 + 设计 token） |
-| 单元测试 | `npm run test` | 通过，7 个文件 / 31 个用例（另 1 个真连测试默认跳过） |
+| 单元测试 | `npm run test` | 通过，8 个文件 / 35 个用例（另 1 个真连测试默认跳过） |
 | 构建 | `npm run build` | 通过 |
 | 冒烟 | `npm run smoke` | 通过，生成控制台面板动画与原生结果窗截图 |
 | 打包 | `npm run package:win` | 通过，NSIS + portable |
@@ -24,6 +24,8 @@
 - `control.png`：控制台，含平台状态、骰子面板、事件流、历史记录。
 - `control-wheel.png`：通用工具切换器选中转转盘。
 - `control-platforms.png`：平台设置页仍保留右侧实时弹幕栏。
+- `control-vote.png` / `control-vote-collecting.png`：投票面板待开始与投票中。
+- `result-vote.png`：投票结果小窗（票数与并列最高）。
 - `control-dice-rolling.png`：骰子面板内 3D 投掷中。
 - `control-wheel-rolling.png`：转盘面板内原地旋转中。
 - `result-dice.png` / `result-wheel.png`：原生结果小窗 + 彩带烟花。
@@ -37,7 +39,7 @@
 
 - 基础设施：AGENTS.md、DESIGN.md、docs、ADR、4 个 agent skill、CI。
 - 平台层：统一 `PlatformAdapter`，本地模拟 + B站匿名弹幕（WBI 签名），协议 fixture 与真连测试。
-- 工具层：统一 `InteractionTool`，投骰子（命令驱动）与转转盘（主播手动）两种形态，历史记录分开。
+- 工具层：统一 `InteractionTool`，投骰子（命令驱动）、转转盘（主播手动）、弹幕投票（命令驱动）三种形态，历史记录分开。
 - 控制台：通用工具切换器按 manifest 渲染，骰子/转盘面板分离；转盘不经过 CommandBus。
 - 物理：六种面数、凸包、cannon-es 固定步长、停稳判定、d4 读底面。
 - 呈现：主进程录制帧，骰子在 `DicePanel` 内联 Three.js 回放，转盘在 `WheelPanel` 内 CSS 旋转；停稳后原生结果小窗 + 彩带烟花，手动关闭。

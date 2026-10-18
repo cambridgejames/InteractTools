@@ -1,6 +1,7 @@
 import type { Component } from 'vue'
 import DicePanel from './components/DicePanel.vue'
 import WheelPanel from './components/WheelPanel.vue'
+import VotePanel from './components/VotePanel.vue'
 
 /**
  * 工具 id → 控制台面板。新增工具只需在这里注册一个组件；
@@ -8,5 +9,6 @@ import WheelPanel from './components/WheelPanel.vue'
  */
 export const TOOL_PANELS: Readonly<Record<string, Component>> = {
   dice: DicePanel,
-  wheel: WheelPanel
+  wheel: WheelPanel,
+  vote: VotePanel
 }

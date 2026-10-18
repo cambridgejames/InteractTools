@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { DEFAULT_DICE_CONFIG, diceConfigSchema, type DiceConfig } from './dice'
 import { DEFAULT_WHEEL_CONFIG, wheelConfigSchema } from './wheel'
+import { DEFAULT_VOTE_CONFIG, voteConfigSchema } from './vote'
 
 export const bilibiliConfigSchema = z
   .object({
@@ -39,7 +40,8 @@ export const appConfigSchema = z
     }),
     tools: z.object({
       dice: diceConfigSchema,
-      wheel: wheelConfigSchema
+      wheel: wheelConfigSchema,
+      vote: voteConfigSchema
     }),
     overlay: overlayConfigSchema
   })
@@ -66,6 +68,11 @@ export const DEFAULT_APP_CONFIG: AppConfig = {
     wheel: {
       ...DEFAULT_WHEEL_CONFIG,
       segments: [...DEFAULT_WHEEL_CONFIG.segments]
+    },
+    vote: {
+      ...DEFAULT_VOTE_CONFIG,
+      options: [...DEFAULT_VOTE_CONFIG.options],
+      commandAliases: [...DEFAULT_VOTE_CONFIG.commandAliases]
     }
   },
   overlay: {

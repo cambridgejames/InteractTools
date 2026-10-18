@@ -57,8 +57,19 @@ export interface WheelResultPresentation {
   readonly segments: readonly string[]
 }
 
+export interface VoteResultPresentation {
+  readonly toolId: 'vote'
+  readonly voteId: string
+  readonly question: string
+  readonly options: readonly string[]
+  readonly counts: readonly number[]
+  readonly totalVotes: number
+  readonly winners: readonly number[]
+}
+
 export type Presentation =
   | { readonly kind: 'dice.roll'; readonly payload: DiceRollPresentation }
   | { readonly kind: 'dice.result'; readonly payload: DiceResultPresentation }
   | { readonly kind: 'wheel.result'; readonly payload: WheelResultPresentation }
+  | { readonly kind: 'vote.result'; readonly payload: VoteResultPresentation }
   | { readonly kind: 'dismiss'; readonly toolId: string }

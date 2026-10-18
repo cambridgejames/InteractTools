@@ -1,6 +1,7 @@
 import type { Aggregation, DiceConfig, DiceFaces, DiceResult, PowerSummary } from './dice'
 import type { PlatformDescriptor, PlatformStatus } from './platform'
 import type { WheelConfig, WheelPhase, WheelResult } from './wheel'
+import type { VoteConfig, VoteResult } from './vote'
 
 export interface PlatformView {
   readonly descriptor: PlatformDescriptor
@@ -69,7 +70,22 @@ export interface WheelToolView extends BaseToolView {
   readonly config: WheelConfig
 }
 
-export type ToolView = DiceToolView | WheelToolView
+export type VotePhase = 'idle' | 'collecting' | 'result'
+
+export interface VoteToolView extends BaseToolView {
+  readonly toolId: 'vote'
+  readonly phase: VotePhase
+  readonly question: string
+  readonly options: readonly string[]
+  readonly counts: readonly number[]
+  readonly totalVotes: number
+  readonly countdownEndsAt: number | null
+  readonly lastResult: VoteResult | null
+  readonly history: readonly VoteResult[]
+  readonly config: VoteConfig
+}
+
+export type ToolView = DiceToolView | WheelToolView | VoteToolView
 
 export interface EngineSnapshot {
   readonly revision: number

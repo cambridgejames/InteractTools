@@ -240,6 +240,7 @@ function handlePresentation(presentation: Presentation): void {
       return
     case 'dice.result':
     case 'wheel.result':
+    case 'vote.result':
       return
     case 'dismiss':
       state.diceRoll = null

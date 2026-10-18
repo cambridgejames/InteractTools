@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
-import type { DiceResultPresentation, WheelResultPresentation } from '@contracts/presentation'
+import type {
+  DiceResultPresentation,
+  VoteResultPresentation,
+  WheelResultPresentation
+} from '@contracts/presentation'
 import AppIcon from '../control/components/AppIcon.vue'
 import { burstConfetti } from './confetti'
 import { facesLabel, formatPower, methodLabel } from '../shared/format'
 
-type ResultPayload = DiceResultPresentation | WheelResultPresentation
+type ResultPayload = DiceResultPresentation | WheelResultPresentation | VoteResultPresentation
 
 const result = ref<ResultPayload | null>(null)
 const canvas = ref<HTMLCanvasElement | null>(null)
@@ -13,6 +17,13 @@ let unsubscribe: (() => void) | null = null
 
 const dice = computed(() => (result.value?.toolId === 'dice' ? result.value : null))
 const wheel = computed(() => (result.value?.toolId === 'wheel' ? result.value : null))
+const vote = computed(() => (result.value?.toolId === 'vote' ? result.value : null))
+const voteMax = computed(() => (vote.value === null ? 0 : Math.max(1, ...vote.value.counts)))
+const voteLabel = computed(() => {
+  if (vote.value === null) return ''
+  if (vote.value.winners.length === 0) return '无人投票'
+  return vote.value.winners.map((index) => vote.value?.options[index] ?? '').join(' / ')
+})
 
 onMounted(() => {
   unsubscribe = window.resultApi.onPresentation(handleResult)
@@ -66,6 +77,23 @@ function handleKeydown(event: KeyboardEvent): void {
         <span class="eyebrow">WHEEL / {{ wheel.segments.length }} 格</span>
         <strong class="wheel-label">{{ wheel.label }}</strong>
         <p class="sub">第 {{ wheel.index + 1 }} 格 · 主播手动触发</p>
+      </template>
+
+      <template v-else-if="vote">
+        <span class="eyebrow">VOTE / {{ vote.options.length }} 项 · {{ vote.totalVotes }} 票</span>
+        <p class="vote-question">{{ vote.question || '本轮投票' }}</p>
+        <strong class="wheel-label vote-label">{{ voteLabel }}</strong>
+        <div class="tally">
+          <div v-for="(option, index) in vote.options" :key="option" class="tally-row">
+            <span class="tally-name" :class="{ winner: vote.winners.includes(index) }">
+              {{ option }}
+            </span>
+            <span class="tally-bar">
+              <i :style="{ width: ((vote.counts[index] ?? 0) / voteMax) * 100 + '%' }" />
+            </span>
+            <span class="tally-count">{{ vote.counts[index] ?? 0 }}</span>
+          </div>
+        </div>
       </template>
 
       <button class="result-ok" @click="close">知道了</button>

@@ -126,6 +126,66 @@ body {
   font-size: 11px;
 }
 
+.vote-question {
+  margin: 0;
+  color: var(--body);
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.vote-label {
+  font-size: 38px;
+}
+
+.tally {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 2px;
+}
+
+.tally-row {
+  display: grid;
+  grid-template-columns: 108px minmax(0, 1fr) 30px;
+  align-items: center;
+  gap: 10px;
+}
+
+.tally-name {
+  overflow: hidden;
+  color: var(--mute);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tally-name.winner {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.tally-bar {
+  height: 6px;
+  overflow: hidden;
+  border-radius: var(--r-chip);
+  background: var(--hairline);
+}
+
+.tally-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width var(--dur-result) var(--ease-out);
+}
+
+.tally-count {
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-align: right;
+}
+
 .warn {
   color: var(--warning);
 }
