@@ -6,8 +6,8 @@ import type { DiceResultPresentation, WheelResultPresentation } from '@contracts
 
 export type ResultPayload = DiceResultPresentation | WheelResultPresentation
 
-const WIDTH = 680
-const HEIGHT = 480
+const WIDTH = 760
+const HEIGHT = 540
 
 /** 只显示最终结果的原生小窗；动画在主窗口面板内完成。 */
 export class ResultWindow {
@@ -60,6 +60,15 @@ export class ResultWindow {
   markReady(): void {
     this.ready = true
     this.flush()
+  }
+
+  /** 跟随主窗口所在显示器：主播把控制台拖到副屏时，结果也留在副屏。 */
+  moveTo(anchor: { x: number; y: number; width: number; height: number }): void {
+    if (this.window.isDestroyed()) return
+    const display = screen.getDisplayMatching(anchor)
+    const x = Math.round(display.bounds.x + (display.bounds.width - WIDTH) / 2)
+    const y = Math.round(display.bounds.y + (display.bounds.height - HEIGHT) / 2)
+    this.window.setPosition(x, y)
   }
 
   present(result: ResultPayload): void {

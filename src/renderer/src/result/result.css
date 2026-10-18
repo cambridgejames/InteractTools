@@ -41,8 +41,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: var(--s-3);
-  width: 520px;
-  padding: 30px;
+  width: 580px;
+  padding: 32px;
   border: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
   border-radius: var(--r-overlay);
   background: var(--surface);

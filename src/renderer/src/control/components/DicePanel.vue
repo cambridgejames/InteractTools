@@ -328,7 +328,7 @@ h2 {
 
 .card-body {
   display: grid;
-  grid-template-columns: minmax(260px, 0.9fr) minmax(300px, 1.1fr);
+  grid-template-columns: minmax(320px, 1.3fr) minmax(300px, 0.9fr);
   gap: var(--s-2);
   padding: var(--s-5);
 }
@@ -343,8 +343,10 @@ h2 {
 }
 
 .dice-stage {
-  width: 300px;
-  height: 240px;
+  width: 100%;
+  max-width: 680px;
+  aspect-ratio: 4 / 3;
+  height: auto;
   overflow: hidden;
   border-radius: var(--r-card);
   background: var(--canvas);
