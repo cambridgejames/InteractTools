@@ -1,0 +1,68 @@
+:root {
+  color-scheme: dark;
+
+  /* surfaces */
+  --canvas: #08090b;
+  --canvas-elevated: #0b0d10;
+  --surface: #111317;
+  --surface-hover: #15181d;
+  --surface-active: #1a1e24;
+  --inset: #0d0f12;
+  --hairline: #23272e;
+  --hairline-strong: #323841;
+
+  /* text */
+  --ink: #f2f4f1;
+  --body: #c4c9c2;
+  --mute: #8a9188;
+  --faint: #5c635b;
+
+  /* accent + semantic */
+  --accent: #c8ff3d;
+  --accent-strong: #dcff7a;
+  --accent-ink: #0a0c08;
+  --accent-soft: rgba(200, 255, 61, 0.12);
+  --info: #64d8ff;
+  --bilibili: #fb7299;
+  --success: #3ddc97;
+  --warning: #f5b544;
+  --danger: #ff6b6b;
+  --overlay-veil: rgba(8, 9, 11, 0.82);
+
+  /* type */
+  --font-ui: Inter, "Segoe UI", "SF Pro Display", "PingFang SC", "Microsoft YaHei UI", sans-serif;
+  --font-mono: "SF Mono", "Cascadia Code", "JetBrains Mono", Consolas, monospace;
+
+  /* spacing */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-7: 32px;
+  --s-8: 40px;
+
+  /* shape */
+  --r-chip: 999px;
+  --r-control: 10px;
+  --r-card: 14px;
+  --r-overlay: 20px;
+  --r-icon: 12px;
+
+  /* layout */
+  --sidebar-width: 216px;
+  --topbar-height: 64px;
+  --content-max: 1440px;
+
+  /* elevation */
+  --shadow-pop: 0 12px 32px rgba(0, 0, 0, 0.45);
+  --shadow-overlay: 0 32px 80px rgba(0, 0, 0, 0.6);
+  --glow-accent: 0 0 32px rgba(200, 255, 61, 0.18);
+
+  /* motion */
+  --dur-fast: 120ms;
+  --dur-base: 180ms;
+  --dur-result: 320ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}

@@ -1,0 +1,84 @@
+import { app, ipcMain, shell } from 'electron'
+import { z } from 'zod'
+import { IPC } from '@contracts/ipc'
+import type { Engine } from '@kernel/engine'
+import type { OverlayWindow } from '../windows/overlay-window'
+
+const platformIdSchema = z.enum(['bilibili', 'mock'])
+const patchSchema = z.record(z.string(), z.unknown())
+const toolActionSchema = z.object({
+  type: z.string().min(1).max(40),
+  payload: z.unknown().optional()
+})
+const mockChatSchema = z.object({
+  userName: z.string().trim().min(1).max(24),
+  text: z.string().trim().min(1).max(200)
+})
+const overlaySettingsSchema = z.object({
+  alwaysOnTop: z.boolean().optional()
+})
+
+export function registerIpc(engine: Engine, overlay: OverlayWindow): void {
+  ipcMain.handle(IPC.snapshot, async () => engine.snapshot())
+
+  ipcMain.handle(IPC.platformConnect, async (_event, rawId: unknown) => {
+    const id = platformIdSchema.parse(rawId)
+    const result = await engine.connectPlatform(id)
+    if (!result.ok) throw new Error(result.error)
+  })
+
+  ipcMain.handle(IPC.platformDisconnect, async (_event, rawId: unknown) => {
+    const id = platformIdSchema.parse(rawId)
+    await engine.disconnectPlatform(id)
+  })
+
+  ipcMain.handle(
+    IPC.platformUpdateConfig,
+    async (_event, rawId: unknown, rawPatch: unknown) => {
+      const id = platformIdSchema.parse(rawId)
+      const patch = patchSchema.parse(rawPatch)
+      await engine.updatePlatformConfig(id, patch)
+    }
+  )
+
+  ipcMain.handle(
+    IPC.toolAction,
+    async (_event, rawToolId: unknown, rawAction: unknown) => {
+      const toolId = z.string().min(1).max(40).parse(rawToolId)
+      const action = toolActionSchema.parse(rawAction)
+      await engine.toolAction(toolId, action)
+    }
+  )
+
+  ipcMain.handle(
+    IPC.toolUpdateConfig,
+    async (_event, rawToolId: unknown, rawPatch: unknown) => {
+      const toolId = z.string().min(1).max(40).parse(rawToolId)
+      await engine.updateToolConfig(toolId, patchSchema.parse(rawPatch))
+    }
+  )
+
+  ipcMain.handle(IPC.mockChat, async (_event, rawInput: unknown) => {
+    const input = mockChatSchema.parse(rawInput)
+    const result = await engine.simulateChat(input)
+    if (!result.ok) throw new Error(result.error)
+  })
+
+  ipcMain.handle(IPC.clearFeed, async () => engine.clearFeed())
+  ipcMain.handle(IPC.overlayPreview, async () => engine.previewOverlay())
+  ipcMain.handle(IPC.overlayDismiss, async () => engine.dismissOverlay())
+  ipcMain.handle(IPC.overlayReady, async () => overlay.markReady())
+  ipcMain.handle(IPC.overlayDismissed, async () => engine.dismissOverlay())
+
+  ipcMain.handle(IPC.overlaySettings, async (_event, rawPatch: unknown) => {
+    const patch = overlaySettingsSchema.parse(rawPatch)
+    await engine.updateOverlaySettings(
+      patch.alwaysOnTop === undefined ? {} : { alwaysOnTop: patch.alwaysOnTop }
+    )
+  })
+
+  ipcMain.handle(IPC.openDataFolder, async () => {
+    const error = await shell.openPath(app.getPath('userData'))
+    if (error.length > 0) throw new Error(error)
+  })
+}

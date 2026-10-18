@@ -1,0 +1,1 @@
+export { bilibiliAdapterFactory } from './adapter'

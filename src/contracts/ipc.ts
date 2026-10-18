@@ -1,0 +1,61 @@
+import type { EngineEvent } from './engine'
+import type { PlatformId } from './platform'
+import type { Presentation } from './presentation'
+import type { ToolAction } from './tool'
+import type { EngineSnapshot } from './view'
+
+export const IPC = {
+  snapshot: 'engine:snapshot',
+  event: 'engine:event',
+  platformConnect: 'platform:connect',
+  platformDisconnect: 'platform:disconnect',
+  platformUpdateConfig: 'platform:update-config',
+  toolAction: 'tool:action',
+  toolUpdateConfig: 'tool:update-config',
+  mockChat: 'mock:chat',
+  overlayPreview: 'overlay:preview',
+  overlayDismiss: 'overlay:dismiss',
+  overlaySettings: 'overlay:update-settings',
+  overlayPresent: 'overlay:present',
+  overlayReady: 'overlay:ready',
+  overlayDismissed: 'overlay:dismissed',
+  openDataFolder: 'app:open-data-folder',
+  clearFeed: 'feed:clear'
+} as const
+
+export interface InjectedChat {
+  readonly userName: string
+  readonly text: string
+}
+
+export interface OverlaySettingsPatch {
+  readonly alwaysOnTop?: boolean
+}
+
+/** 控制台可用的全部能力；preload 只暴露这些方法，不暴露 ipcRenderer。 */
+export interface RendererApi {
+  snapshot(): Promise<EngineSnapshot>
+  onEvent(listener: (event: EngineEvent) => void): () => void
+
+  connectPlatform(id: PlatformId): Promise<void>
+  disconnectPlatform(id: PlatformId): Promise<void>
+  updatePlatformConfig(id: PlatformId, patch: Readonly<Record<string, unknown>>): Promise<void>
+
+  toolAction(toolId: string, action: ToolAction): Promise<void>
+  updateToolConfig(toolId: string, patch: Readonly<Record<string, unknown>>): Promise<void>
+
+  simulateChat(input: InjectedChat): Promise<void>
+  clearFeed(): Promise<void>
+
+  previewOverlay(): Promise<void>
+  dismissOverlay(): Promise<void>
+  updateOverlaySettings(patch: OverlaySettingsPatch): Promise<void>
+
+  openDataFolder(): Promise<void>
+}
+
+export interface OverlayApi {
+  onPresentation(listener: (presentation: Presentation) => void): () => void
+  ready(): void
+  dismiss(): void
+}

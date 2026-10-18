@@ -281,7 +281,7 @@ idle ──start──▶ collecting ──timeout──▶ rolling ──frames
 ## 8. 物理
 
 - 坐标：Y 轴向上，地面 `y = 0`，长度单位约等于骰子外接球半径。
-- 几何：顶点定义 + 凸包算法求面；d10 用五角双锥台（pentagonal trapezohedron）顶点，d4/d6/d8/d12/d20 用标准多面体。
+- 几何：顶点定义 + 凸包算法求面；d10 用五角双锥（pentagonal bipyramid，10 个三角面），d4/d6/d8/d12/d20 用标准多面体。
 - 刚体：cannon-es `ConvexPolyhedron`，质量 1；地面 `Plane`；摩擦 0.4，弹性 0.35。
 - 初始条件：位置、朝向、角速度由 seed 派生；力度 0–100 映射到初始角速度与水平冲量，**不参与选面**。
 - 固定步长 `1 / 120` 秒，最多 8 秒；每两步记录一帧（60Hz）。

@@ -6,7 +6,7 @@
 
 1017 互动工坊：面向直播间的弹幕互动工具集。Electron 桌面端，多平台接入，互动玩法以工具插件的形式扩展。第一个工具是「投骰子」：观众用弹幕设置力度，倒计时结束后聚合力度，用真实刚体物理掷骰，并在独立窗口播放结果。
 
-当前阶段：基础设施与工程骨架。功能代码尚未落地，命令与目录以本文为准。
+当前阶段：可运行原型。控制台、本地模拟、B站匿名适配器、骰子领域、物理模拟、3D 结果弹窗与冒烟截图已落地；安装包实机验证与 B站真连仍待完成。
 
 ## 2. 技术栈
 
@@ -27,11 +27,11 @@
 ```bash
 npm run dev          # 开发模式（Electron + Vite HMR）
 npm run typecheck    # 主进程 / 预加载 / 渲染进程类型检查
-npm run lint         # ESLint，含依赖边界规则
+npm run lint         # ESLint + 依赖边界 + 设计 token
 npm run test         # Vitest 单测（一次）
 npm run test:watch   # 监听模式
 npm run build        # typecheck + 产物构建
-npm run smoke        # 启动 Electron 冒烟并截图
+npm run smoke        # 构建后启动 Electron 冒烟并截图
 npm run package:win  # Windows 安装包
 ```
 
@@ -50,6 +50,8 @@ src/
   renderer/
     control/                 Vue 控制台
     overlay/                 独立 HTML entry，透明结果弹窗
+    src/styles/tokens.css    唯一视觉 token
+DESIGN.md                    视觉语言与组件规则
 docs/
   architecture.md            架构与契约细节
   adr/                       决策记录
@@ -70,6 +72,7 @@ docs/
 8. 所有跨进程、配置文件、平台报文入口，先用 zod 解析，再进入类型系统。
 9. 工具之间禁止互相 import；共享逻辑上移到 contracts/kernel 或 tools/shared。
 10. 物理结果是唯一事实源；UI 不得自行随机、重算或改判点数。
+11. UI 只允许使用 `src/renderer/src/styles/tokens.css` 的变量；禁止在组件里写死颜色、字体、圆角。视觉规格以 `DESIGN.md` 为唯一事实源。
 
 ## 6. TypeScript 与注释
 
@@ -99,16 +102,17 @@ recordPower(vote: PowerVote): void
 
 ## 7. 扩展流程
 
+- 改 UI：先读 `DESIGN.md`，再按 `.agents/skills/design-review/SKILL.md` 执行；颜色、间距、组件不得在 Vue 文件里临时发明。
 - 加平台：读 `.agents/skills/add-platform/SKILL.md`。
 - 加工具：读 `.agents/skills/add-tool/SKILL.md`。
 - 交付前：读 `.agents/skills/verify-app/SKILL.md`。
 
 ## 8. 完成定义（DoD）
 
-- `npm run typecheck`、`npm run lint`、`npm run test` 全绿。
+- `npm run typecheck`、`npm run lint`（含 `check:design`）、`npm run test` 全绿。
 - 新增或修改的逻辑有对应测试；协议解析用 fixture；物理用固定 seed 断言。
 - `npm run build` 通过；涉及界面时 `npm run smoke` 有截图，且无白屏、无未处理报错。
-- 文档与实现同步：契约变更必须更新 `docs/architecture.md` 和对应 ADR。
+- 文档与实现同步：契约变更必须更新 `docs/architecture.md` 和对应 ADR；UI 变更遵循 `DESIGN.md`。
 - 没有新增 `any`、裸 `setInterval`、未处理的 Promise rejection。
 - 不把「以后再说」留在代码里而不留 TODO 链接；TODO 必须写清触发条件。
 
