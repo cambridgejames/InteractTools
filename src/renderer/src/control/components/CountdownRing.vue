@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import type { DiceFaces } from '@contracts/dice'
 import type { DicePhase } from '@contracts/view'
-import AppIcon from './AppIcon.vue'
+import DiceIdle from './DiceIdle.vue'
 import { facesLabel } from '../../shared/format'
 
 const props = defineProps<{
@@ -56,7 +56,7 @@ const warning = computed(() => props.phase === 'collecting' && props.remaining <
         <span class="label">{{ facesLabel(faces) }} 点数</span>
       </template>
       <template v-else>
-        <AppIcon name="dice" :size="30" />
+        <DiceIdle />
         <span class="label">等待开始</span>
       </template>
     </div>

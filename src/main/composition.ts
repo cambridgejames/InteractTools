@@ -7,8 +7,8 @@ import { MathRandom } from '@kernel/random'
 import { bilibiliAdapterFactory } from '@platforms/bilibili'
 import { mockAdapterFactory } from '@platforms/mock'
 import { ControlWindow } from './windows/control-window'
-import { OverlayWindow } from './windows/overlay-window'
-import { ElectronSurface } from './surface/electron-surface'
+import { ResultWindow } from './windows/result-window'
+import { ResultSurface } from './surface/result-surface'
 import { AppLogger } from './services/logger'
 import { JsonConfigStore } from './services/config-store'
 import { JsonHistoryStore } from './services/history-store'
@@ -19,7 +19,7 @@ import { registerIpc } from './ipc/handlers'
 export interface Application {
   readonly engine: Engine
   readonly controlWindow: ControlWindow
-  readonly overlayWindow: OverlayWindow
+  readonly resultWindow: ResultWindow
   readonly logger: AppLogger
   dispose(): Promise<void>
 }
@@ -30,13 +30,13 @@ export async function createApplication(): Promise<Application> {
   const clock = new SystemClock()
 
   const controlWindow = new ControlWindow(join(__dirname, '../preload/index.js'))
-  const store = new JsonConfigStore(join(userData, 'config.json'), logger)
-  const config = await store.load()
-  const overlayWindow = new OverlayWindow(
-    join(__dirname, '../preload/overlay.js'),
-    config.overlay.alwaysOnTop
+  const resultWindow = new ResultWindow(
+    join(__dirname, '../preload/result.js'),
+    controlWindow.browserWindow.getBounds()
   )
-  const surface = new ElectronSurface(overlayWindow, config.overlay.alwaysOnTop)
+  const store = new JsonConfigStore(join(userData, 'config.json'), logger)
+  await store.load()
+  const surface = new ResultSurface(controlWindow, resultWindow)
 
   logger.subscribe((entry) => controlWindow.send({ type: 'log', entry }))
 
@@ -54,14 +54,15 @@ export async function createApplication(): Promise<Application> {
   })
 
   // 先注册 IPC、启动内核，再加载窗口：渲染进程一挂载就会取快照。
-  registerIpc(engine, overlayWindow)
+  registerIpc(engine, resultWindow)
   await engine.start()
-  await Promise.all([controlWindow.load(), overlayWindow.load()])
+  await controlWindow.load()
+  await resultWindow.load()
 
   return {
     engine,
     controlWindow,
-    overlayWindow,
+    resultWindow,
     logger,
     async dispose() {
       await engine.shutdown()

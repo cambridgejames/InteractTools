@@ -3,7 +3,14 @@ import { z } from 'zod'
 export const roomInitSchema = z.object({
   code: z.number(),
   message: z.string().optional(),
-  data: z.object({ room_id: z.number().int() }).optional()
+  data: z
+    .object({
+      room_id: z.number().int(),
+      short_id: z.number().optional(),
+      uid: z.number().optional(),
+      live_status: z.number().optional()
+    })
+    .optional()
 })
 
 export const danmuInfoSchema = z.object({

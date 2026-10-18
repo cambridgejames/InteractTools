@@ -28,6 +28,11 @@ const USER_AGENT =
 const API_TIMEOUT_MS = 12_000
 const HEARTBEAT_MS = 30_000
 
+interface RoomInfo {
+  readonly roomId: number
+  readonly liveStatus: number
+}
+
 /**
  * B站匿名弹幕适配器。
  *
@@ -53,21 +58,26 @@ export class BilibiliAdapter implements PlatformAdapter {
 
   async connect(config: unknown, signal: AbortSignal): Promise<void> {
     const parsed = bilibiliConfigSchema.parse(config)
-    if (parsed.roomId.length === 0) {
+    const roomId = normalizeRoomInput(parsed.roomId)
+    if (roomId.length === 0) {
       throw new PlatformError('config', '请先填写直播间房间号')
     }
     if (signal.aborted) throw new PlatformError('network', '连接已取消')
 
     this.disposed = false
     this.signal = signal
-    this.activeRoomId = parsed.roomId
+    this.activeRoomId = roomId
     signal.addEventListener('abort', () => void this.disconnect(), { once: true })
     this.setStatus({ phase: 'connecting' })
 
     try {
-      await this.start(signal)
+      const room = await this.start(signal)
       this.attempt = 0
-      this.setStatus({ phase: 'connected', connectedAt: this.context.clock.now() })
+      this.setStatus({
+        phase: 'connected',
+        detail: describeRoom(room),
+        connectedAt: this.context.clock.now()
+      })
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       this.setStatus({ phase: 'error', detail: message })
@@ -91,20 +101,38 @@ export class BilibiliAdapter implements PlatformAdapter {
     return this.status
   }
 
-  private async start(signal: AbortSignal): Promise<void> {
-    const realRoomId = await this.resolveRoom(signal)
+  private async start(signal: AbortSignal): Promise<RoomInfo> {
+    const room = await this.resolveRoom(signal)
     const buvid = await this.fetchBuvid(signal)
     this.buvid = buvid?.buvid3 ?? ''
     const cookie = buvid === null ? '' : 'buvid3=' + buvid.buvid3 + '; buvid4=' + buvid.buvid4
-    const info = await this.fetchDanmuInfo(realRoomId, cookie, signal)
-    const host = info.host_list[0]
-    if (host === undefined) throw new PlatformError('protocol', 'B站没有返回可用的弹幕服务器')
+    const info = await this.fetchDanmuInfo(room.roomId, cookie, signal)
+    if (info.host_list.length === 0) {
+      throw new PlatformError('protocol', 'B站没有返回可用的弹幕服务器')
+    }
 
-    this.activeRoomId = String(realRoomId)
-    await this.openSocket(host.host, host.wss_port ?? host.port ?? 443, info.token, realRoomId, signal)
+    this.activeRoomId = String(room.roomId)
+    let lastError: Error | null = null
+    for (const host of uniqueHosts(info.host_list)) {
+      try {
+        await this.openSocket(
+          host.host,
+          host.wss_port ?? host.port ?? 443,
+          info.token,
+          room.roomId,
+          signal
+        )
+        return room
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error))
+        this.context.logger.warn('bilibili', '弹幕服务器 ' + host.host + ' 连接失败，换下一个', String(error))
+      }
+    }
+
+    throw lastError ?? new PlatformError('network', '所有 B站弹幕服务器都连接失败')
   }
 
-  private async resolveRoom(signal: AbortSignal): Promise<number> {
+  private async resolveRoom(signal: AbortSignal): Promise<RoomInfo> {
     const data = await this.fetchJson(
       'https://api.live.bilibili.com/room/v1/Room/room_init?id=' + encodeURIComponent(this.activeRoomId),
       signal,
@@ -115,12 +143,20 @@ export class BilibiliAdapter implements PlatformAdapter {
     if (parsed.data.code !== 0 || parsed.data.data === undefined) {
       throw new PlatformError('room-not-found', parsed.data.message ?? '房间不存在或暂未开播')
     }
-    return parsed.data.data.room_id
+    return {
+      roomId: parsed.data.data.room_id,
+      liveStatus: parsed.data.data.live_status ?? 0
+    }
   }
 
   private async fetchBuvid(signal: AbortSignal): Promise<{ buvid3: string; buvid4: string } | null> {
     try {
-      const data = await this.fetchJson('https://api.bilibili.com/x/frontend/finger/spi', signal, '')
+      const data = await this.fetchJson(
+        'https://api.bilibili.com/x/frontend/finger/spi',
+        signal,
+        '',
+        'https://www.bilibili.com/'
+      )
       const parsed = fingerSchema.safeParse(data)
       if (!parsed.success || parsed.data.code !== 0 || parsed.data.data === undefined) return null
       return { buvid3: parsed.data.data.b_3, buvid4: parsed.data.data.b_4 }
@@ -136,7 +172,12 @@ export class BilibiliAdapter implements PlatformAdapter {
       return this.wbiKeys
     }
 
-    const data = await this.fetchJson('https://api.bilibili.com/x/web-interface/nav', signal, '')
+    const data = await this.fetchJson(
+      'https://api.bilibili.com/x/web-interface/nav',
+      signal,
+      '',
+      'https://www.bilibili.com/'
+    )
     const parsed = navSchema.safeParse(data)
     const wbi = parsed.success ? parsed.data.data?.wbi_img : undefined
     if (wbi === undefined) {
@@ -160,11 +201,28 @@ export class BilibiliAdapter implements PlatformAdapter {
       signal,
       cookie
     )
-    const parsed = danmuInfoSchema.safeParse(data)
+    let parsed = danmuInfoSchema.safeParse(data)
     if (!parsed.success) throw new PlatformError('protocol', 'B站返回了无法解析的弹幕服务器信息')
+
+    // -352 常见于 WBI 密钥过期或风控；强制刷新一次密钥再试。
     if (parsed.data.code === -352) {
-      // 密钥可能过期；下次重连会重新取 nav。
       this.wbiKeys = null
+      const fresh = await this.ensureWbiKeys(signal)
+      const retryQuery = signWbi(
+        { id: roomId, type: 0, web_location: 444.8 },
+        fresh,
+        Math.floor(this.context.clock.now() / 1000)
+      )
+      const retryData = await this.fetchJson(
+        'https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?' + retryQuery,
+        signal,
+        cookie
+      )
+      parsed = danmuInfoSchema.safeParse(retryData)
+      if (!parsed.success) throw new PlatformError('protocol', 'B站返回了无法解析的弹幕服务器信息')
+    }
+
+    if (parsed.data.code === -352) {
       throw new PlatformError('rate-limited', 'B站弹幕接口仍返回 -352，请稍后重试或更换网络')
     }
     if (parsed.data.code !== 0 || parsed.data.data === undefined) {
@@ -314,9 +372,13 @@ export class BilibiliAdapter implements PlatformAdapter {
   private async reconnect(): Promise<void> {
     if (this.disposed || this.signal === null) return
     try {
-      await this.start(this.signal)
+      const room = await this.start(this.signal)
       this.attempt = 0
-      this.setStatus({ phase: 'connected', connectedAt: this.context.clock.now() })
+      this.setStatus({
+        phase: 'connected',
+        detail: describeRoom(room),
+        connectedAt: this.context.clock.now()
+      })
     } catch (error) {
       this.context.logger.warn('bilibili', '重连失败', String(error))
       this.scheduleReconnect()
@@ -343,22 +405,46 @@ export class BilibiliAdapter implements PlatformAdapter {
     this.context.emit({ type: 'status', status })
   }
 
-  private async fetchJson(url: string, signal: AbortSignal, cookie: string): Promise<unknown> {
+  private async fetchJson(
+    url: string,
+    signal: AbortSignal,
+    cookie: string,
+    referer = 'https://live.bilibili.com/'
+  ): Promise<unknown> {
     const headers: Record<string, string> = {
       'User-Agent': USER_AGENT,
-      Referer: 'https://live.bilibili.com/',
+      Accept: 'application/json, text/plain, */*',
+      'Accept-Language': 'zh-CN,zh;q=0.9',
+      'Cache-Control': 'no-cache',
+      Referer: referer,
       Origin: 'https://live.bilibili.com'
     }
     if (cookie.length > 0) headers.Cookie = cookie
 
-    const response = await fetch(url, {
-      headers,
-      signal: AbortSignal.any([signal, AbortSignal.timeout(API_TIMEOUT_MS)])
-    })
-    if (!response.ok) {
-      throw new PlatformError('network', 'B站接口返回 HTTP ' + response.status)
+    let lastError: Error | null = null
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      try {
+        const response = await fetch(url, {
+          headers,
+          signal: AbortSignal.any([signal, AbortSignal.timeout(API_TIMEOUT_MS)])
+        })
+        if (response.ok) return (await response.json()) as unknown
+
+        const error = new PlatformError('network', 'B站接口返回 HTTP ' + String(response.status))
+        if (response.status < 500 || attempt === 3) throw error
+        lastError = error
+      } catch (error) {
+        if (signal.aborted) throw new PlatformError('network', '连接已取消')
+        if (error instanceof PlatformError && !error.message.includes('HTTP 5')) throw error
+        lastError = error instanceof Error ? error : new Error(String(error))
+        if (attempt === 3) break
+      }
+
+      await delay(250 * attempt)
     }
-    return (await response.json()) as unknown
+
+    const cause = fetchCause(lastError)
+    throw new PlatformError('network', 'B站接口请求失败' + (cause.length > 0 ? '：' + cause : ''))
   }
 }
 
@@ -372,6 +458,51 @@ function toBuffer(raw: WebSocket.RawData): Buffer {
   if (Buffer.isBuffer(raw)) return raw
   if (Array.isArray(raw)) return Buffer.concat(raw)
   return Buffer.from(raw)
+}
+
+/** 允许直接粘贴直播间 URL 或“房间号 6”这类文本。 */
+function normalizeRoomInput(value: string): string {
+  const trimmed = value.trim()
+  if (/^\d+$/.test(trimmed)) return trimmed
+  const match = trimmed.match(/(\d{1,12})/)
+  return match?.[1] ?? trimmed
+}
+
+function uniqueHosts(
+  hosts: readonly { host: string; port?: number | undefined; wss_port?: number | undefined }[]
+): readonly { host: string; port?: number | undefined; wss_port?: number | undefined }[] {
+  const seen = new Set<string>()
+  const result: { host: string; port?: number | undefined; wss_port?: number | undefined }[] = []
+  for (const item of hosts) {
+    const key = item.host + ':' + String(item.wss_port ?? item.port ?? 443)
+    if (seen.has(key)) continue
+    seen.add(key)
+    result.push(item)
+    if (result.length >= 4) break
+  }
+  return result
+}
+
+function describeRoom(room: RoomInfo): string {
+  const live =
+    room.liveStatus === 1 ? '直播中' : room.liveStatus === 2 ? '轮播/录播' : '未开播'
+  return '房间 ' + String(room.roomId) + ' · ' + live
+}
+
+function fetchCause(error: Error | null): string {
+  if (error === null) return ''
+  const cause = (error as Error & { cause?: unknown }).cause
+  if (cause instanceof Error && cause.message.length > 0) return cause.message
+  if (typeof cause === 'object' && cause !== null) {
+    const record = cause as Record<string, unknown>
+    const code = record.code ?? record.errno
+    if (typeof code === 'string' || typeof code === 'number') return String(code)
+  }
+  return error.message
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 export const bilibiliAdapterFactory: PlatformAdapterFactory = {

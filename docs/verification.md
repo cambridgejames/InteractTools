@@ -12,20 +12,21 @@
 | 静态检查 | `npm run lint` | 通过（ESLint + 依赖边界 + 设计 token） |
 | 单元测试 | `npm run test` | 通过，7 个文件 / 31 个用例（另 1 个真连测试默认跳过） |
 | 构建 | `npm run build` | 通过 |
-| 冒烟 | `npm run smoke` | 通过，生成控制台与 overlay 截图 |
+| 冒烟 | `npm run smoke` | 通过，生成控制台面板动画与原生结果窗截图 |
 | 打包 | `npm run package:win` | 通过，NSIS + portable |
 | 打包后冒烟 | `release/win-unpacked/1017 互动工坊.exe --smoke` | 通过，进程正常退出 |
-| B站真连 | `LIVE_BILIBILI=1 npx vitest run tests/bilibili-live.test.ts` | 通过，房间 21144080，8 秒 16 条弹幕 |
+| B站真连 | `LIVE_BILIBILI=1 npx vitest run tests/bilibili-live.test.ts` | 通过，房间 6 / 21144080 可认证；弹幕数随房间活跃度变化，最近一次房间 6 收到 2 条 |
 
 ## 冒烟截图
 
 本地生成在 `artifacts/smoke/`，未入库：
 
 - `control.png`：控制台，含平台状态、骰子面板、事件流、历史记录。
-- `overlay-rolling.png`：骰子结果窗投掷中。
-- `overlay.png`：骰子结果窗停稳，点数与骰子朝上面一致。
 - `control-wheel.png`：通用工具切换器选中转转盘。
-- `overlay-wheel-spinning.png` / `overlay-wheel.png`：转盘旋转中与停稳。
+- `control-platforms.png`：平台设置页仍保留右侧实时弹幕栏。
+- `control-dice-rolling.png`：骰子面板内 3D 投掷中。
+- `control-wheel-rolling.png`：转盘面板内原地旋转中。
+- `result-dice.png` / `result-wheel.png`：原生结果小窗 + 彩带烟花。
 
 ## 打包产物
 
@@ -39,15 +40,15 @@
 - 工具层：统一 `InteractionTool`，投骰子（命令驱动）与转转盘（主播手动）两种形态，历史记录分开。
 - 控制台：通用工具切换器按 manifest 渲染，骰子/转盘面板分离；转盘不经过 CommandBus。
 - 物理：六种面数、凸包、cannon-es 固定步长、停稳判定、d4 读底面。
-- 呈现：主进程录制帧，overlay 回放 Three.js，透明置顶窗。
+- 呈现：主进程录制帧，骰子在 `DicePanel` 内联 Three.js 回放，转盘在 `WheelPanel` 内 CSS 旋转；停稳后原生结果小窗 + 彩带烟花，手动关闭。
 - 配置：zod 校验、原子写、坏配置回落。
 - 设计：DESIGN.md 规格 + tokens.css + `check:design` 强制。
 
 ## 已知限制
 
-1. B站真连已通过 WBI 签名验证；若特定网络仍返回 `-352`，可能是网络/风控，不一定是签名问题。
+1. B站真连已通过 WBI 签名验证；未开播/轮播房间连接成功但 0 弹幕属正常，状态栏会显示房间状态。若特定网络仍返回 `-352`，适配器会刷新密钥重试一次。
 2. d10 使用五角双锥，而非标准五角偏方面体。
-3. OBS 窗口捕获尚未在 OBS 内实测；截图确认透明通道存在。
+3. 结果窗是独立原生小窗；OBS 窗口捕获尚未在 OBS 内实测，透明通道与原生阴影需实机确认。
 4. NSIS 安装包已构建，但未走完整安装向导点击验证。
 
 ## 复现

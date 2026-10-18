@@ -90,7 +90,7 @@ function openTool(toolId: string): void {
 <style scoped>
 .tools {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--s-5);
   max-width: var(--content-max);
   margin: 0 auto;
@@ -204,13 +204,13 @@ footer {
   opacity: 0.62;
 }
 
-@media (max-width: 1180px) {
+@media (min-width: 1500px) {
   .tools {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 980px) {
+@media (max-width: 1180px) {
   .tools {
     grid-template-columns: minmax(0, 1fr);
   }

@@ -1,6 +1,6 @@
 import type { EngineEvent } from './engine'
 import type { PlatformId } from './platform'
-import type { Presentation } from './presentation'
+import type { DiceResultPresentation, Presentation, WheelResultPresentation } from './presentation'
 import type { ToolAction } from './tool'
 import type { EngineSnapshot } from './view'
 
@@ -14,11 +14,11 @@ export const IPC = {
   toolUpdateConfig: 'tool:update-config',
   mockChat: 'mock:chat',
   overlayPreview: 'overlay:preview',
-  overlayDismiss: 'overlay:dismiss',
-  overlaySettings: 'overlay:update-settings',
   overlayPresent: 'overlay:present',
-  overlayReady: 'overlay:ready',
   overlayDismissed: 'overlay:dismissed',
+  resultPresent: 'result:present',
+  resultReady: 'result:ready',
+  resultDismissed: 'result:dismissed',
   openDataFolder: 'app:open-data-folder',
   clearFeed: 'feed:clear'
 } as const
@@ -28,14 +28,12 @@ export interface InjectedChat {
   readonly text: string
 }
 
-export interface OverlaySettingsPatch {
-  readonly alwaysOnTop?: boolean
-}
-
 /** 控制台可用的全部能力；preload 只暴露这些方法，不暴露 ipcRenderer。 */
 export interface RendererApi {
   snapshot(): Promise<EngineSnapshot>
   onEvent(listener: (event: EngineEvent) => void): () => void
+  /** 结果动画直接在主窗口播放，不再开独立窗口。 */
+  onPresentation(listener: (presentation: Presentation) => void): () => void
 
   connectPlatform(id: PlatformId): Promise<void>
   disconnectPlatform(id: PlatformId): Promise<void>
@@ -49,13 +47,14 @@ export interface RendererApi {
 
   previewTool(toolId: string): Promise<void>
   dismissOverlay(): Promise<void>
-  updateOverlaySettings(patch: OverlaySettingsPatch): Promise<void>
 
   openDataFolder(): Promise<void>
 }
 
-export interface OverlayApi {
-  onPresentation(listener: (presentation: Presentation) => void): () => void
+export interface ResultApi {
+  onPresentation(
+    listener: (result: DiceResultPresentation | WheelResultPresentation) => void
+  ): () => void
   ready(): void
   dismiss(): void
 }

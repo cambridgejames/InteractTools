@@ -16,12 +16,13 @@ export interface DiceMeshFace {
   readonly indices: readonly number[]
 }
 
-/** 主进程算好的骰子外形；overlay 只负责建 Three 几何，不再推导物理形状。 */
+/** 主进程算好的骰子外形；DicePanel 只负责建 Three 几何。 */
 export interface DiceMesh {
   readonly vertices: readonly DiceMeshVertex[]
   readonly faces: readonly DiceMeshFace[]
 }
 
+/** 投掷动画：发到工具面板，在面板内就地播放。 */
 export interface DiceRollPresentation {
   readonly toolId: 'dice'
   readonly rollId: string
@@ -30,26 +31,34 @@ export interface DiceRollPresentation {
   readonly power: number
   readonly seed: number
   readonly mesh: DiceMesh
-  /** 主进程录制的逐帧位姿，overlay 只回放，不重新计算。 */
   readonly frames: readonly DiceFrame[]
-  /** 相邻两帧的秒数。 */
   readonly frameSeconds: number
   readonly settled: boolean
   readonly stats: PowerSummary
-  readonly autoCloseSeconds: number
 }
 
-export interface WheelSpinPresentation {
+/** 骰子结果弹窗：动画结束后才出现。 */
+export interface DiceResultPresentation {
+  readonly toolId: 'dice'
+  readonly rollId: string
+  readonly faces: DiceFaces
+  readonly value: number
+  readonly power: number
+  readonly settled: boolean
+  readonly stats: PowerSummary
+}
+
+/** 转盘结果弹窗：转盘在控制面板内转完后才出现。 */
+export interface WheelResultPresentation {
   readonly toolId: 'wheel'
   readonly spinId: string
+  readonly label: string
+  readonly index: number
   readonly segments: readonly string[]
-  readonly resultIndex: number
-  readonly resultLabel: string
-  readonly durationMs: number
-  readonly autoCloseSeconds: number
 }
 
 export type Presentation =
   | { readonly kind: 'dice.roll'; readonly payload: DiceRollPresentation }
-  | { readonly kind: 'wheel.spin'; readonly payload: WheelSpinPresentation }
+  | { readonly kind: 'dice.result'; readonly payload: DiceResultPresentation }
+  | { readonly kind: 'wheel.result'; readonly payload: WheelResultPresentation }
   | { readonly kind: 'dismiss'; readonly toolId: string }

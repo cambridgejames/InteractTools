@@ -39,7 +39,7 @@ const bilibili = computed(() => state.snapshot?.platforms.find((item) => item.de
       </div>
       <button class="preview" @click="actions.previewActiveTool()">
         <AppIcon name="eye" :size="16" />
-        预览弹窗
+        预览结果
       </button>
     </div>
   </header>

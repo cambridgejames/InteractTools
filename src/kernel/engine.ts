@@ -176,18 +176,6 @@ export class Engine {
     return ok(undefined)
   }
 
-  async updateOverlaySettings(patch: { readonly alwaysOnTop?: boolean }): Promise<void> {
-    const current = this.requireConfig()
-    const next = appConfigSchema.parse({
-      ...current,
-      overlay: { ...current.overlay, ...patch }
-    })
-    this.config = next
-    await this.options.store.save(next)
-    this.options.surface.setAlwaysOnTop(next.overlay.alwaysOnTop)
-    this.publishSnapshot()
-  }
-
   clearFeed(): void {
     this.feed = []
     this.publishSnapshot()

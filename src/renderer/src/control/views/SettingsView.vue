@@ -1,63 +1,26 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
 import AppIcon from '../components/AppIcon.vue'
-import { actions, selectDice, state } from '../store'
-
-const dice = computed(() => selectDice(state.snapshot))
-const alwaysOnTop = computed(() => state.snapshot?.overlay.alwaysOnTop ?? true)
-const autoClose = ref(12)
-
-watch(
-  () => dice.value?.config.overlayAutoCloseSeconds,
-  (value) => {
-    if (typeof value === 'number') autoClose.value = value
-  },
-  { immediate: true }
-)
-
-function toggleAlwaysOnTop(): void {
-  void actions.updateOverlaySettings({ alwaysOnTop: !alwaysOnTop.value })
-}
-
-function saveAutoClose(): void {
-  const next = Math.min(120, Math.max(0, Math.round(autoClose.value)))
-  autoClose.value = next
-  void actions.updateDiceConfig({ overlayAutoCloseSeconds: next })
-}
+import { actions } from '../store'
 </script>
 
 <template>
   <div class="settings">
     <section class="card">
       <header>
-        <h2>结果弹窗</h2>
-        <p>OBS 用窗口捕获采集；透明窗口不挡鼠标。</p>
+        <h2>结果展示</h2>
+        <p>动画在工具面板内播放，停稳后用原生结果小窗展示，带彩带烟花。</p>
       </header>
 
       <div class="row">
         <div>
-          <strong>窗口置顶</strong>
-          <span>直播时保持在其它窗口之上。</span>
-        </div>
-        <button class="toggle" :class="{ on: alwaysOnTop }" role="switch" :aria-checked="alwaysOnTop" @click="toggleAlwaysOnTop">
-          <i />
-        </button>
-      </div>
-
-      <div class="row">
-        <div>
-          <strong>结果停留</strong>
-          <span>动画结束后，结果卡再停留多久。</span>
-        </div>
-        <div class="unit">
-          <input v-model.number="autoClose" type="number" min="0" max="120" @change="saveAutoClose" />
-          <em>秒</em>
+          <strong>关闭方式</strong>
+          <span>结果小窗右上角关闭按钮，或按 Esc。</span>
         </div>
       </div>
 
       <button class="secondary" @click="actions.previewActiveTool()">
         <AppIcon name="eye" :size="15" />
-        预览结果弹窗
+        预览结果动画
       </button>
     </section>
 
@@ -79,7 +42,7 @@ function saveAutoClose(): void {
       </header>
       <ul>
         <li>本地优先：B站匿名弹幕 + 本地模拟，不依赖自建服务端。</li>
-        <li>物理结果由 cannon-es 刚体模拟产生，overlay 只回放。</li>
+        <li>物理结果由 cannon-es 刚体模拟产生，结果动画只回放录制数据。</li>
         <li>视觉规格见 DESIGN.md，组件只使用 tokens.css 的变量。</li>
       </ul>
     </section>

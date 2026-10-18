@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { AGGREGATIONS, DICE_FACES, type Aggregation, type DiceFaces } from '@contracts/dice'
 import type { DiceToolView } from '@contracts/view'
 import AppIcon from './AppIcon.vue'
 import CountdownRing from './CountdownRing.vue'
-import { actions } from '../store'
+import { actions, state } from '../store'
+import { DiceScene } from '../result/dice-scene'
 import { formatPower, methodLabel, phaseLabel } from '../../shared/format'
 
 const props = defineProps<{ view: DiceToolView }>()
@@ -12,6 +13,8 @@ const props = defineProps<{ view: DiceToolView }>()
 const now = ref(Date.now())
 let ticker: ReturnType<typeof setInterval> | null = null
 const countdown = ref(props.view.config.countdownSeconds)
+const diceStage = ref<HTMLElement | null>(null)
+let diceScene: DiceScene | null = null
 
 onMounted(() => {
   ticker = setInterval(() => {
@@ -19,8 +22,39 @@ onMounted(() => {
   }, 200)
 })
 
+let mountedRollId: string | null = null
+
+watch(
+  [() => props.view.phase, () => state.diceRoll?.rollId],
+  async () => {
+    if (props.view.phase !== 'rolling' || state.diceRoll === null) {
+      diceScene?.dispose()
+      diceScene = null
+      mountedRollId = null
+      return
+    }
+
+    await nextTick()
+    mountDiceScene()
+  }
+)
+
+function mountDiceScene(): void {
+  const roll = state.diceRoll
+  if (props.view.phase !== 'rolling' || roll === null || diceStage.value === null) return
+  if (diceScene !== null && mountedRollId === roll.rollId) return
+
+  diceScene?.dispose()
+  diceScene = new DiceScene(diceStage.value, () => undefined)
+  mountedRollId = roll.rollId
+  diceScene.play(roll)
+}
+
 onUnmounted(() => {
   if (ticker !== null) clearInterval(ticker)
+  diceScene?.dispose()
+  diceScene = null
+  mountedRollId = null
 })
 
 watch(
@@ -108,13 +142,23 @@ function participantPower(value: number): string {
 
     <div class="card-body">
       <div class="left">
-        <CountdownRing
-          :phase="view.phase"
-          :remaining="remaining"
-          :total="view.config.countdownSeconds"
-          :value="resultValue"
-          :faces="view.config.faces"
-        />
+        <Transition name="dice-swap" mode="out-in" @after-enter="mountDiceScene">
+          <div
+            v-if="view.phase === 'rolling' && state.diceRoll"
+            key="stage"
+            ref="diceStage"
+            class="dice-stage"
+          />
+          <CountdownRing
+            v-else
+            key="ring"
+            :phase="view.phase"
+            :remaining="remaining"
+            :total="view.config.countdownSeconds"
+            :value="resultValue"
+            :faces="view.config.faces"
+          />
+        </Transition>
 
         <div class="primary-actions">
           <button v-if="!collecting && !rolling" class="btn primary" @click="start">
@@ -293,9 +337,33 @@ h2 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--s-5);
+  gap: var(--s-4);
   padding-right: var(--s-5);
   border-right: 1px solid var(--hairline);
+}
+
+.dice-stage {
+  width: 300px;
+  height: 240px;
+  overflow: hidden;
+  border-radius: var(--r-card);
+  background: var(--canvas);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+}
+
+.dice-swap-enter-active,
+.dice-swap-leave-active {
+  transition: opacity var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out);
+}
+
+.dice-swap-enter-from {
+  opacity: 0;
+  transform: scale(0.96);
+}
+
+.dice-swap-leave-to {
+  opacity: 0;
+  transform: scale(1.03);
 }
 
 .primary-actions {

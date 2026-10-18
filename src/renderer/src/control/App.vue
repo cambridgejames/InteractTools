@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import FeedPanel from './components/FeedPanel.vue'
 import DashboardView from './views/DashboardView.vue'
 import PlatformsView from './views/PlatformsView.vue'
 import SettingsView from './views/SettingsView.vue'
@@ -41,6 +42,7 @@ onMounted(() => {
         </template>
       </main>
     </div>
+    <FeedPanel class="feed-sidebar" />
     <Toast />
   </div>
 </template>
@@ -48,7 +50,8 @@ onMounted(() => {
 <style scoped>
 .app-shell {
   display: grid;
-  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr) var(--feed-width);
+  grid-template-rows: minmax(0, 1fr);
   height: 100%;
   background: var(--canvas);
 }
@@ -58,6 +61,22 @@ onMounted(() => {
   flex-direction: column;
   min-width: 0;
   height: 100%;
+}
+
+.feed-sidebar {
+  height: 100%;
+  min-height: 0;
+  border-left: 1px solid var(--hairline);
+}
+
+@media (max-width: 1180px) {
+  .app-shell {
+    grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+  }
+
+  .feed-sidebar {
+    display: none;
+  }
 }
 
 .app-content {

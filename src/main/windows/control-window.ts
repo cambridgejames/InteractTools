@@ -3,6 +3,7 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import type { EngineEvent } from '@contracts/engine'
 import { IPC } from '@contracts/ipc'
+import type { Presentation } from '@contracts/presentation'
 
 /** 主控制台窗口；只负责窗口生命周期与事件转发。 */
 export class ControlWindow {
@@ -10,8 +11,8 @@ export class ControlWindow {
 
   constructor(preloadPath: string) {
     this.window = new BrowserWindow({
-      width: 1320,
-      height: 860,
+      width: 1440,
+      height: 900,
       minWidth: 1120,
       minHeight: 720,
       show: false,
@@ -41,6 +42,11 @@ export class ControlWindow {
   send(event: EngineEvent): void {
     if (this.window.isDestroyed()) return
     this.window.webContents.send(IPC.event, event)
+  }
+
+  sendPresentation(presentation: Presentation): void {
+    if (this.window.isDestroyed()) return
+    this.window.webContents.send(IPC.overlayPresent, presentation)
   }
 
   show(): void {

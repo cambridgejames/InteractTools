@@ -2,7 +2,7 @@ import { app, ipcMain, shell } from 'electron'
 import { z } from 'zod'
 import { IPC } from '@contracts/ipc'
 import type { Engine } from '@kernel/engine'
-import type { OverlayWindow } from '../windows/overlay-window'
+import type { ResultWindow } from '../windows/result-window'
 
 const platformIdSchema = z.enum(['bilibili', 'mock'])
 const patchSchema = z.record(z.string(), z.unknown())
@@ -14,11 +14,7 @@ const mockChatSchema = z.object({
   userName: z.string().trim().min(1).max(24),
   text: z.string().trim().min(1).max(200)
 })
-const overlaySettingsSchema = z.object({
-  alwaysOnTop: z.boolean().optional()
-})
-
-export function registerIpc(engine: Engine, overlay: OverlayWindow): void {
+export function registerIpc(engine: Engine, result: ResultWindow): void {
   ipcMain.handle(IPC.snapshot, async () => engine.snapshot())
 
   ipcMain.handle(IPC.platformConnect, async (_event, rawId: unknown) => {
@@ -69,15 +65,10 @@ export function registerIpc(engine: Engine, overlay: OverlayWindow): void {
     const toolId = z.string().min(1).max(40).parse(rawToolId)
     await engine.previewTool(toolId)
   })
-  ipcMain.handle(IPC.overlayDismiss, async () => engine.dismissOverlay())
-  ipcMain.handle(IPC.overlayReady, async () => overlay.markReady())
   ipcMain.handle(IPC.overlayDismissed, async () => engine.dismissOverlay())
-
-  ipcMain.handle(IPC.overlaySettings, async (_event, rawPatch: unknown) => {
-    const patch = overlaySettingsSchema.parse(rawPatch)
-    await engine.updateOverlaySettings(
-      patch.alwaysOnTop === undefined ? {} : { alwaysOnTop: patch.alwaysOnTop }
-    )
+  ipcMain.on(IPC.resultReady, () => result.markReady())
+  ipcMain.on(IPC.resultDismissed, () => {
+    void engine.dismissOverlay()
   })
 
   ipcMain.handle(IPC.openDataFolder, async () => {

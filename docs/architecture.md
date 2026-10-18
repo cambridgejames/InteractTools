@@ -12,13 +12,13 @@
 - 工具可扩展：新增玩法不修改内核。
 - 物理可信：结果由刚体模拟产生，不是随机抽面。
 - 离线可用：不依赖自建服务端；B站不可用时本地模拟仍能完整跑通。
-- 直播可用：结果窗口能被 OBS 以窗口捕获方式采集。
+- 结果可见：动画在工具面板内就地播放；停稳后再用原生结果小窗展示最终结果。
 
 ## 2. 分层
 
 ```
 ┌──────────────────────────── Electron App Shell ────────────────────────────┐
-│  main（组合根）      preload（类型化桥）      renderer（控制台 / 弹窗）      │
+│  main（组合根）      preload（类型化桥）      renderer（控制台 / 结果窗）    │
 └───────────────────────────────┬────────────────────────────────────────────┘
                                 │ Surface Port
 ┌───────────────────────────────▼────────────────────────────────────────────┐
@@ -120,7 +120,9 @@ export interface PlatformAdapterFactory {
 
 `connect` 接收 `AbortSignal`，断线和退出时统一取消重连、心跳与请求，不允许后台残留定时器。
 
-B站适配器的 `getDanmuInfo` 需要 WBI 签名：先从 `nav` 取 `wbi_img`，推导 mixinKey，再对 `id / type / web_location / wts` 排序签名生成 `w_rid`。缺参数时接口会返回 `-352`，看起来像风控，实际是签名缺失。
+B站适配器的 `getDanmuInfo` 需要 WBI 签名：先从 `nav` 取 `wbi_img`，推导 mixinKey，再对 `id / type / web_location / wts` 排序签名生成 `w_rid`。缺参数时接口会返回 `-352`，看起来像风控，实际是签名缺失；适配器会在 `-352` 时刷新密钥重试一次。
+
+`room_init` 同时返回 `live_status`：连接成功后状态栏显示「直播中 / 轮播 / 未开播」。未开播时 WSS 仍保持连接，但没有新弹幕，这是房间状态而不是连接失败。房间输入支持 URL 或房间号；WSS host 去重后最多尝试 4 个。
 
 ### 4.3 工具
 
@@ -182,7 +184,7 @@ export interface DiceRollPresentation {
   readonly value: number;
   readonly power: number;
   readonly seed: number;
-  /** 由主进程物理模拟录制的逐帧位姿，overlay 只回放。 */
+  /** 由主进程物理模拟录制的逐帧位姿，DicePanel 只回放。 */
   readonly frames: readonly DiceFrame[];
   readonly frameSeconds: number;
   readonly settled: boolean;
@@ -190,7 +192,7 @@ export interface DiceRollPresentation {
 }
 ```
 
-呈现是**数据**，不是回调。main 的 `SurfaceHost` 决定它变成透明窗口、OBS 页面还是未来的 HTTP 浏览器源。
+呈现是**数据**，不是回调。`SurfaceHost` 把 `dice.roll` 发到控制台面板，把 `dice.result` / `wheel.result` 发到原生结果小窗；动画和结果分开。
 
 ### 4.5 引擎事件与快照
 
@@ -202,7 +204,7 @@ export type EngineEvent =
   | { readonly type: 'presentation'; readonly presentation: Presentation };
 ```
 
-控制台通过 `snapshot` 渲染全部状态，通过 `feed` 追加时间线。快照广播做 50ms 合并，避免弹幕高峰把 IPC 打满。overlay 只订阅 `presentation`。
+控制台通过 `snapshot` 渲染全部状态，通过 `feed` 追加时间线。快照广播做 50ms 合并，避免弹幕高峰把 IPC 打满。结果窗只订阅最终 result，不接收逐帧动画。
 
 ## 5. 运行时对象图
 
@@ -218,7 +220,7 @@ Electron main
        │    └─ DiceTool
        ├─ SurfaceHost
        │    ├─ ControlWindow
-       │    └─ OverlayWindow
+       │    └─ ResultWindow（原生结果小窗）
        └─ Engine
             ├─ CommandBus
             └─ EventPublisher（→ IPC → renderer）
@@ -235,11 +237,11 @@ Electron main
 5. 倒计时结束，`domain/aggregate.ts` 聚合出力度。
 6. `physics/simulate.ts` 用固定 seed 跑 cannon-es，得到点数与逐帧位姿。
 7. `DiceTool` 调 `ctx.present({ kind: 'dice.roll', payload })`。
-8. `SurfaceHost` 创建或复用透明置顶窗口，把 payload 发给 overlay。
-9. overlay 按 `frameSeconds` 回放 Three.js 动画；播放结束显示结果卡。
-10. 主窗口通过快照和 feed 同步状态；历史记录写入配置目录。
+8. `SurfaceHost` 把 `dice.roll` 发给控制台，`DicePanel` 用 Three.js 就地回放。
+9. 面板动画结束后，`SurfaceHost` 把 `dice.result` 发给原生结果小窗，播放彩带烟花并等待手动关闭。
+10. 控制台通过快照和 feed 同步状态；历史记录写入配置目录。
 
-转盘是另一条链路：主播在控制台点「开始旋转」→ `Engine.toolAction('wheel', { type: 'spin' })` → `WheelTool` 用 `RandomSource` 选格 → `wheel.spin` 呈现 → overlay 用 2D Canvas 旋转。它**不经过 CommandBus**，也没有物理模拟。
+转盘是另一条链路：主播在控制台点「开始旋转」→ `Engine.toolAction('wheel', { type: 'spin' })` → `WheelTool` 用 `RandomSource` 选格 → `WheelToolView.currentSpin` 驱动 `WheelPanel` 原地 CSS 旋转 → 停稳后 `wheel.result` 弹结果小窗。它**不经过 CommandBus**，也没有物理模拟。
 
 ## 7. 骰子领域
 
@@ -255,11 +257,10 @@ export interface DiceConfig {
   readonly aggregation: Aggregation;
   readonly fallbackPower: number;
   readonly commandAliases: readonly string[];
-  readonly overlayAutoCloseSeconds: number;
 }
 ```
 
-默认值：d6、30 秒、中位数、兜底 50、别名 `['力度', 'power']`、结果窗口 12 秒后关闭。
+默认值：d6、30 秒、中位数、兜底 50、别名 `['力度', 'power']`；结果窗手动关闭。
 
 ### 7.2 命令
 
@@ -289,8 +290,8 @@ idle ──start──▶ collecting ──timeout──▶ rolling ──frames
 ### 7.5 转盘
 
 - 无弹幕命令：`handleChat` 永远返回 `false`，不抢骰子的指令。
-- 配置：`segments`（2–16 个标签）、`spinDurationSeconds`（2–10）、`overlayAutoCloseSeconds`。
-- 结果：`RandomSource.next()` 均匀选格；主进程把 `segments / resultIndex / durationMs` 交给 overlay，overlay 只负责把对应格子转到指针下。
+- 配置：`segments`（2–16 个标签）、`spinDurationSeconds`（2–10）。
+- 结果：`RandomSource.next()` 均匀选格；`currentSpin` 只给面板提供 `resultIndex / durationMs`，面板负责把对应格子转到指针下，最终标签由结果窗展示。
 - 历史：`history/wheel.json`，与骰子分开。
 - 控制台入口：`control/tool-panels.ts` 注册 `wheel → WheelPanel`；工具切换器选中后动态渲染，Dashboard 不知道具体工具。
 
@@ -300,7 +301,7 @@ idle ──start──▶ collecting ──timeout──▶ rolling ──frames
 - 几何：顶点定义 + 凸包算法求面；d10 用五角双锥（pentagonal bipyramid，10 个三角面），d4/d6/d8/d12/d20 用标准多面体。
 - 刚体：cannon-es `ConvexPolyhedron`，质量 1；地面 `Plane`；摩擦 0.4，弹性 0.35。
 - 初始条件：位置、朝向、角速度由 seed 派生；力度 0–100 映射到初始角速度与水平冲量，**不参与选面**。
-- 固定步长 `1 / 120` 秒，最多 8 秒；每两步记录一帧（60Hz）。
+- 固定步长 `1 / 120` 秒，最多 10 秒；每两步记录一帧（60Hz）。
 - 静止判定：线速度 < 0.08、角速度 < 0.1，连续 30 步，且存在法线接近竖直的面。
 - 读数：d4 取贴地面（法线 y 最小），其余取朝上面（法线 y 最大）。
 - 未停稳：先施加一次轻推；仍失败则取最近面，`settled: false` 写进结果，UI 明确标注。
@@ -329,16 +330,13 @@ idle ──start──▶ collecting ──timeout──▶ rolling ──frames
       "countdownSeconds": 30,
       "aggregation": "median",
       "fallbackPower": 50,
-      "commandAliases": ["力度", "power"],
-      "overlayAutoCloseSeconds": 12
+      "commandAliases": ["力度", "power"]
     },
     "wheel": {
       "segments": ["一等奖", "二等奖", "三等奖", "谢谢参与"],
-      "spinDurationSeconds": 5,
-      "overlayAutoCloseSeconds": 8
+      "spinDurationSeconds": 5
     }
-  },
-  "overlay": { "alwaysOnTop": true }
+  }
 }
 ```
 
@@ -349,7 +347,7 @@ idle ──start──▶ collecting ──timeout──▶ rolling ──frames
 - 渲染进程只能看到 `window.api`；preload 暴露固定方法，不暴露 `ipcRenderer`。
 - 每个 `invoke` 通道在 main 侧有 zod 入参校验；返回值也必须是可序列化数据。
 - 主进程 → 渲染进程只有一条事件通道 `engine:event`，携带 `EngineEvent`。
-- overlay 单独使用 `overlay:present` / `overlay:dismissed`，避免和控制台共享全量快照。
+- 结果窗单独使用 `result:present` / `result:dismissed`；`dice.roll` 走控制台的 `overlay:present`，避免把逐帧动画发给结果窗。
 - 所有通道名集中在 `contracts/ipc.ts`，禁止散落字符串。
 
 ## 11. 错误与生命周期
@@ -358,7 +356,7 @@ idle ──start──▶ collecting ──timeout──▶ rolling ──frames
 - `throw` 只用于违反不变量（例如未知工具 id）；由 main 的全局 handler 记录并展示。
 - 每个平台连接持有独立 `AbortController`；`disconnect` 先 abort，再等待 socket 关闭。
 - 重连指数退避 1s、2s、4s……上限 30s，带 ±20% 抖动；用户手动断开后不再重连。
-- 工具 `deactivate` 必须清空定时器、取消未完成的呈现；overlay 关闭时通知 SurfaceHost。
+- 工具 `deactivate` 必须清空定时器、取消未完成的呈现；结果窗关闭时通知 SurfaceHost。
 
 ## 12. 可测试性
 
@@ -374,8 +372,8 @@ idle ──start──▶ collecting ──timeout──▶ rolling ──frames
 | --- | --- |
 | 平台 | 新增 `platforms/<id>/` 工厂，注册到 composition，补 config schema 与 fixture 测试 |
 | 工具 | 新增 `tools/<id>/`，实现 `InteractionTool`，注册到 ToolHost，并在控制台加一个面板分支 |
-| 控制台面板 | 在 `control/tool-panels.ts` 注册工具 id → 面板组件；overlay 加对应呈现分支 |
-| 弹窗形态 | 在 `Presentation` 增加 kind，在 SurfaceHost 注册 renderer |
+| 控制台面板 | 在 `control/tool-panels.ts` 注册工具 id → 面板组件；有动画时在面板内消费 view / presentation |
+| 结果窗形态 | 在 `Presentation` 增加 result kind，在 `ResultApp` 注册结果渲染 |
 | 呈现介质 | 实现新的 Surface（例如 HTTP 浏览器源），内核与工具不动 |
 
 ## 14. 非目标

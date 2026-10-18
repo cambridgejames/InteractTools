@@ -9,7 +9,6 @@ const props = defineProps<{ view: WheelToolView }>()
 
 const segmentsText = ref(props.view.config.segments.join('\n'))
 const duration = ref(props.view.config.spinDurationSeconds)
-const autoClose = ref(props.view.config.overlayAutoCloseSeconds)
 
 watch(
   () => props.view.config.segments,
@@ -23,12 +22,7 @@ watch(
     duration.value = value
   }
 )
-watch(
-  () => props.view.config.overlayAutoCloseSeconds,
-  (value) => {
-    autoClose.value = value
-  }
-)
+
 
 const spinning = computed(() => props.view.phase === 'spinning')
 const phaseText = computed(() => {
@@ -48,6 +42,25 @@ const displayedResult = computed(() => {
   return props.view.lastResult?.label ?? null
 })
 
+const wheelRotation = ref(0)
+const spinDuration = ref(0)
+
+watch(
+  [() => props.view.phase, () => props.view.currentSpin?.spinId],
+  () => {
+    const spin = props.view.currentSpin
+    if (props.view.phase !== 'spinning' || spin === null) return
+
+    const step = 360 / Math.max(1, props.view.segments.length)
+    const targetMod = ((-(spin.resultIndex + 0.5) * step) % 360 + 360) % 360
+    const currentMod = ((wheelRotation.value % 360) + 360) % 360
+    const delta = (targetMod - currentMod + 360) % 360
+
+    spinDuration.value = spin.durationMs
+    wheelRotation.value += 360 * 5 + delta
+  }
+)
+
 const wheelStyle = computed(() => {
   const segments = props.view.segments
   const step = 360 / Math.max(1, segments.length)
@@ -58,7 +71,11 @@ const wheelStyle = computed(() => {
       return 'var(' + paletteVar(index) + ') ' + start + 'deg ' + end + 'deg'
     })
     .join(', ')
-  return { background: 'conic-gradient(' + stops + ')' }
+  return {
+    background: 'conic-gradient(' + stops + ')',
+    transform: 'rotate(' + wheelRotation.value + 'deg)',
+    transitionDuration: spinDuration.value + 'ms'
+  }
 })
 
 function paletteVar(index: number): string {
@@ -107,15 +124,6 @@ async function saveDuration(): Promise<void> {
   await actions.updateToolConfig('wheel', { spinDurationSeconds: next })
 }
 
-async function saveAutoClose(): Promise<void> {
-  const raw = Number(autoClose.value)
-  const next = Number.isFinite(raw)
-    ? Math.min(60, Math.max(0, Math.round(raw)))
-    : props.view.config.overlayAutoCloseSeconds
-  autoClose.value = next
-  await actions.updateToolConfig('wheel', { overlayAutoCloseSeconds: next })
-}
-
 async function clearHistory(): Promise<void> {
   await actions.toolAction('wheel', { type: 'clear-history' })
 }
@@ -136,7 +144,8 @@ async function clearHistory(): Promise<void> {
 
     <div class="card-body">
       <div class="left">
-        <div class="wheel-preview" :style="wheelStyle">
+        <div class="wheel-frame">
+          <div class="wheel-disc" :style="wheelStyle" />
           <span class="hub">1017</span>
           <span class="pointer" />
         </div>
@@ -154,7 +163,7 @@ async function clearHistory(): Promise<void> {
             预览
           </button>
         </div>
-        <p class="hint">没有命令、没有倒计时。主播点一下，结果窗旋转并停住。</p>
+        <p class="hint">没有命令、没有倒计时。主播点一下，转盘就在这里旋转；停稳后再弹结果。</p>
       </div>
 
       <div class="right">
@@ -174,13 +183,6 @@ async function clearHistory(): Promise<void> {
             <span>旋转时长</span>
             <div class="unit">
               <input v-model.number="duration" type="number" min="2" max="10" @change="saveDuration" />
-              <em>秒</em>
-            </div>
-          </label>
-          <label>
-            <span>结果停留</span>
-            <div class="unit">
-              <input v-model.number="autoClose" type="number" min="0" max="60" @change="saveAutoClose" />
               <em>秒</em>
             </div>
           </label>
@@ -285,7 +287,7 @@ h2 {
   border-right: 1px solid var(--hairline);
 }
 
-.wheel-preview {
+.wheel-frame {
   position: relative;
   width: 190px;
   height: 190px;
@@ -293,26 +295,32 @@ h2 {
   box-shadow: 0 0 0 1px var(--hairline-strong), var(--glow-accent);
 }
 
-.wheel-preview::after {
-  content: '';
+.wheel-disc {
   position: absolute;
-  inset: 42%;
-  border: 2px solid var(--accent);
+  inset: 0;
   border-radius: 50%;
-  background: var(--canvas);
+  transition-property: transform;
+  transition-timing-function: cubic-bezier(0.12, 0.7, 0.15, 1);
 }
 
 .hub {
   position: absolute;
-  inset: 0;
-  z-index: 1;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
   display: grid;
   place-items: center;
+  width: 60px;
+  height: 60px;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  background: var(--canvas);
   color: var(--accent);
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.5px;
+  transform: translate(-50%, -50%);
 }
 
 .pointer {

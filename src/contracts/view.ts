@@ -53,10 +53,17 @@ export interface DiceToolView extends BaseToolView {
   readonly config: DiceConfig
 }
 
+export interface WheelSpinView {
+  readonly spinId: string
+  readonly resultIndex: number
+  readonly durationMs: number
+}
+
 export interface WheelToolView extends BaseToolView {
   readonly toolId: 'wheel'
   readonly phase: WheelPhase
   readonly segments: readonly string[]
+  readonly currentSpin: WheelSpinView | null
   readonly lastResult: WheelResult | null
   readonly history: readonly WheelResult[]
   readonly config: WheelConfig

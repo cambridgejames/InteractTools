@@ -24,6 +24,7 @@ describe.skipIf(!live)('bilibili live connection', () => {
     const adapter = new BilibiliAdapter(context)
     await adapter.connect({ enabled: true, roomId }, new AbortController().signal)
     expect(adapter.snapshot().phase).toBe('connected')
+    console.info('[bilibili-live] status:', adapter.snapshot().detail)
 
     await new Promise((resolve) => setTimeout(resolve, 8_000))
     const chats = events.filter((event) => event.type === 'chat')

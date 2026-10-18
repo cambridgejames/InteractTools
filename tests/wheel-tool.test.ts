@@ -121,16 +121,25 @@ describe('WheelTool', () => {
     expect(await tool.handleChat(message)).toBe(false)
 
     await tool.handleAction({ type: 'spin' })
-    const presentation = presentations.find((item) => item.kind === 'wheel.spin')
-    expect(presentation?.kind).toBe('wheel.spin')
-    if (presentation?.kind === 'wheel.spin') {
-      expect(presentation.payload.resultIndex).toBe(1)
-      expect(presentation.payload.resultLabel).toBe('B')
-      expect(presentation.payload.segments).toEqual(['A', 'B', 'C', 'D'])
-    }
+    expect(presentations).toHaveLength(1)
+    expect(presentations[0]?.kind).toBe('dismiss')
+
+    const spinning = tool.view()
+    if (spinning.toolId !== 'wheel') throw new Error('expected wheel view')
+    expect(spinning.phase).toBe('spinning')
+    expect(spinning.currentSpin?.resultIndex).toBe(1)
+    expect(spinning.currentSpin?.durationMs).toBe(5_000)
 
     await timers.advance(6_000)
     await new Promise((resolve) => setImmediate(resolve))
+
+    const result = presentations.find((item) => item.kind === 'wheel.result')
+    expect(result?.kind).toBe('wheel.result')
+    if (result?.kind === 'wheel.result') {
+      expect(result.payload.label).toBe('B')
+      expect(result.payload.index).toBe(1)
+      expect(result.payload.segments).toEqual(['A', 'B', 'C', 'D'])
+    }
 
     const view = tool.view()
     expect(view.toolId).toBe('wheel')

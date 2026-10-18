@@ -172,6 +172,12 @@ describe('DiceTool', () => {
     const result = tool.view()
     expect(result.phase).toBe('result')
     expect(result.lastResult).not.toBeNull()
+    const popup = presentations.find((item) => item.kind === 'dice.result')
+    expect(popup?.kind).toBe('dice.result')
+    if (popup?.kind === 'dice.result' && result.toolId === 'dice' && result.lastResult !== null) {
+      expect(popup.payload.value).toBe(result.lastResult.value)
+      expect(popup.payload.stats.count).toBe(2)
+    }
     expect(result.history).toHaveLength(1)
     expect(history.entries).toHaveLength(1)
     expect(announcements.some((item) => item.includes('开始投掷'))).toBe(true)

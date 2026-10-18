@@ -45,7 +45,6 @@ export interface DiceConfig {
   readonly aggregation: Aggregation
   readonly fallbackPower: number
   readonly commandAliases: readonly string[]
-  readonly overlayAutoCloseSeconds: number
 }
 
 export const powerSummarySchema = z
@@ -95,16 +94,13 @@ export const diceConfigSchema = z
     countdownSeconds: z.number().int().min(5).max(600),
     aggregation: z.enum(AGGREGATIONS),
     fallbackPower: z.number().int().min(0).max(100),
-    commandAliases: z.array(z.string().trim().min(1).max(16)).min(1).max(8),
-    overlayAutoCloseSeconds: z.number().int().min(0).max(120)
+    commandAliases: z.array(z.string().trim().min(1).max(16)).min(1).max(8)
   })
-  .strict()
 
 export const DEFAULT_DICE_CONFIG: DiceConfig = {
   faces: 6,
   countdownSeconds: 30,
   aggregation: 'median',
   fallbackPower: 50,
-  commandAliases: ['力度', 'power'],
-  overlayAutoCloseSeconds: 12
+  commandAliases: ['力度', 'power']
 }

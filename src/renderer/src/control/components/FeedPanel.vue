@@ -135,10 +135,10 @@ function platformLabel(item: FeedItem): string {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  max-height: 640px;
-  border: 1px solid var(--hairline);
-  border-radius: var(--r-card);
-  background: var(--surface);
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+  background: var(--canvas-elevated);
 }
 
 .card-head {
@@ -184,7 +184,7 @@ h2 {
 
 .feed-list {
   flex: 1;
-  min-height: 180px;
+  min-height: 0;
   overflow: auto;
   padding: var(--s-2) var(--s-3);
 }

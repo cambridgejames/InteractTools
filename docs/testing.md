@@ -9,7 +9,7 @@
 | protocol | Vitest + fixture | 分包、压缩、心跳、异常帧 |
 | kernel | Vitest + fakes | 超时、取消、重复开始、工具路由 |
 | renderer | Vitest + Vue Test Utils | 关键交互与空状态 |
-| app | Electron `--smoke` | 启动、白屏、overlay 截图、console error |
+| app | Electron `--smoke` | 启动、白屏、面板动画与结果窗截图、console error |
 
 ## 命令
 
@@ -56,8 +56,8 @@ npx vitest run tests/bilibili-live.test.ts --reporter=verbose
 `npm run smoke` 启动 Electron，加载控制台，触发一次本地模拟投骰：
 
 - 截图保存到 `artifacts/smoke/`。
-- 控制台会截图骰子面板和转盘面板；overlay 会截图骰子结果、转盘旋转中与转盘结果。
-- 人工检查控制台不是白屏、两个 overlay 都能看到正确结果。
+- 控制台会截图骰子/转盘面板；结果窗会截图骰子与转盘的最终结果。
+- 人工检查控制台不是白屏、面板动画能看到滚动/旋转、结果窗与面板结果一致且彩带出现。
 - 当前冒烟不自动断言 console error；交付前仍要查看终端与截图。
 
 ## CI 顺序

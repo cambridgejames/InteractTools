@@ -5,7 +5,6 @@ export type WheelPhase = 'idle' | 'spinning' | 'result'
 export interface WheelConfig {
   readonly segments: readonly string[]
   readonly spinDurationSeconds: number
-  readonly overlayAutoCloseSeconds: number
 }
 
 export interface WheelResult {
@@ -18,10 +17,8 @@ export interface WheelResult {
 export const wheelConfigSchema = z
   .object({
     segments: z.array(z.string().trim().min(1).max(20)).min(2).max(16),
-    spinDurationSeconds: z.number().min(2).max(10),
-    overlayAutoCloseSeconds: z.number().int().min(0).max(60)
+    spinDurationSeconds: z.number().min(2).max(10)
   })
-  .strict()
 
 export const wheelResultSchema = z
   .object({
@@ -34,6 +31,5 @@ export const wheelResultSchema = z
 
 export const DEFAULT_WHEEL_CONFIG: WheelConfig = {
   segments: ['一等奖', '二等奖', '三等奖', '谢谢参与', '再来一次', '幸运奖'],
-  spinDurationSeconds: 5,
-  overlayAutoCloseSeconds: 8
+  spinDurationSeconds: 5
 }

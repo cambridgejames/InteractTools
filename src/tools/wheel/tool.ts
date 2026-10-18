@@ -9,7 +9,7 @@ import type { ChatMessage } from '@contracts/platform'
 import type { Cancellable } from '@contracts/time'
 import type { InteractionTool, ToolAction, ToolContext } from '@contracts/tool'
 import type { WheelPhase } from '@contracts/wheel'
-import type { WheelToolView } from '@contracts/view'
+import type { WheelSpinView, WheelToolView } from '@contracts/view'
 import { wheelManifest } from './manifest'
 
 const HISTORY_LIMIT = 20
@@ -17,8 +17,9 @@ const HISTORY_LIMIT = 20
 /**
  * 转转盘工具。
  *
- * 与骰子相反，它没有任何弹幕命令：主播在控制台点一下，结果窗旋转并停在
- * 主进程选中的格子上。这样验证工具框架不只服务“弹幕互动”一种形态。
+ * 与骰子相反，它没有任何弹幕命令：主播在控制台点一下，转盘就在面板内
+ * 旋转并停在主进程选中的格子上，停稳后再弹结果。这样验证工具框架不只
+ * 服务“弹幕互动”一种形态。
  */
 export class WheelTool implements InteractionTool {
   readonly manifest = wheelManifest
@@ -26,6 +27,7 @@ export class WheelTool implements InteractionTool {
   private context: ToolContext | null = null
   private config: WheelConfig = DEFAULT_WHEEL_CONFIG
   private phase: WheelPhase = 'idle'
+  private currentSpin: WheelSpinView | null = null
   private lastResult: WheelResult | null = null
   private history: WheelResult[] = []
   private resultTimer: Cancellable | null = null
@@ -53,6 +55,7 @@ export class WheelTool implements InteractionTool {
     this.resultTimer?.cancel()
     this.resultTimer = null
     this.phase = 'idle'
+    this.currentSpin = null
     const context = this.context
     this.context = null
     if (context !== null) {
@@ -91,6 +94,7 @@ export class WheelTool implements InteractionTool {
       icon: this.manifest.icon,
       phase: this.phase,
       segments: [...this.config.segments],
+      currentSpin: this.currentSpin === null ? null : { ...this.currentSpin },
       lastResult: this.lastResult,
       history: [...this.history],
       config: {
@@ -118,27 +122,10 @@ export class WheelTool implements InteractionTool {
     const generation = ++this.generation
 
     this.phase = 'spinning'
+    this.currentSpin = { spinId, resultIndex: index, durationMs }
     this.lastResult = result
+    void context.present({ kind: 'dismiss', toolId: 'wheel' }).catch(() => undefined)
     this.notify()
-
-    try {
-      await context.present({
-        kind: 'wheel.spin',
-        payload: {
-          toolId: 'wheel',
-          spinId,
-          segments: [...segments],
-          resultIndex: index,
-          resultLabel: label,
-          durationMs,
-          autoCloseSeconds: this.config.overlayAutoCloseSeconds
-        }
-      })
-    } catch (error) {
-      context.logger.error('wheel', '打开转盘窗口失败', String(error))
-    }
-
-    if (generation !== this.generation) return
 
     this.resultTimer = context.timer.setTimeout(
       durationMs + 350,
@@ -153,6 +140,18 @@ export class WheelTool implements InteractionTool {
           })
         }
         context.announce('转盘停在「' + result.label + '」。')
+        void context
+          .present({
+            kind: 'wheel.result',
+            payload: {
+              toolId: 'wheel',
+              spinId,
+              label: result.label,
+              index: result.index,
+              segments: [...segments]
+            }
+          })
+          .catch((error: unknown) => context.logger.error('wheel', '打开结果弹窗失败', String(error)))
         this.notify()
       }
     )
@@ -163,6 +162,7 @@ export class WheelTool implements InteractionTool {
     this.resultTimer?.cancel()
     this.resultTimer = null
     this.phase = 'idle'
+    this.currentSpin = null
     this.lastResult = null
     this.notify()
   }

@@ -24,7 +24,7 @@ description: 为 1017 互动工坊新增互动工具（命令驱动或主播手�
 3. 配置用 zod schema + 默认值；`activate(context, config)` 里解析，`updateConfig` 里重新解析。
 4. 实现 `InteractionTool`；`view()` 带通用字段 `toolId/name/description/icon`，控制台才能渲染切换器。
 5. 所有定时器走 `ToolContext.timer`；`deactivate` 清理并关闭呈现。
-6. 需要上屏时在 `contracts/presentation.ts` 加 kind、在 `OverlayApp.vue` 加分支、在 `overlay-window.ts` 加安全关闭时长。
+6. 需要上屏时在 `contracts/presentation.ts` 加 kind：动画放工具面板内，最终结果放 `ResultApp.vue` 原生结果窗；结果窗手动关闭。
 7. 在 `contracts/view.ts` 的 `ToolView` 联合类型加 view；在 `contracts/config.ts` 与 `DEFAULT_APP_CONFIG` 加配置。
 8. 在 `main/composition.ts` 注册 `new Tool()`。
 9. **在 `control/tool-panels.ts` 注册 `id → 面板组件`**（新工具唯一必须手写的 UI 注册点），并新建 `components/<Tool>Panel.vue`；Dashboard 不用改。
@@ -38,7 +38,7 @@ description: 为 1017 互动工坊新增互动工具（命令驱动或主播手�
 - 不直接操作窗口；只调用 `present()`。
 - 不在工具里读写磁盘；配置通过 `activate/updateConfig`，历史通过 `ToolContext.history`。
 - 预期失败用 `Result`，不要用异常控制流程。
-- 呈现数据必须足够完整，让 overlay 不需要再算业务结果（例如转盘只回放 `resultIndex`）。
+- 呈现数据必须足够完整，让面板/结果窗不需要再算业务结果（例如转盘只回放 `resultIndex`）。
 
 ## 验收
 

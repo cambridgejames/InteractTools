@@ -39,8 +39,8 @@ export class DiceScene {
     container.appendChild(this.renderer.domElement)
 
     this.camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100)
-    this.camera.position.set(0, 4.9, 10.4)
-    this.camera.lookAt(0, 1.15, 0)
+    this.camera.position.set(0, 3.8, 7.6)
+    this.camera.lookAt(0, 1.0, 0)
 
     this.setupStage()
     this.resizeObserver = new ResizeObserver(() => this.resize())
@@ -141,24 +141,55 @@ export class DiceScene {
     fill.position.set(4.5, 1.5, 4)
     this.scene.add(fill)
 
-    const tableGeometry = new THREE.CylinderGeometry(4.5, 4.5, 0.24, 96)
     const tableMaterial = new THREE.MeshStandardMaterial({
       color: new THREE.Color(SCENE.table),
       roughness: 0.88,
       metalness: 0.06
     })
-    const table = new THREE.Mesh(tableGeometry, tableMaterial)
+    const traySize = 7.2
+    const trayHalf = traySize / 2
+    const wallThickness = 0.18
+    const wallHeight = 0.6
+
+    const table = new THREE.Mesh(new THREE.BoxGeometry(traySize, 0.24, traySize), tableMaterial)
     table.position.y = -0.12
     table.receiveShadow = true
     this.scene.add(table)
 
-    const edge = new THREE.Mesh(
-      new THREE.TorusGeometry(4.5, 0.018, 8, 128),
-      new THREE.MeshBasicMaterial({ color: new THREE.Color(SCENE.tableEdge), transparent: true, opacity: 0.45 })
-    )
-    edge.rotation.x = Math.PI / 2
-    edge.position.y = 0.012
-    this.scene.add(edge)
+    const longWall = new THREE.BoxGeometry(traySize, wallHeight, wallThickness)
+    const shortWall = new THREE.BoxGeometry(wallThickness, wallHeight, traySize)
+    for (const z of [-1, 1]) {
+      const wall = new THREE.Mesh(longWall, tableMaterial)
+      wall.position.set(0, wallHeight / 2, z * (trayHalf - wallThickness / 2))
+      wall.castShadow = true
+      wall.receiveShadow = true
+      this.scene.add(wall)
+    }
+    for (const x of [-1, 1]) {
+      const wall = new THREE.Mesh(shortWall, tableMaterial)
+      wall.position.set(x * (trayHalf - wallThickness / 2), wallHeight / 2, 0)
+      wall.castShadow = true
+      wall.receiveShadow = true
+      this.scene.add(wall)
+    }
+
+    const edgeMaterial = new THREE.MeshBasicMaterial({
+      color: new THREE.Color(SCENE.tableEdge),
+      transparent: true,
+      opacity: 0.45
+    })
+    const longEdge = new THREE.BoxGeometry(traySize, 0.02, 0.02)
+    const shortEdge = new THREE.BoxGeometry(0.02, 0.02, traySize)
+    for (const z of [-1, 1]) {
+      const edge = new THREE.Mesh(longEdge, edgeMaterial)
+      edge.position.set(0, wallHeight + 0.01, z * (trayHalf - wallThickness / 2))
+      this.scene.add(edge)
+    }
+    for (const x of [-1, 1]) {
+      const edge = new THREE.Mesh(shortEdge, edgeMaterial)
+      edge.position.set(x * (trayHalf - wallThickness / 2), wallHeight + 0.01, 0)
+      this.scene.add(edge)
+    }
 
     const shadow = new THREE.Mesh(
       new THREE.CircleGeometry(0.95, 48),
@@ -174,13 +205,6 @@ export class DiceScene {
     this.scene.add(shadow)
     this.contactShadow = shadow
 
-    const inner = new THREE.Mesh(
-      new THREE.TorusGeometry(3.2, 0.01, 6, 128),
-      new THREE.MeshBasicMaterial({ color: new THREE.Color(SCENE.tableEdge), transparent: true, opacity: 0.12 })
-    )
-    inner.rotation.x = Math.PI / 2
-    inner.position.y = 0.012
-    this.scene.add(inner)
   }
 
   private buildDice(mesh: DiceMesh): void {

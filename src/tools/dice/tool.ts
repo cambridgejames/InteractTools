@@ -274,8 +274,7 @@ export class DiceTool implements InteractionTool {
           frames: simulation.frames,
           frameSeconds: simulation.frameSeconds,
           settled: result.settled,
-          stats: summary,
-          autoCloseSeconds: this.config.overlayAutoCloseSeconds
+          stats: summary
         }
       })
     } catch (error) {
@@ -296,6 +295,20 @@ export class DiceTool implements InteractionTool {
         })
       }
       context.announce('骰子停稳：' + result.value + ' 点' + (result.settled ? '' : '（未完全停稳）'))
+      void context
+        .present({
+          kind: 'dice.result',
+          payload: {
+            toolId: 'dice',
+            rollId: result.rollId,
+            faces: result.faces,
+            value: result.value,
+            power: result.power,
+            settled: result.settled,
+            stats: result.summary
+          }
+        })
+        .catch((error: unknown) => context.logger.error('dice', '打开结果弹窗失败', String(error)))
       this.notify()
     })
   }

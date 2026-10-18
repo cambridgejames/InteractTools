@@ -13,7 +13,6 @@ export interface SurfaceHost {
   present(presentation: Presentation): Promise<void>
   dismiss(toolId: string): Promise<void>
   isOpen(): boolean
-  setAlwaysOnTop(value: boolean): void
 }
 
 export interface TimerFactory {

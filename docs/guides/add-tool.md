@@ -97,14 +97,14 @@ export class ExampleTool implements InteractionTool {
 
 ## 6. 呈现
 
-需要上屏时：
+需要动画/上屏时：
 
-1. 在 `contracts/presentation.ts` 增加 `kind` 与 payload 类型。
-2. 在 overlay 的 `OverlayApp.vue` 加一个分支（例如 `WheelOverlay`）。
-3. 在 `main/windows/overlay-window.ts` 的安全关闭逻辑里加时长计算。
-4. 提供 `autoCloseSeconds`，避免窗口堆积。
+1. 在 `contracts/presentation.ts` 增加动画或 result 的 `kind` 与 payload 类型。
+2. **动画**放在工具面板内：骰子用 `DicePanel` 的 3D 舞台，转盘用 `WheelPanel` 的 CSS 旋转；不要把动画塞进结果窗。
+3. **结果**用 `dice.result` / `wheel.result` 发到原生结果小窗，`ResultApp.vue` 只负责结果卡和彩带烟花。
+4. 结果窗右上角关闭 + Esc；默认手动关闭，不自动消失。
 
-呈现数据要足够完整，让 overlay 不需要再算业务结果。转盘的 `resultIndex` 由主进程选出，overlay 只负责把该格转到指针下。
+结果 payload 只带展示所需字段；动画数据由 view 或 `dice.roll` 提供，结果窗不需要重算业务结果。转盘的 `resultIndex` 由主进程选出，面板只负责把该格转到指针下。
 
 ## 7. 注册清单（少一步 UI 就看不到）
 
@@ -112,7 +112,7 @@ export class ExampleTool implements InteractionTool {
 2. **组合根**：`main/composition.ts` 的 `tools` 数组加 `new ExampleTool()`。
 3. **控制台面板**：新建 `components/ExamplePanel.vue`，在 `control/tool-panels.ts` 注册 `id → 组件`。这是唯一必须手写的 UI 注册点，Dashboard 本身不用改。
 4. **工具页**：`ToolsView.vue` 加一张卡片（可选，但用户需要入口）。
-5. **呈现**：有上屏时按第 6 节加 overlay 分支。
+5. **呈现**：有动画/上屏时按第 6 节加面板动画或结果窗分支。
 6. **测试**：至少覆盖状态机、无命令工具不吞消息、配置校验、历史持久化。
 
 ## 8. 测试
@@ -132,5 +132,5 @@ export class ExampleTool implements InteractionTool {
 - [ ] `view()` 带 toolId/name/description/icon。
 - [ ] 配置有 zod schema 与默认值，旧配置可迁移。
 - [ ] `control/tool-panels.ts` 有对应面板注册。
-- [ ] 有上屏时 overlay 有对应分支 + 冒烟截图。
+- [ ] 有动画时面板内能看到过程，结果窗有对应分支 + 冒烟截图。
 - [ ] 文档、UI 文案、测试同步。

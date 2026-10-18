@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import FeedPanel from '../components/FeedPanel.vue'
 import HistoryPanel from '../components/HistoryPanel.vue'
 import ToolSwitcher from '../components/ToolSwitcher.vue'
 import WheelHistoryPanel from '../components/WheelHistoryPanel.vue'
@@ -33,8 +32,6 @@ const panel = computed(() => (active.value === null ? null : TOOL_PANELS[active.
       </section>
     </div>
 
-    <FeedPanel />
-
     <HistoryPanel v-if="dice" class="history" :history="dice.history" />
     <WheelHistoryPanel v-else-if="wheel" class="history" :history="wheel.history" />
   </div>
@@ -42,16 +39,16 @@ const panel = computed(() => (active.value === null ? null : TOOL_PANELS[active.
 
 <style scoped>
 .dashboard {
-  display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: var(--s-5);
-  align-items: start;
+  width: 100%;
   max-width: var(--content-max);
   margin: 0 auto;
 }
 
 .switcher {
-  grid-column: 1 / -1;
+  width: 100%;
 }
 
 .main-col {
@@ -62,7 +59,7 @@ const panel = computed(() => (active.value === null ? null : TOOL_PANELS[active.
 }
 
 .history {
-  grid-column: 1 / -1;
+  width: 100%;
 }
 
 .empty-card {
@@ -85,13 +82,4 @@ const panel = computed(() => (active.value === null ? null : TOOL_PANELS[active.
   font-size: 12px;
 }
 
-@media (max-width: 1180px) {
-  .dashboard {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .history {
-    grid-column: auto;
-  }
-}
 </style>

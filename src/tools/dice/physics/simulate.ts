@@ -23,8 +23,9 @@ export interface DiceSimulationResult {
 const FIXED_STEP = 1 / 120
 const RECORD_EVERY = 2
 const FRAME_SECONDS = FIXED_STEP * RECORD_EVERY
-const MAX_SECONDS = 8
+const MAX_SECONDS = 10
 const MIN_SETTLE_SECONDS = 1
+const NUDGE_SECONDS = 3
 const STABLE_STEPS_REQUIRED = 30
 
 /**
@@ -44,6 +45,7 @@ export function simulateDice(input: DiceSimulationInput): DiceSimulationResult {
   const frames: DiceFrame[] = []
   let stableSteps = 0
   let settleStep = -1
+  let nudged = false
   const maxSteps = Math.ceil(MAX_SECONDS / FIXED_STEP)
 
   for (let step = 0; step < maxSteps; step += 1) {
@@ -53,6 +55,22 @@ export function simulateDice(input: DiceSimulationInput): DiceSimulationResult {
 
     const seconds = (step + 1) * FIXED_STEP
     if (seconds < MIN_SETTLE_SECONDS) continue
+
+    // 偶尔会停在棱上：低速但没有面朝上时轻推一次，让它倒向某一面。
+    if (
+      !nudged &&
+      seconds > NUDGE_SECONDS &&
+      body.velocity.length() < 0.25 &&
+      body.angularVelocity.length() < 0.7 &&
+      upwardness(geometry, body.quaternion) < 0.92
+    ) {
+      body.applyImpulse(
+        new Vec3((rng.next() - 0.5) * 0.5, 0.35, (rng.next() - 0.5) * 0.5)
+      )
+      body.angularVelocity.x += (rng.next() - 0.5) * 1.4
+      body.angularVelocity.z += (rng.next() - 0.5) * 1.4
+      nudged = true
+    }
 
     if (isStable(body, geometry)) {
       stableSteps += 1
@@ -99,7 +117,7 @@ function createWorld(): World {
     const angle = (index * Math.PI) / 4
     const inward = new Vec3(-Math.cos(angle), 0, -Math.sin(angle))
     const wall = new Body({ mass: 0, shape: new Plane() })
-    wall.position.set(Math.cos(angle) * 4.2, 0, Math.sin(angle) * 4.2)
+    wall.position.set(Math.cos(angle) * 3.2, 0, Math.sin(angle) * 3.2)
     wall.quaternion.setFromVectors(new Vec3(0, 0, 1), inward)
     world.addBody(wall)
   }

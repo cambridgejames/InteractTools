@@ -4,6 +4,7 @@ import type { ToolAction } from '@contracts/tool'
 import type { EngineEvent } from '@contracts/engine'
 import type { LogEntry } from '@contracts/log'
 import type { PlatformId, PlatformPhase } from '@contracts/platform'
+import type { DiceRollPresentation, Presentation } from '@contracts/presentation'
 import type { DiceToolView, EngineSnapshot, PlatformView } from '@contracts/view'
 
 export type Tone = 'success' | 'error' | 'info'
@@ -20,12 +21,14 @@ export const state = reactive<{
   toast: Toast | null
   loading: boolean
   activeToolId: string
+  diceRoll: DiceRollPresentation | null
 }>({
   snapshot: null,
   logs: [],
   toast: null,
   loading: true,
-  activeToolId: 'dice'
+  activeToolId: 'dice',
+  diceRoll: null
 })
 
 let started = false
@@ -38,6 +41,7 @@ export async function initStore(): Promise<void> {
   try {
     applySnapshot(await window.api.snapshot())
     window.api.onEvent(handleEvent)
+    window.api.onPresentation(handlePresentation)
   } catch (error) {
     showToast(errorMessage(error), 'error')
   } finally {
@@ -167,6 +171,15 @@ export const actions = {
     await run(() => window.api.previewTool(toolId))
   },
 
+  async dismissOverlay(): Promise<void> {
+    try {
+      await window.api.dismissOverlay()
+      state.diceRoll = null
+    } catch (error) {
+      showToast(errorMessage(error), 'error')
+    }
+  },
+
   async previewActiveTool(): Promise<void> {
     const tool = selectActiveTool(state.snapshot)
     if (tool === null) {
@@ -178,10 +191,8 @@ export const actions = {
 
   selectTool(toolId: string): void {
     state.activeToolId = toolId
-  },
-
-  async updateOverlaySettings(patch: { alwaysOnTop?: boolean }): Promise<void> {
-    await run(() => window.api.updateOverlaySettings(patch))
+    state.diceRoll = null
+    void window.api.dismissOverlay().catch(() => undefined)
   },
 
   async openDataFolder(): Promise<void> {
@@ -218,6 +229,20 @@ function handleEvent(event: EngineEvent): void {
       state.logs = [event.entry, ...state.logs].slice(0, 100)
       return
     case 'presentation':
+      return
+  }
+}
+
+function handlePresentation(presentation: Presentation): void {
+  switch (presentation.kind) {
+    case 'dice.roll':
+      state.diceRoll = presentation.payload
+      return
+    case 'dice.result':
+    case 'wheel.result':
+      return
+    case 'dismiss':
+      state.diceRoll = null
       return
   }
 }

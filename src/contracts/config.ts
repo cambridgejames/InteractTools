@@ -5,7 +5,7 @@ import { DEFAULT_WHEEL_CONFIG, wheelConfigSchema } from './wheel'
 export const bilibiliConfigSchema = z
   .object({
     enabled: z.boolean(),
-    roomId: z.string().trim().max(32)
+    roomId: z.string().trim().max(256)
   })
   .strict()
 
