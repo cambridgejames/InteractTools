@@ -155,7 +155,7 @@ async function clearAllData(): Promise<void> {
         </button>
         <button class="danger" @click="clearAllData">清除所有数据…</button>
       </div>
-      <p class="data-note">清除会删除配置、资源和工具历史，并重新启动应用。</p>
+      <p class="data-note">清除会删除配置、工具历史和日志，并重新启动应用。</p>
     </section>
 
     <section class="card about">

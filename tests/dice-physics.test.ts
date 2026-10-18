@@ -33,9 +33,11 @@ describe('dice simulation', () => {
   })
 
   it('settles a d20 across representative launches', () => {
-    for (const seed of [1, 7, 42, 99, 123]) {
-      const result = simulateDice({ faces: 20, power: 65, seed })
-      expect(result.settled, 'd20 seed ' + String(seed)).toBe(true)
+    for (const power of [20, 65, 100]) {
+      for (const seed of [1, 7, 42]) {
+        const result = simulateDice({ faces: 20, power, seed })
+        expect(result.settled, 'd20 power ' + String(power) + ' seed ' + String(seed)).toBe(true)
+      }
     }
   })
 

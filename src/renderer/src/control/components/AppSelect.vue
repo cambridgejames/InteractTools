@@ -17,10 +17,17 @@ const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
 
 const root = ref<HTMLElement | null>(null)
 const open = ref(false)
+const placement = ref<'down' | 'up'>('down')
 const selected = computed(() => props.options.find((option) => option.value === props.modelValue))
 
 function toggle(): void {
   if (props.disabled === true) return
+  if (!open.value) {
+    const rect = root.value?.getBoundingClientRect()
+    placement.value = rect !== undefined && window.innerHeight - rect.bottom < 240 && rect.top > 240
+      ? 'up'
+      : 'down'
+  }
   open.value = !open.value
 }
 
@@ -73,7 +80,7 @@ onUnmounted(() => document.removeEventListener('pointerdown', onPointerDown))
       <AppIcon name="chevron" :size="14" />
     </button>
 
-    <ul v-if="open" class="menu" role="listbox">
+    <ul v-if="open" class="menu" :class="{ up: placement === 'up' }" role="listbox">
       <li v-for="option in options" :key="option.value">
         <button
           type="button"
@@ -151,6 +158,11 @@ onUnmounted(() => document.removeEventListener('pointerdown', onPointerDown))
   background: var(--surface);
   box-shadow: var(--shadow-pop);
   list-style: none;
+}
+
+.menu.up {
+  top: auto;
+  bottom: calc(100% + 4px);
 }
 
 .menu button {
