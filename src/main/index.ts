@@ -37,6 +37,7 @@ if (!hasLock) {
 }
 
 async function start(): Promise<void> {
+  app.setName('互动工坊')
   app.setAppUserModelId('com.interact1017.studio')
   application = await createApplication()
   application.controlWindow.show()

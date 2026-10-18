@@ -494,6 +494,8 @@ PlatformHost 只保留连接对象，不重复创建。
 物理：
 
 - cannon-es 刚体；固定步长 1/120 秒，最多 10 秒。
+- 从中央发射台向上弹射：初始上冲速度 3.2 + power×0.23，自旋 2.5 + power×0.28；自旋轴以当前面法线为基准偏 24–54°，力度只改变能量，不参与选面。
+- d6 渲染层用 RoundedBoxGeometry 做小倒角；物理仍是原凸包，避免改变读数与碰撞。
 - 六种面数：d4/d6/d8/d10/d12/d20。
 - 凸包几何；d10 使用五角双锥。
 - 停稳判定：面朝上程度、稳定步数。
@@ -504,6 +506,7 @@ PlatformHost 只保留连接对象，不重复创建。
 
 - dice.roll 给 DicePanel，面板 3D 骰盒内播放。
 - 面板骰盒响应式，最大 760px，4:3；空闲倒计时环 220px。
+- 场景含发射台、地面网格、虚线导轨和 3/6/9/12 高度环；相机随骰子高度上升并后拉，高力度时仍保留地面参照。
 - 面板右侧显示「合力」24px 数值 + 0–100 进度条，说明力度决定抛投强度、点数仍由物理决定。
 - config.directRoll=true 时出现「直接投掷」按钮：跳过收集，用 fallbackPower 直接投，仍写历史。
 - 播完后 dice.result 给应用内结果弹窗。
@@ -516,7 +519,8 @@ PlatformHost 只保留连接对象，不重复创建。
 - 旋转时长 2–10 秒。
 - 主播手动，无命令。
 - RandomSource 均匀选格。
-- WheelPanel 用 CSS rotate 原地旋转；圆盘 280px，指针和中心不转。
+- WheelPanel 用 CSS rotate 原地旋转；圆盘 400px，扇形内标签随盘面旋转，中心品牌图标顶部的小三角作为固定指针（带深色投影，避免和同色扇形糊在一起）。
+- 预设：最多 12 个命名转盘，保存 segments + spinDurationSeconds；同名覆盖。
 - duration + 350ms 后出结果。
 - 结果弹窗只显示最终格，不重播转盘。
 
@@ -533,6 +537,7 @@ PlatformHost 只保留连接对象，不重复创建。
 - 实时 counts + 进度条。
 - 结束后并列最高全部展示；0 票显示无人投票。
 - 历史记录问题、选项、counts、totalVotes、winners、at。
+- 预设：最多 12 个命名投票，保存 question + options + countdownSeconds；同名覆盖。
 - 预览使用示例分布，不写历史。
 
 ## 10. 平台适配
@@ -582,7 +587,9 @@ PlatformHost 只保留连接对象，不重复创建。
 
 ### 11.1 控制台
 
-- 目标 1560×960，按主屏工作区自动收缩；最小 1120×720。
+- 目标 1560×960，按配置的显示器（默认鼠标所在屏）workArea 自动收缩并居中；最小 1120×720。
+- 设置页通过 window:displays / window:set-display 选择屏幕；配置持久化到 appConfig.window.display。
+- 开发模式窗口图标读取 `build/icon.png`；打包后从 `extraResources/icon.png` 读取，任务栏不再显示 Electron 默认图标。
 - contextIsolation true，nodeIntegration false。
 - 不加载远程页面；开发模式只加载 ELECTRON_RENDERER_URL。
 - 三栏布局：左导航 216px、中内容、右 feed 320px；小于 1180px 隐藏 feed。
@@ -657,7 +664,7 @@ userData 默认是 %APPDATA%/interact-tools；--smoke 时切到 artifacts/smoke/
 
 测试：
 
-- 10 个测试文件，37 个用例通过，1 个 B站真连用例默认跳过。
+- 11 个测试文件，40 个用例通过，1 个 B站真连用例默认跳过。
 - 覆盖骰子 domain、几何、物理、工具、轮盘工具、投票 domain/工具、命令提示总线、MockAdapter、B站协议、WBI。
 - 真连测试：LIVE_BILIBILI=1 npx vitest run tests/bilibili-live.test.ts；最近房间 6 收到 6 条。
 

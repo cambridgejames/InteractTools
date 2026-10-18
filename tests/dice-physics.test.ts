@@ -24,6 +24,14 @@ describe('dice simulation', () => {
     }
   })
 
+  it('launches at 100 power and still settles', () => {
+    const result = simulateDice({ faces: 6, power: 100, seed: 10 })
+    expect(result.settled).toBe(true)
+    expect(result.frames.length).toBeGreaterThan(10)
+    expect(result.value).toBeGreaterThanOrEqual(1)
+    expect(result.value).toBeLessThanOrEqual(6)
+  })
+
   it('reads the bottom face of a d4', () => {
     const result = simulateDice({ faces: 4, power: 55, seed: 7 })
     expect(result.value).toBeGreaterThanOrEqual(1)

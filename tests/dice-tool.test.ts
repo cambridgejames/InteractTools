@@ -156,6 +156,7 @@ describe('DiceTool', () => {
     if (collecting.toolId !== 'dice') throw new Error('expected dice view')
     expect(collecting.phase).toBe('collecting')
     expect(collecting.participants).toHaveLength(2)
+    expect(announcements.some((item) => item.includes('力度无效'))).toBe(true)
     expect(collecting.participants.find((person) => person.userKey === 'mock:a')?.power).toBe(90)
 
     await timers.advance(5_000)

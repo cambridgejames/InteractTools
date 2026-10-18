@@ -166,7 +166,7 @@ function participantPower(value: number): string {
       >
         !{{ view.config.commandAliases[0] ?? '力度' }} {{ power }}
       </button>
-      <span class="hint-note">收集时才会被计数</span>
+      <span class="hint-note">0–100 整数 · 收集时才计数</span>
     </div>
 
     <div class="card-body">
@@ -280,7 +280,7 @@ function participantPower(value: number): string {
         </div>
 
         <p v-if="collecting" class="hint">
-          发送 <code>!力度 80</code> 设置力度；同一人只取最后一条。
+          发送 <code>!力度 80</code> 设置力度，<strong>0–100 整数</strong>；越界或非数字会被忽略，同一人只取最后一条。
         </p>
         <p v-else-if="view.lastResult === null" class="hint">观众发得越多，力度越接近真实。</p>
         <p v-else class="hint">上一轮 {{ view.lastResult.value }} 点，{{ methodLabel(view.config.aggregation) }}。</p>
@@ -293,7 +293,7 @@ function participantPower(value: number): string {
 
           <div v-if="participants.length === 0" class="empty">
             <span>还没有人设置力度</span>
-            <small>开始收集后，弹幕里的 !力度 80 会出现在这里。</small>
+            <small>开始收集后，弹幕里的 !力度 80 会出现在这里；只接受 0–100 的整数。</small>
           </div>
 
           <ul v-else class="participant-list">

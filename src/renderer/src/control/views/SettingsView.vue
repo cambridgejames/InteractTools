@@ -1,20 +1,61 @@
 <script setup lang="ts">
+import { onMounted, ref } from 'vue'
+import type { WindowDisplayOption } from '@contracts/ipc'
 import AppIcon from '../components/AppIcon.vue'
-import { actions } from '../store'
+import { actions, showToast, state } from '../store'
+
+const displays = ref<readonly WindowDisplayOption[]>([])
+const selectedDisplay = ref('cursor')
+
+onMounted(async () => {
+  selectedDisplay.value = state.snapshot?.window.display ?? 'cursor'
+  try {
+    displays.value = await window.api.windowDisplays()
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : '读取显示器失败', 'error')
+  }
+})
+
+async function saveDisplay(): Promise<void> {
+  try {
+    await window.api.setWindowDisplay(selectedDisplay.value)
+    showToast('窗口位置已更新', 'success')
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : '更新窗口位置失败', 'error')
+  }
+}
 </script>
 
 <template>
   <div class="settings">
     <section class="card">
       <header>
+        <h2>窗口位置</h2>
+        <p>控制台启动时放在哪块屏幕；选择后立即移动。</p>
+      </header>
+
+      <label class="field">
+        <span>显示器</span>
+        <select v-model="selectedDisplay" @change="saveDisplay">
+          <option value="cursor">跟随鼠标</option>
+          <option value="primary">主显示器</option>
+          <option v-for="display in displays" :key="display.id" :value="display.id">
+            {{ display.label }}{{ display.primary ? ' · 主屏' : '' }} · {{ display.width }}×{{ display.height }}
+          </option>
+        </select>
+      </label>
+    </section>
+
+    <section class="card">
+      <header>
         <h2>结果展示</h2>
-        <p>动画在工具面板内播放，停稳后用原生结果小窗展示，带彩带烟花。</p>
+        <p>动画在工具面板内播放，停稳后用应用内结果弹窗展示，带彩带烟花。</p>
       </header>
 
       <div class="row">
         <div>
           <strong>关闭方式</strong>
-          <span>结果小窗右上角关闭按钮，或按 Esc。</span>
+          <span>结果弹窗右上角、遮罩或 Esc。</span>
         </div>
       </div>
 
@@ -79,6 +120,24 @@ header p {
   margin: 2px 0 0;
   color: var(--mute);
   font-size: 11px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--mute);
+  font-size: 11px;
+}
+
+.field select {
+  height: 36px;
+  padding: 0 var(--s-3);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-control);
+  background: var(--inset);
+  color: var(--ink);
+  font-size: 12px;
 }
 
 .row {

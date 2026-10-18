@@ -28,6 +28,12 @@ describe('parsePowerCommand', () => {
     expect(parsePowerCommand('!力度', aliases).status).toBe('invalid')
     expect(parsePowerCommand('!力度 101', aliases).status).toBe('invalid')
     expect(parsePowerCommand('!力度 abc', aliases).status).toBe('invalid')
+    expect(parsePowerCommand('!力度 -1', aliases).status).toBe('invalid')
+    expect(parsePowerCommand('!力度 80.5', aliases).status).toBe('invalid')
+    expect(parsePowerCommand('!力度 1e2', aliases).status).toBe('invalid')
+    expect(parsePowerCommand('!力度 1000', aliases).status).toBe('invalid')
+    expect(parsePowerCommand('!力度 Infinity', aliases).status).toBe('invalid')
+    expect(parsePowerCommand('!力度 ８０分', aliases).status).toBe('invalid')
   })
 })
 

@@ -128,7 +128,12 @@ function checkRule(from, to) {
 
   if (from.kind === 'renderer') {
     if (to.kind === 'contracts' || to.kind === 'renderer') return null
-    if (to.kind === 'package' && (to.name === 'vue' || to.name === 'three')) return null
+    if (
+      to.kind === 'package' &&
+      (to.name === 'vue' || to.name === 'three' || to.name.startsWith('three/'))
+    ) {
+      return null
+    }
     return 'renderer 不能依赖 ' + describe(to)
   }
 

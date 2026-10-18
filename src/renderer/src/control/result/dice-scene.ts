@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 import type { DiceFrame, DiceMesh, DiceMeshFace } from '@contracts/presentation'
 import { SCENE } from './palette'
 
@@ -103,6 +104,7 @@ export class DiceScene {
     if (this.dice === null) return
     this.dice.position.set(frame.position[0], frame.position[1], frame.position[2])
     this.dice.quaternion.set(frame.quaternion[0], frame.quaternion[1], frame.quaternion[2], frame.quaternion[3])
+    this.updateCamera(frame.position[1])
 
     if (this.contactShadow !== null) {
       this.contactShadow.position.set(frame.position[0], 0.006, frame.position[2])
@@ -156,6 +158,21 @@ export class DiceScene {
     table.receiveShadow = true
     this.scene.add(table)
 
+    // 地面网格 + 垂直发射导轨：镜头拉高后仍有高度参照，能看出骰子确实在“冲天”。
+    const grid = new THREE.GridHelper(
+      24,
+      24,
+      new THREE.Color(SCENE.tableEdge),
+      new THREE.Color(SCENE.table)
+    )
+    grid.position.y = 0.002
+    const gridMaterial = grid.material
+    if (gridMaterial instanceof THREE.LineBasicMaterial) {
+      gridMaterial.transparent = true
+      gridMaterial.opacity = 0.08
+    }
+    this.scene.add(grid)
+
     const longWall = new THREE.BoxGeometry(traySize, wallHeight, wallThickness)
     const shortWall = new THREE.BoxGeometry(wallThickness, wallHeight, traySize)
     for (const z of [-1, 1]) {
@@ -171,6 +188,60 @@ export class DiceScene {
       wall.castShadow = true
       wall.receiveShadow = true
       this.scene.add(wall)
+    }
+
+    // 发射台：让“从地面弹射”这件事在画面里有明确锚点。
+    const pad = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.62, 0.72, 0.12, 48),
+      new THREE.MeshStandardMaterial({
+        color: new THREE.Color(SCENE.table),
+        roughness: 0.55,
+        metalness: 0.25,
+        emissive: new THREE.Color(SCENE.tableEdge),
+        emissiveIntensity: 0.12
+      })
+    )
+    pad.position.y = 0.06
+    pad.receiveShadow = true
+    pad.castShadow = true
+    this.scene.add(pad)
+
+    const padRing = new THREE.Mesh(
+      new THREE.TorusGeometry(0.5, 0.025, 8, 64),
+      new THREE.MeshBasicMaterial({ color: new THREE.Color(SCENE.tableEdge), transparent: true, opacity: 0.8 })
+    )
+    padRing.rotation.x = Math.PI / 2
+    padRing.position.y = 0.14
+    this.scene.add(padRing)
+
+    const rail = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(0, 0.16, 0),
+        new THREE.Vector3(0, 20, 0)
+      ]),
+      new THREE.LineDashedMaterial({
+        color: new THREE.Color(SCENE.tableEdge),
+        transparent: true,
+        opacity: 0.22,
+        dashSize: 0.16,
+        gapSize: 0.22
+      })
+    )
+    rail.computeLineDistances()
+    this.scene.add(rail)
+
+    for (const height of [3, 6, 9, 12]) {
+      const marker = new THREE.Mesh(
+        new THREE.TorusGeometry(0.56, 0.012, 6, 48),
+        new THREE.MeshBasicMaterial({
+          color: new THREE.Color(SCENE.tableEdge),
+          transparent: true,
+          opacity: 0.18
+        })
+      )
+      marker.rotation.x = Math.PI / 2
+      marker.position.y = height
+      this.scene.add(marker)
     }
 
     const edgeMaterial = new THREE.MeshBasicMaterial({
@@ -205,6 +276,13 @@ export class DiceScene {
     this.scene.add(shadow)
     this.contactShadow = shadow
 
+  }
+
+  private updateCamera(y: number): void {
+    const height = Math.max(0, y - 0.8)
+    // 镜头随高度上升并后拉：骰子越高，地面/发射台越远，形成“冲天”的纵深感。
+    this.camera.position.set(0, 4.0 + height * 0.5, 8.2 + height * 1.1)
+    this.camera.lookAt(0, 0.8 + height * 0.5, 0)
   }
 
   private buildDice(mesh: DiceMesh): void {
@@ -268,6 +346,8 @@ interface BuiltDice {
 }
 
 function buildDiceGeometry(mesh: DiceMesh, renderer: THREE.WebGLRenderer): BuiltDice {
+  if (mesh.faces.length === 6) return buildRoundedD6(mesh, renderer)
+
   const positions: number[] = []
   const normals: number[] = []
   const uvs: number[] = []
@@ -305,6 +385,63 @@ function buildDiceGeometry(mesh: DiceMesh, renderer: THREE.WebGLRenderer): Built
   geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2))
   geometry.computeBoundingSphere()
 
+  return { geometry, materials, textures }
+}
+
+function buildRoundedD6(mesh: DiceMesh, renderer: THREE.WebGLRenderer): BuiltDice {
+  // BoxGeometry 的 group 顺序是 +X/-X/+Y/-Y/+Z/-Z；倒角只改视觉，物理仍是原凸包。
+  const axes = [
+    new THREE.Vector3(1, 0, 0),
+    new THREE.Vector3(-1, 0, 0),
+    new THREE.Vector3(0, 1, 0),
+    new THREE.Vector3(0, -1, 0),
+    new THREE.Vector3(0, 0, 1),
+    new THREE.Vector3(0, 0, -1)
+  ]
+  const geometry = new RoundedBoxGeometry(1, 1, 1, 4, 0.09)
+  geometry.scale(1.27, 1.27, 1.27)
+
+  const materials: THREE.MeshStandardMaterial[] = []
+  const textures: THREE.CanvasTexture[] = []
+  const assigned = new Set<number>()
+
+  for (const face of mesh.faces) {
+    const points = face.indices.map((index) => mesh.vertices[index]).filter((point) => point !== undefined)
+    const a = points[0]
+    const b = points[1]
+    const c = points[2]
+    if (a === undefined || b === undefined || c === undefined) continue
+
+    const normal = new THREE.Vector3(b.x - a.x, b.y - a.y, b.z - a.z)
+      .cross(new THREE.Vector3(c.x - a.x, c.y - a.y, c.z - a.z))
+      .normalize()
+    const centroid = new THREE.Vector3(
+      points.reduce((sum, point) => sum + point.x, 0) / points.length,
+      points.reduce((sum, point) => sum + point.y, 0) / points.length,
+      points.reduce((sum, point) => sum + point.z, 0) / points.length
+    )
+    if (normal.dot(centroid) < 0) normal.negate()
+
+    const slot = axes.findIndex((axis) => axis.dot(normal) > 0.9)
+    if (slot < 0 || assigned.has(slot)) continue
+    assigned.add(slot)
+
+    const texture = createFaceTexture(face.number, 6, renderer)
+    textures.push(texture)
+    materials[slot] = new THREE.MeshStandardMaterial({
+      map: texture,
+      roughness: 0.58,
+      metalness: 0.04
+    })
+  }
+
+  for (let slot = 0; slot < 6; slot += 1) {
+    if (materials[slot] === undefined) {
+      materials[slot] = new THREE.MeshStandardMaterial({ color: new THREE.Color(SCENE.faceDark) })
+    }
+  }
+
+  geometry.computeBoundingSphere()
   return { geometry, materials, textures }
 }
 

@@ -1,4 +1,4 @@
-import { BrowserWindow, screen } from 'electron'
+import { BrowserWindow, screen, type Display } from 'electron'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import type { EngineEvent } from '@contracts/engine'
@@ -9,20 +9,22 @@ import type { Presentation } from '@contracts/presentation'
 export class ControlWindow {
   private readonly window: BrowserWindow
 
-  constructor(preloadPath: string) {
-    const workArea = screen.getPrimaryDisplay().workAreaSize
-    const width = Math.min(1560, Math.max(1120, workArea.width - 120))
-    const height = Math.min(960, Math.max(720, workArea.height - 100))
+  constructor(preloadPath: string, iconPath?: string, displayPreference = 'cursor') {
+    const display = resolveDisplay(displayPreference)
+    const bounds = centeredBounds(display)
 
     this.window = new BrowserWindow({
-      width,
-      height,
+      width: bounds.width,
+      height: bounds.height,
+      x: bounds.x,
+      y: bounds.y,
       minWidth: 1120,
       minHeight: 720,
       show: false,
       backgroundColor: '#08090b',
       autoHideMenuBar: true,
       title: '互动工坊',
+      ...(iconPath === undefined ? {} : { icon: iconPath }),
       webPreferences: {
         preload: preloadPath,
         contextIsolation: true,
@@ -57,6 +59,29 @@ export class ControlWindow {
     this.window.show()
   }
 
+  /** 把窗口居中到指定屏幕；'cursor' 跟随鼠标，'primary' 主屏，其余是 Display.id。 */
+  placeOnDisplay(preference: string): void {
+    const bounds = centeredBounds(resolveDisplay(preference))
+    this.window.setBounds(bounds)
+  }
+
+  displayOptions(): readonly {
+    id: string
+    label: string
+    width: number
+    height: number
+    primary: boolean
+  }[] {
+    const primaryId = screen.getPrimaryDisplay().id
+    return screen.getAllDisplays().map((display, index) => ({
+      id: String(display.id),
+      label: display.label.trim().length > 0 ? display.label : '显示器 ' + String(index + 1),
+      width: display.size.width,
+      height: display.size.height,
+      primary: display.id === primaryId
+    }))
+  }
+
   async capture(path: string): Promise<void> {
     await mkdir(dirname(path), { recursive: true })
     const image = await this.window.webContents.capturePage()
@@ -65,5 +90,26 @@ export class ControlWindow {
 
   get browserWindow(): BrowserWindow {
     return this.window
+  }
+}
+function resolveDisplay(preference: string): Display {
+  if (preference === 'primary') return screen.getPrimaryDisplay()
+  if (preference === 'cursor') return screen.getDisplayNearestPoint(screen.getCursorScreenPoint())
+
+  return (
+    screen.getAllDisplays().find((display) => String(display.id) === preference) ??
+    screen.getDisplayNearestPoint(screen.getCursorScreenPoint())
+  )
+}
+
+function centeredBounds(display: Display): { x: number; y: number; width: number; height: number } {
+  const workArea = display.workArea
+  const width = Math.min(1560, Math.max(1120, workArea.width - 120))
+  const height = Math.min(960, Math.max(720, workArea.height - 100))
+  return {
+    x: Math.round(workArea.x + (workArea.width - width) / 2),
+    y: Math.round(workArea.y + (workArea.height - height) / 2),
+    width,
+    height
   }
 }

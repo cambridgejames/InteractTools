@@ -6,12 +6,23 @@ import { z } from 'zod'
  * 选项按顺序映射 1–8；观众也可以直接打选项文字。选项不允许重复，
  * 否则按文字投票会产生歧义。
  */
+const votePresetSchema = z
+  .object({
+    id: z.string().min(1).max(40),
+    name: z.string().trim().min(1).max(20),
+    question: z.string().trim().max(80),
+    options: z.array(z.string().trim().min(1).max(20)).min(2).max(8),
+    countdownSeconds: z.number().int().min(5).max(300)
+  })
+  .strict()
+
 export const voteConfigSchema = z
   .object({
     question: z.string().trim().max(80),
     options: z.array(z.string().trim().min(1).max(20)).min(2).max(8),
     countdownSeconds: z.number().int().min(5).max(300),
-    commandAliases: z.array(z.string().trim().min(1).max(16)).min(1).max(8)
+    commandAliases: z.array(z.string().trim().min(1).max(16)).min(1).max(8),
+    presets: z.array(votePresetSchema).max(12)
   })
   .superRefine((value, context) => {
     const seen = new Set<string>()
@@ -35,7 +46,8 @@ export const DEFAULT_VOTE_CONFIG: VoteConfig = {
   question: '今晚玩什么？',
   options: ['方案 A', '方案 B', '方案 C'],
   countdownSeconds: 30,
-  commandAliases: ['投票', 'vote']
+  commandAliases: ['投票', 'vote'],
+  presets: []
 }
 
 export const voteResultSchema = z

@@ -32,6 +32,7 @@ export class DiceTool implements InteractionTool {
   private config: DiceConfig = DEFAULT_DICE_CONFIG
   private phase: DicePhase = 'idle'
   private participants = new Map<string, PowerVote>()
+  private readonly invalidUsers = new Set<string>()
   private summary: PowerSummary | null = null
   private countdownEndsAt: number | null = null
   private lastResult: DiceResult | null = null
@@ -78,9 +79,15 @@ export class DiceTool implements InteractionTool {
 
     if (parsed.status === 'invalid') {
       this.context?.logger.warn('dice', '忽略非法力度指令', message.userName + ': ' + parsed.reason)
+      const userKey = toUserKey(message.platform, message.userId)
+      if (!this.invalidUsers.has(userKey)) {
+        this.invalidUsers.add(userKey)
+        this.context?.announce(message.userName + ' 的力度无效：请输入 0–100 的整数。')
+      }
       return true
     }
 
+    this.invalidUsers.delete(toUserKey(message.platform, message.userId))
     this.participants.set(toUserKey(message.platform, message.userId), {
       userKey: toUserKey(message.platform, message.userId),
       userName: message.userName,
@@ -153,6 +160,7 @@ export class DiceTool implements InteractionTool {
     this.generation += 1
     this.clearTimers()
     this.participants.clear()
+    this.invalidUsers.clear()
     this.summary = null
     this.lastResult = null
     this.phase = 'collecting'
@@ -160,7 +168,7 @@ export class DiceTool implements InteractionTool {
     context.publishCommandHint(this.commandSamples())
 
     context.announce(
-      '开始收集力度：发送 ' + this.commandHint() + '，' + this.config.countdownSeconds + ' 秒后投掷。'
+      '开始收集力度：发送 ' + this.commandHint() + '（0–100 整数），' + this.config.countdownSeconds + ' 秒后投掷。'
     )
     this.countdown = context.timer.setInterval(250, () => {
       const endsAt = this.countdownEndsAt
@@ -209,6 +217,7 @@ export class DiceTool implements InteractionTool {
     this.generation += 1
     this.clearTimers()
     this.participants.clear()
+    this.invalidUsers.clear()
     this.countdownEndsAt = null
     context.publishCommandHint(null)
 
@@ -361,6 +370,7 @@ export class DiceTool implements InteractionTool {
     this.phase = 'idle'
     this.countdownEndsAt = null
     this.participants.clear()
+    this.invalidUsers.clear()
     this.summary = null
     this.context?.publishCommandHint(null)
     this.notify()

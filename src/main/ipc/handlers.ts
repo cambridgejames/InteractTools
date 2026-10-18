@@ -2,6 +2,7 @@ import { app, ipcMain, shell } from 'electron'
 import { z } from 'zod'
 import { IPC } from '@contracts/ipc'
 import type { Engine } from '@kernel/engine'
+import type { ControlWindow } from '../windows/control-window'
 
 const platformIdSchema = z.enum(['bilibili', 'mock'])
 const patchSchema = z.record(z.string(), z.unknown())
@@ -13,8 +14,16 @@ const mockChatSchema = z.object({
   userName: z.string().trim().min(1).max(24),
   text: z.string().trim().min(1).max(200)
 })
-export function registerIpc(engine: Engine): void {
+export function registerIpc(engine: Engine, controlWindow: ControlWindow): void {
   ipcMain.handle(IPC.snapshot, async () => engine.snapshot())
+
+  ipcMain.handle(IPC.windowDisplays, async () => controlWindow.displayOptions())
+
+  ipcMain.handle(IPC.windowDisplay, async (_event, rawDisplay: unknown) => {
+    const display = z.string().trim().min(1).max(40).parse(rawDisplay)
+    await engine.updateWindowDisplay(display)
+    controlWindow.placeOnDisplay(display)
+  })
 
   ipcMain.handle(IPC.platformConnect, async (_event, rawId: unknown) => {
     const id = platformIdSchema.parse(rawId)

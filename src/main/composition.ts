@@ -28,9 +28,16 @@ export async function createApplication(): Promise<Application> {
   const logger = new AppLogger()
   const clock = new SystemClock()
 
-  const controlWindow = new ControlWindow(join(__dirname, '../preload/index.js'))
+  const iconPath = app.isPackaged
+    ? join(process.resourcesPath, 'icon.png')
+    : join(app.getAppPath(), 'build/icon.png')
   const store = new JsonConfigStore(join(userData, 'config.json'), logger)
-  await store.load()
+  const config = await store.load()
+  const controlWindow = new ControlWindow(
+    join(__dirname, '../preload/index.js'),
+    iconPath,
+    config.window.display
+  )
   const surface = new ResultSurface(controlWindow)
 
   logger.subscribe((entry) => controlWindow.send({ type: 'log', entry }))
@@ -48,7 +55,7 @@ export async function createApplication(): Promise<Application> {
     onEvent: (event) => controlWindow.send(event)
   })
 
-  registerIpc(engine)
+  registerIpc(engine, controlWindow)
   await engine.start()
   await controlWindow.load()
 

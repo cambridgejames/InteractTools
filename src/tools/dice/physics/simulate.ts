@@ -137,7 +137,8 @@ function createDiceBody(
     faces: geometry.polygons.map((face) => [...face.indices])
   })
 
-  const position = new Vec3((rng.next() - 0.5) * 2.4, 5.2 + rng.next() * 1.4, (rng.next() - 0.5) * 2.4)
+  // 从发射台向上弹射：力度同时决定初速度和初始自旋。
+  const position = new Vec3((rng.next() - 0.5) * 0.3, 1.1 + rng.next() * 0.15, (rng.next() - 0.5) * 0.3)
   const body = new Body({ mass: 1, shape, position })
 
   body.quaternion.setFromEuler(
@@ -146,21 +147,32 @@ function createDiceBody(
     rng.next() * Math.PI * 2
   )
 
-  const horizontal = 0.8 + power * 0.045
+  const lift = 3.2 + power * 0.23
+  const horizontal = 0.2 + power * 0.004
   body.velocity.set(
     (rng.next() - 0.5) * horizontal,
-    -(1.4 + power * 0.03),
+    lift,
     (rng.next() - 0.5) * horizontal
   )
 
-  const axis = new Vec3(rng.next() * 2 - 1, rng.next() * 2 - 1, rng.next() * 2 - 1)
-  const axisLength = axis.length() || 1
-  const spin = 2.4 + power * 0.21
-  body.angularVelocity.set(
-    (axis.x / axisLength) * spin,
-    (axis.y / axisLength) * spin,
-    (axis.z / axisLength) * spin
-  )
+  // 不要正好绕面法线自转：以法线为基准偏 24–54°，骰子会带一点斜翻，观感更自然。
+  const face = geometry.polygons[Math.floor(rng.next() * geometry.polygons.length)]
+  const normal = face === undefined
+    ? new Vec3(0, 1, 0)
+    : new Vec3(face.normal.x, face.normal.y, face.normal.z)
+  body.quaternion.vmult(normal, normal)
+  normal.normalize()
+
+  const tangent = new Vec3(rng.next() * 2 - 1, rng.next() * 2 - 1, rng.next() * 2 - 1)
+  tangent.vsub(normal.scale(tangent.dot(normal)), tangent)
+  if (tangent.length() < 0.0001) tangent.set(1, 0, 0)
+  tangent.normalize()
+
+  const tilt = ((24 + rng.next() * 30) * Math.PI) / 180
+  const axis = normal.scale(Math.cos(tilt)).vadd(tangent.scale(Math.sin(tilt)))
+  axis.normalize()
+  const spin = 2.5 + power * 0.28
+  body.angularVelocity.set(axis.x * spin, axis.y * spin, axis.z * spin)
 
   body.linearDamping = 0.06
   body.angularDamping = 0.08

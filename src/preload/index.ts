@@ -35,7 +35,10 @@ const api: RendererApi = {
   previewTool: (toolId) => ipcRenderer.invoke(IPC.overlayPreview, toolId),
   dismissOverlay: () => ipcRenderer.invoke(IPC.overlayDismissed),
 
-  openDataFolder: () => ipcRenderer.invoke(IPC.openDataFolder)
+  openDataFolder: () => ipcRenderer.invoke(IPC.openDataFolder),
+
+  windowDisplays: () => ipcRenderer.invoke(IPC.windowDisplays),
+  setWindowDisplay: (display) => ipcRenderer.invoke(IPC.windowDisplay, display)
 }
 
 contextBridge.exposeInMainWorld('api', api)

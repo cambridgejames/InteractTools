@@ -98,8 +98,23 @@ export class Engine {
       overlay: {
         open: this.options.surface.isOpen(),
         alwaysOnTop: this.requireConfig().overlay.alwaysOnTop
+      },
+      window: {
+        display: this.requireConfig().window.display
       }
     }
+  }
+
+  /** 选择控制台窗口出现在哪块屏幕；持久化后由 main 实际移动窗口。 */
+  async updateWindowDisplay(display: string): Promise<void> {
+    const config = this.requireConfig()
+    const next = appConfigSchema.parse({
+      ...config,
+      window: { display }
+    })
+    this.config = next
+    await this.options.store.save(next)
+    this.publishSnapshot()
   }
 
   async connectPlatform(id: PlatformId): Promise<Result<void, string>> {

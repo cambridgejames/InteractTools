@@ -10,6 +10,22 @@ export async function runSmoke(application: Application): Promise<void> {
   await delay(1_200)
   await application.controlWindow.capture(join(output, 'control.png'))
 
+  await application.engine.updateToolConfig('wheel', {
+    presets: [
+      {
+        id: 'smoke-truth',
+        name: '真心话',
+        segments: ['上次最尴尬的事', '最想合作的主播', '手机里最舍不得删的照片', '最近一次哭是什么时候'],
+        spinDurationSeconds: 5
+      },
+      {
+        id: 'smoke-dare',
+        name: '大冒险',
+        segments: ['给榜一唱一句', '做十个深蹲', '模仿一个主播', '喝一口水'],
+        spinDurationSeconds: 5
+      }
+    ]
+  })
   await application.controlWindow.browserWindow.webContents.executeJavaScript(
     "document.querySelectorAll('.tool-tab')[1]?.click()"
   )
@@ -22,10 +38,33 @@ export async function runSmoke(application: Application): Promise<void> {
   await delay(300)
   await application.controlWindow.capture(join(output, 'control-platforms.png'))
   await application.controlWindow.browserWindow.webContents.executeJavaScript(
+    "document.querySelectorAll('.nav-item')[3]?.click()"
+  )
+  await delay(300)
+  await application.controlWindow.capture(join(output, 'control-settings.png'))
+  await application.controlWindow.browserWindow.webContents.executeJavaScript(
     "document.querySelectorAll('.nav-item')[0]?.click()"
   )
   await delay(300)
 
+  await application.engine.updateToolConfig('vote', {
+    presets: [
+      {
+        id: 'smoke-vote-truth',
+        name: '真心话',
+        question: '真心话',
+        options: ['初恋', '糗事', '秘密', '理想型'],
+        countdownSeconds: 30
+      },
+      {
+        id: 'smoke-vote-dare',
+        name: '大冒险',
+        question: '大冒险',
+        options: ['唱歌', '深蹲', '模仿', '喝水'],
+        countdownSeconds: 30
+      }
+    ]
+  })
   await application.controlWindow.browserWindow.webContents.executeJavaScript(
     "document.querySelectorAll('.tool-tab')[2]?.click()"
   )
@@ -73,6 +112,17 @@ export async function runSmoke(application: Application): Promise<void> {
   await application.controlWindow.capture(join(output, 'control-wheel-rolling.png'))
   await waitForResult(application)
   await application.controlWindow.capture(join(output, 'control-wheel-result.png'))
+  await application.engine.dismissOverlay()
+  await delay(300)
+
+  await application.controlWindow.browserWindow.webContents.executeJavaScript(
+    "document.querySelectorAll('.tool-tab')[0]?.click()"
+  )
+  await application.engine.updateToolConfig('dice', { directRoll: true, fallbackPower: 100 })
+  await application.engine.toolAction('dice', { type: 'direct' })
+  await delay(900)
+  await application.controlWindow.capture(join(output, 'control-dice-100.png'))
+  await waitForResult(application)
 
   console.info('[smoke] screenshots:', output)
   app.quit()

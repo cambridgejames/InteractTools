@@ -29,6 +29,13 @@ export const overlayConfigSchema = z
   })
   .strict()
 
+export const windowConfigSchema = z
+  .object({
+    /** 'cursor' | 'primary' | Electron Display.id（字符串）。 */
+    display: z.string().trim().min(1).max(40)
+  })
+  .strict()
+
 export type OverlayConfig = z.infer<typeof overlayConfigSchema>
 
 export const appConfigSchema = z
@@ -43,7 +50,8 @@ export const appConfigSchema = z
       wheel: wheelConfigSchema,
       vote: voteConfigSchema
     }),
-    overlay: overlayConfigSchema
+    overlay: overlayConfigSchema,
+    window: windowConfigSchema
   })
   .strict()
 
@@ -67,16 +75,27 @@ export const DEFAULT_APP_CONFIG: AppConfig = {
     },
     wheel: {
       ...DEFAULT_WHEEL_CONFIG,
-      segments: [...DEFAULT_WHEEL_CONFIG.segments]
+      segments: [...DEFAULT_WHEEL_CONFIG.segments],
+      presets: DEFAULT_WHEEL_CONFIG.presets.map((preset) => ({
+        ...preset,
+        segments: [...preset.segments]
+      }))
     },
     vote: {
       ...DEFAULT_VOTE_CONFIG,
       options: [...DEFAULT_VOTE_CONFIG.options],
-      commandAliases: [...DEFAULT_VOTE_CONFIG.commandAliases]
+      commandAliases: [...DEFAULT_VOTE_CONFIG.commandAliases],
+      presets: DEFAULT_VOTE_CONFIG.presets.map((preset) => ({
+        ...preset,
+        options: [...preset.options]
+      }))
     }
   },
   overlay: {
     alwaysOnTop: true
+  },
+  window: {
+    display: 'cursor'
   }
 }
 

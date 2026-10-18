@@ -87,6 +87,10 @@ export interface VoteToolView extends BaseToolView {
 
 export type ToolView = DiceToolView | WheelToolView | VoteToolView
 
+export interface WindowView {
+  readonly display: string
+}
+
 export interface EngineSnapshot {
   readonly revision: number
   readonly startedAt: number
@@ -94,6 +98,7 @@ export interface EngineSnapshot {
   readonly tools: readonly ToolView[]
   readonly feed: readonly FeedItem[]
   readonly overlay: OverlayView
+  readonly window: WindowView
 }
 
 export type { Aggregation }

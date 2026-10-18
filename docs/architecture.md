@@ -304,7 +304,7 @@ idle ──start──▶ collecting ──timeout──▶ rolling ──frames
 - 坐标：Y 轴向上，地面 `y = 0`，长度单位约等于骰子外接球半径。
 - 几何：顶点定义 + 凸包算法求面；d10 用五角双锥（pentagonal bipyramid，10 个三角面），d4/d6/d8/d12/d20 用标准多面体。
 - 刚体：cannon-es `ConvexPolyhedron`，质量 1；地面 `Plane`；摩擦 0.4，弹性 0.35。
-- 初始条件：位置、朝向、角速度由 seed 派生；力度 0–100 映射到初始角速度与水平冲量，**不参与选面**。
+- 初始条件：位置、朝向、角速度由 seed 派生；力度 0–100 映射到向上初速度和初始自旋，自旋轴相对面法线偏 24–54°，**不参与选面**。骰子从中央发射台弹射，面板相机随高度上升后拉。d6 渲染使用圆角倒角，物理凸包不变。
 - 固定步长 `1 / 120` 秒，最多 10 秒；每两步记录一帧（60Hz）。
 - 静止判定：线速度 < 0.08、角速度 < 0.1，连续 30 步，且存在法线接近竖直的面。
 - 读数：d4 取贴地面（法线 y 最小），其余取朝上面（法线 y 最大）。
@@ -339,15 +339,19 @@ idle ──start──▶ collecting ──timeout──▶ rolling ──frames
     },
     "wheel": {
       "segments": ["一等奖", "二等奖", "三等奖", "谢谢参与"],
-      "spinDurationSeconds": 5
+      "spinDurationSeconds": 5,
+      "presets": []
     },
     "vote": {
       "question": "今晚玩什么？",
       "options": ["方案 A", "方案 B", "方案 C"],
       "countdownSeconds": 30,
-      "commandAliases": ["投票", "vote"]
+      "commandAliases": ["投票", "vote"],
+      "presets": []
     }
-  }
+  },
+  "overlay": { "alwaysOnTop": true },
+  "window": { "display": "cursor" }
 }
 ```
 

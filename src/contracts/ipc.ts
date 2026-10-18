@@ -17,8 +17,18 @@ export const IPC = {
   overlayPresent: 'overlay:present',
   overlayDismissed: 'overlay:dismissed',
   openDataFolder: 'app:open-data-folder',
-  clearFeed: 'feed:clear'
+  clearFeed: 'feed:clear',
+  windowDisplays: 'window:displays',
+  windowDisplay: 'window:set-display'
 } as const
+
+export interface WindowDisplayOption {
+  readonly id: string
+  readonly label: string
+  readonly width: number
+  readonly height: number
+  readonly primary: boolean
+}
 
 export interface InjectedChat {
   readonly userName: string
@@ -46,4 +56,6 @@ export interface RendererApi {
   dismissOverlay(): Promise<void>
 
   openDataFolder(): Promise<void>
+  windowDisplays(): Promise<readonly WindowDisplayOption[]>
+  setWindowDisplay(display: string): Promise<void>
 }

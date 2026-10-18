@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, watch } from 'vue'
+import type { WheelPreset } from '@contracts/wheel'
 import type { WheelToolView } from '@contracts/view'
 import AppIcon from './AppIcon.vue'
 import BrandMark from './BrandMark.vue'
@@ -10,6 +11,7 @@ const props = defineProps<{ view: WheelToolView }>()
 
 const segmentsText = ref(props.view.config.segments.join('\n'))
 const duration = ref(props.view.config.spinDurationSeconds)
+const presetName = ref('')
 let saveTimer: ReturnType<typeof setTimeout> | null = null
 
 watch(
@@ -49,11 +51,22 @@ function scheduleDuration(): void {
   void actions.updateToolConfig('wheel', { spinDurationSeconds: next })
 }
 
-async function persistSegments(showError: boolean): Promise<boolean> {
-  const segments = segmentsText.value
+function readSegments(): string[] {
+  return segmentsText.value
     .split(/[\n,，]/)
     .map((segment) => segment.trim())
     .filter((segment) => segment.length > 0)
+}
+
+function readDuration(): number {
+  const raw = Number(duration.value)
+  return Number.isFinite(raw)
+    ? Math.min(10, Math.max(2, Math.round(raw)))
+    : props.view.config.spinDurationSeconds
+}
+
+async function persistSegments(showError: boolean): Promise<boolean> {
+  const segments = readSegments()
 
   if (segments.length < 2) {
     if (showError) showToast('至少保留两个格子', 'error')
@@ -64,6 +77,53 @@ async function persistSegments(showError: boolean): Promise<boolean> {
   if (segments.length > 16 && showError) showToast('最多 16 个格子，已截断', 'info')
   if (next.length !== segments.length) segmentsText.value = next.join('\n')
   return actions.updateToolConfig('wheel', { segments: next })
+}
+
+async function savePreset(): Promise<void> {
+  if (!(await persistSegments(true))) return
+  const name = presetName.value.trim()
+  if (name.length === 0) {
+    showToast('先给预设起个名字', 'error')
+    return
+  }
+
+  const segments = readSegments().slice(0, 16)
+  const existing = props.view.config.presets.find((preset) => preset.name === name)
+  if (existing === undefined && props.view.config.presets.length >= 12) {
+    showToast('最多保存 12 个预设', 'error')
+    return
+  }
+
+  const preset: WheelPreset = {
+    id: existing?.id ?? crypto.randomUUID(),
+    name,
+    segments,
+    spinDurationSeconds: readDuration()
+  }
+  const presets = existing === undefined
+    ? [...props.view.config.presets, preset]
+    : props.view.config.presets.map((item) => (item.id === existing.id ? preset : item))
+  const ok = await actions.updateToolConfig('wheel', { presets })
+  if (ok) {
+    presetName.value = ''
+    showToast('预设已保存', 'success')
+  }
+}
+
+async function applyPreset(preset: WheelPreset): Promise<void> {
+  if (spinning.value) return
+  segmentsText.value = preset.segments.join('\n')
+  duration.value = preset.spinDurationSeconds
+  const ok = await actions.updateToolConfig('wheel', {
+    segments: preset.segments,
+    spinDurationSeconds: preset.spinDurationSeconds
+  })
+  if (ok) showToast('已载入「' + preset.name + '」', 'success')
+}
+
+async function removePreset(id: string): Promise<void> {
+  const presets = props.view.config.presets.filter((preset) => preset.id !== id)
+  await actions.updateToolConfig('wheel', { presets })
 }
 
 const spinning = computed(() => props.view.phase === 'spinning')
@@ -125,6 +185,25 @@ function paletteVar(index: number): string {
   return palette[index % palette.length] ?? '--surface-active'
 }
 
+function labelStyle(index: number): Record<string, string> {
+  const step = 360 / Math.max(1, props.view.segments.length)
+  const angle = (index + 0.5) * step
+  const radians = ((angle - 90) * Math.PI) / 180
+  const radius = 128
+  const count = props.view.segments.length
+  const width = count <= 6 ? 118 : count <= 8 ? 96 : count <= 10 ? 80 : 64
+  const fontSize = count <= 8 ? 13 : count <= 12 ? 12 : 11
+  return {
+    left: 'calc(50% + ' + Math.cos(radians) * radius + 'px)',
+    top: 'calc(50% + ' + Math.sin(radians) * radius + 'px)',
+    // 沿半径排布，文字跟着扇形一起转；超过半圈时翻转，减少倒着读。
+    transform: 'translate(-50%, -50%) rotate(' + (angle - 90 + (angle > 180 ? 180 : 0)) + 'deg)',
+    color: index % 7 === 3 ? 'var(--ink)' : 'var(--canvas)',
+    width: width + 'px',
+    fontSize: fontSize + 'px'
+  }
+}
+
 async function spin(): Promise<void> {
   if (!(await persistSegments(true))) return
   await actions.toolAction('wheel', { type: 'spin' })
@@ -156,9 +235,21 @@ async function clearHistory(): Promise<void> {
     <div class="card-body">
       <div class="left">
         <div class="wheel-frame">
-          <div class="wheel-disc" :style="wheelStyle" />
-          <span class="hub"><BrandMark :size="38" /></span>
-          <span class="pointer" />
+          <div class="wheel-disc" :style="wheelStyle">
+            <span
+              v-for="(segment, index) in view.segments"
+              :key="index"
+              class="wheel-label"
+              :style="labelStyle(index)"
+              :title="segment"
+            >
+              {{ segment }}
+            </span>
+          </div>
+          <span class="hub">
+            <BrandMark :size="46" />
+            <span class="hub-pointer" />
+          </span>
         </div>
         <div class="preview-meta">
           <span>{{ view.segments.length }} 格</span>
@@ -198,6 +289,39 @@ async function clearHistory(): Promise<void> {
             </div>
           </label>
           <span class="auto-save">自动保存</span>
+        </div>
+
+        <div class="presets">
+          <div class="preset-head">
+            <span>预设</span>
+            <span>保存当前配置</span>
+          </div>
+          <div class="preset-save">
+            <input
+              v-model="presetName"
+              maxlength="20"
+              placeholder="例如 真心话"
+              :disabled="spinning"
+              @keyup.enter="savePreset"
+            />
+            <button class="preset-add" :disabled="spinning" @click="savePreset">保存</button>
+          </div>
+          <div v-if="view.config.presets.length > 0" class="preset-list">
+            <div v-for="preset in view.config.presets" :key="preset.id" class="preset-row">
+              <button class="preset-apply" :disabled="spinning" @click="applyPreset(preset)">
+                <strong>{{ preset.name }}</strong>
+                <small>{{ preset.segments.length }} 格 · {{ preset.spinDurationSeconds }} 秒</small>
+              </button>
+              <button
+                class="preset-remove"
+                :aria-label="'删除预设 ' + preset.name"
+                @click="removePreset(preset.id)"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+          <p v-else class="preset-empty">把当前转盘存成预设，下次一键载入。</p>
         </div>
 
         <div class="history">
@@ -284,7 +408,7 @@ h2 {
 
 .card-body {
   display: grid;
-  grid-template-columns: minmax(300px, 1.1fr) minmax(300px, 0.9fr);
+  grid-template-columns: minmax(440px, 1.1fr) minmax(280px, 0.9fr);
   gap: var(--s-5);
   padding: var(--s-5);
 }
@@ -300,8 +424,8 @@ h2 {
 
 .wheel-frame {
   position: relative;
-  width: 280px;
-  height: 280px;
+  width: 400px;
+  height: 400px;
   border-radius: 50%;
   box-shadow: 0 0 0 1px var(--hairline-strong), var(--glow-accent);
 }
@@ -309,9 +433,22 @@ h2 {
 .wheel-disc {
   position: absolute;
   inset: 0;
+  overflow: hidden;
   border-radius: 50%;
   transition-property: transform;
   transition-timing-function: cubic-bezier(0.12, 0.7, 0.15, 1);
+}
+
+.wheel-label {
+  position: absolute;
+  display: -webkit-box;
+  overflow: hidden;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  text-overflow: ellipsis;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .hub {
@@ -321,8 +458,8 @@ h2 {
   z-index: 2;
   display: grid;
   place-items: center;
-  width: 80px;
-  height: 80px;
+  width: 100px;
+  height: 100px;
   border: 2px solid var(--accent);
   border-radius: 50%;
   background: var(--canvas);
@@ -330,17 +467,18 @@ h2 {
   transform: translate(-50%, -50%);
 }
 
-.pointer {
+.hub-pointer {
   position: absolute;
-  top: -12px;
+  top: -16px;
   left: 50%;
-  z-index: 2;
   width: 0;
   height: 0;
-  border-right: 9px solid transparent;
-  border-left: 9px solid transparent;
-  border-top: 18px solid var(--accent);
+  border-right: 10px solid transparent;
+  border-bottom: 18px solid var(--accent);
+  border-left: 10px solid transparent;
+  filter: drop-shadow(0 0 1px var(--canvas)) drop-shadow(0 3px 6px var(--canvas));
   transform: translateX(-50%);
+  z-index: 3;
 }
 
 .preview-meta {
@@ -534,6 +672,120 @@ textarea {
   font-size: 12px;
 }
 
+.presets {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--hairline);
+}
+
+.preset-head {
+  display: flex;
+  justify-content: space-between;
+  color: var(--mute);
+  font-size: 10px;
+}
+
+.preset-save {
+  display: flex;
+  gap: var(--s-2);
+}
+
+.preset-save input {
+  min-width: 0;
+  flex: 1;
+  height: 32px;
+  padding: 0 var(--s-3);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-control);
+  background: var(--inset);
+  color: var(--ink);
+  font-size: 11px;
+}
+
+.preset-add,
+.preset-remove {
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-control);
+  background: var(--surface-active);
+  color: var(--body);
+  font-size: 11px;
+}
+
+.preset-add {
+  padding: 0 var(--s-3);
+}
+
+.preset-add:hover:not(:disabled),
+.preset-remove:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.preset-add:disabled,
+.preset-apply:disabled {
+  opacity: 0.5;
+}
+
+.preset-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.preset-row {
+  display: flex;
+  gap: 4px;
+}
+
+.preset-apply {
+  display: flex;
+  flex: 1;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-2);
+  min-width: 0;
+  padding: 6px var(--s-3);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-control);
+  background: var(--inset);
+  text-align: left;
+}
+
+.preset-apply:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.preset-apply strong {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.preset-apply small {
+  flex: none;
+  color: var(--faint);
+  font-size: 9px;
+}
+
+.preset-remove {
+  width: 30px;
+  flex: none;
+  padding: 0;
+  font-size: 14px;
+}
+
+.preset-empty {
+  margin: 0;
+  color: var(--faint);
+  font-size: 10px;
+  line-height: 15px;
+}
+
 .history {
   display: flex;
   flex-direction: column;
@@ -588,7 +840,7 @@ textarea {
   font-size: 11px;
 }
 
-@media (max-width: 1180px) {
+@media (max-width: 1400px) {
   .card-body {
     grid-template-columns: 1fr;
   }
