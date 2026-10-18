@@ -20,7 +20,8 @@ import {
   readJson,
   readMember
 } from './protocol'
-import { danmuInfoSchema, fingerSchema, roomInitSchema } from './schema'
+import { danmuInfoSchema, fingerSchema, navSchema, roomInitSchema } from './schema'
+import { signWbi, wbiKeysFromUrls, type WbiKeys } from './wbi'
 
 const USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
@@ -45,6 +46,8 @@ export class BilibiliAdapter implements PlatformAdapter {
   private activeRoomId = ''
   private buvid = ''
   private signal: AbortSignal | null = null
+  private wbiKeys: WbiKeys | null = null
+  private wbiFetchedAt = 0
 
   constructor(private readonly context: PlatformContext) {}
 
@@ -127,18 +130,42 @@ export class BilibiliAdapter implements PlatformAdapter {
     }
   }
 
+  private async ensureWbiKeys(signal: AbortSignal): Promise<WbiKeys> {
+    const now = this.context.clock.now()
+    if (this.wbiKeys !== null && now - this.wbiFetchedAt < 30 * 60 * 1000) {
+      return this.wbiKeys
+    }
+
+    const data = await this.fetchJson('https://api.bilibili.com/x/web-interface/nav', signal, '')
+    const parsed = navSchema.safeParse(data)
+    const wbi = parsed.success ? parsed.data.data?.wbi_img : undefined
+    if (wbi === undefined) {
+      throw new PlatformError('protocol', 'B站没有返回 WBI 密钥，无法签名弹幕接口')
+    }
+
+    this.wbiKeys = wbiKeysFromUrls(wbi.img_url, wbi.sub_url)
+    this.wbiFetchedAt = now
+    return this.wbiKeys
+  }
+
   private async fetchDanmuInfo(roomId: number, cookie: string, signal: AbortSignal) {
+    const keys = await this.ensureWbiKeys(signal)
+    const query = signWbi(
+      { id: roomId, type: 0, web_location: 444.8 },
+      keys,
+      Math.floor(this.context.clock.now() / 1000)
+    )
     const data = await this.fetchJson(
-      'https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?id=' +
-        roomId +
-        '&type=0',
+      'https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?' + query,
       signal,
       cookie
     )
     const parsed = danmuInfoSchema.safeParse(data)
     if (!parsed.success) throw new PlatformError('protocol', 'B站返回了无法解析的弹幕服务器信息')
     if (parsed.data.code === -352) {
-      throw new PlatformError('rate-limited', 'B站风控拦截了匿名连接，请稍后重试或更换网络')
+      // 密钥可能过期；下次重连会重新取 nav。
+      this.wbiKeys = null
+      throw new PlatformError('rate-limited', 'B站弹幕接口仍返回 -352，请稍后重试或更换网络')
     }
     if (parsed.data.code !== 0 || parsed.data.data === undefined) {
       throw new PlatformError('auth', parsed.data.message ?? '无法获取弹幕 token')

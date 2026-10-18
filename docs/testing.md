@@ -37,14 +37,27 @@ npm run smoke
 
 真实抓包必须脱敏：去掉 uid、昵称、token、cookie。fixture 只保留解析所需字段与二进制结构。
 
+WBI 签名有固定向量测试：`nav` 的 img/sub key + 固定 `wts` → 真实 `w_rid`，防止混入表或参数排序被改坏。
+
+## B站真连（手动）
+
+真连测试默认跳过，不拖慢 CI。需要网络：
+
+```powershell
+$env:LIVE_BILIBILI='1'
+$env:LIVE_ROOM='21144080'   # 可选，默认就是这个高人气房间
+npx vitest run tests/bilibili-live.test.ts --reporter=verbose
+```
+
+它会完整走 `room_init → nav WBI 签名 → getDanmuInfo → WebSocket 认证`，并打印 8 秒内收到的弹幕数量。
+
 ## 冒烟
 
 `npm run smoke` 启动 Electron，加载控制台，触发一次本地模拟投骰：
 
 - 截图保存到 `artifacts/smoke/`。
-- 检查页面没有 `#root:empty`。
-- 捕获 `console.error` 与 `render-process-gone`，非空即失败。
-- overlay 截图必须能看到骰子与结果数字。
+- 人工检查控制台不是白屏、overlay 能看到骰子与结果数字。
+- 当前冒烟不自动断言 console error；交付前仍要查看终端与截图。
 
 ## CI 顺序
 

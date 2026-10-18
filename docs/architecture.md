@@ -98,7 +98,7 @@ export interface PlatformAdapter {
   readonly descriptor: PlatformDescriptor;
 
   /** 失败必须抛 PlatformError，且不留下半连接状态。 */
-  connect(config: PlatformConfig, signal: AbortSignal): Promise<void>;
+  connect(config: unknown, signal: AbortSignal): Promise<void>;
   disconnect(): Promise<void>;
 
   /** 只读快照；UI 拿不到 socket、cookie 等实现细节。 */
@@ -113,12 +113,14 @@ export interface PlatformContext {
 
 export interface PlatformAdapterFactory {
   readonly descriptor: PlatformDescriptor;
-  readonly configSchema: ZodType<PlatformConfig>;
+  readonly configSchema: ZodType;
   create(context: PlatformContext): PlatformAdapter;
 }
 ```
 
 `connect` 接收 `AbortSignal`，断线和退出时统一取消重连、心跳与请求，不允许后台残留定时器。
+
+B站适配器的 `getDanmuInfo` 需要 WBI 签名：先从 `nav` 取 `wbi_img`，推导 mixinKey，再对 `id / type / web_location / wts` 排序签名生成 `w_rid`。缺参数时接口会返回 `-352`，看起来像风控，实际是签名缺失。
 
 ### 4.3 工具
 
@@ -134,17 +136,20 @@ export interface ToolManifest {
 
 export interface ToolContext {
   readonly clock: Clock;
-  readonly timer: TimerService;
+  readonly timer: TimerScope;
+  readonly random: RandomSource;
   readonly logger: Logger;
-  readonly config: ToolConfigHandle;
+  readonly history: ToolHistory;
   readonly present: (presentation: Presentation) => Promise<void>;
-  readonly publish: (event: EngineEvent) => void;
+  readonly notifyChange: () => void;
+  readonly announce: (text: string) => void;
 }
 
 export interface InteractionTool {
   readonly manifest: ToolManifest;
 
-  activate(context: ToolContext): Promise<void>;
+  activate(context: ToolContext, config: unknown): Promise<void>;
+  updateConfig(config: unknown): Promise<void>;
   deactivate(): Promise<void>;
 
   /** 消费了返回 true；未命中返回 false，交给下一个工具。 */

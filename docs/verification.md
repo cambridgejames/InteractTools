@@ -1,7 +1,7 @@
 # 验证记录
 
 - 日期：2026-10-18
-- 验证时代码：`134f2ef`（后续文档提交不改变功能）
+- 验证时代码：WBI 修复后的工作区（见 `git log`）
 - 环境：Windows 10.0.26200 / Node 24.19 / Electron 44.9.0 / electron-vite 6.0.0
 
 ## 自动检查
@@ -10,11 +10,12 @@
 | --- | --- | --- |
 | 类型 | `npm run typecheck` | 通过 |
 | 静态检查 | `npm run lint` | 通过（ESLint + 依赖边界 + 设计 token） |
-| 单元测试 | `npm run test` | 通过，5 个文件 / 28 个用例 |
+| 单元测试 | `npm run test` | 通过，6 个文件 / 30 个用例（另 1 个真连测试默认跳过） |
 | 构建 | `npm run build` | 通过 |
 | 冒烟 | `npm run smoke` | 通过，生成控制台与 overlay 截图 |
 | 打包 | `npm run package:win` | 通过，NSIS + portable |
 | 打包后冒烟 | `release/win-unpacked/1017 互动工坊.exe --smoke` | 通过，进程正常退出 |
+| B站真连 | `LIVE_BILIBILI=1 npx vitest run tests/bilibili-live.test.ts` | 通过，房间 21144080，8 秒 16 条弹幕 |
 
 ## 冒烟截图
 
@@ -32,7 +33,7 @@
 ## 覆盖范围
 
 - 基础设施：AGENTS.md、DESIGN.md、docs、ADR、4 个 agent skill、CI。
-- 平台层：统一 `PlatformAdapter`，本地模拟 + B站匿名弹幕，协议 fixture 测试。
+- 平台层：统一 `PlatformAdapter`，本地模拟 + B站匿名弹幕（WBI 签名），协议 fixture 与真连测试。
 - 工具层：统一 `InteractionTool`，投骰子完整状态机与历史记录。
 - 物理：六种面数、凸包、cannon-es 固定步长、停稳判定、d4 读底面。
 - 呈现：主进程录制帧，overlay 回放 Three.js，透明置顶窗。
@@ -41,7 +42,7 @@
 
 ## 已知限制
 
-1. B站匿名 `getDanmuInfo` 在验证网络返回 `-352` 风控，无法完成真连；适配器错误处理与协议解析已测试。
+1. B站真连已通过 WBI 签名验证；若特定网络仍返回 `-352`，可能是网络/风控，不一定是签名问题。
 2. d10 使用五角双锥，而非标准五角偏方面体。
 3. OBS 窗口捕获尚未在 OBS 内实测；截图确认透明通道存在。
 4. NSIS 安装包已构建，但未走完整安装向导点击验证。

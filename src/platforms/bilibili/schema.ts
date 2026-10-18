@@ -23,6 +23,20 @@ export const danmuInfoSchema = z.object({
     .optional()
 })
 
+export const navSchema = z.object({
+  code: z.number(),
+  data: z
+    .object({
+      wbi_img: z
+        .object({
+          img_url: z.string(),
+          sub_url: z.string()
+        })
+        .optional()
+    })
+    .optional()
+})
+
 export const fingerSchema = z.object({
   code: z.number(),
   data: z.object({ b_3: z.string(), b_4: z.string() }).optional()
