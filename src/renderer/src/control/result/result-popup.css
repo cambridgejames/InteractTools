@@ -139,6 +139,62 @@
   text-align: right;
 }
 
+.power-meter {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--s-3);
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--hairline));
+  border-radius: var(--r-control);
+  background: var(--surface-active);
+}
+
+.power-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.power-head span {
+  color: var(--mute);
+  font-size: 10px;
+  letter-spacing: 0.8px;
+}
+
+.power-head strong {
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 24px;
+  line-height: 1;
+}
+
+.power-head em {
+  color: var(--faint);
+  font-size: 10px;
+  font-style: normal;
+}
+
+.power-track {
+  height: 6px;
+  overflow: hidden;
+  border-radius: var(--r-chip);
+  background: var(--hairline);
+}
+
+.power-track i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+}
+
+.power-meter p {
+  margin: 0;
+  color: var(--mute);
+  font-size: 10px;
+  line-height: 15px;
+}
+
 .stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

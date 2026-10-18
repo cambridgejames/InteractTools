@@ -237,7 +237,7 @@ Electron main
 5. 倒计时结束，`domain/aggregate.ts` 聚合出力度。
 6. `physics/simulate.ts` 用固定 seed 跑 cannon-es，得到点数与逐帧位姿。
 7. `DiceTool` 调 `ctx.present({ kind: 'dice.roll', payload })`。
-8. `SurfaceHost` 把 `dice.roll` 发给控制台，`DicePanel` 用 Three.js 就地回放。
+8. `SurfaceHost` 把 `dice.roll` 发给控制台，`DicePanel` 用 Three.js 就地回放。`directRoll` 开启时，`direct` action 跳过收集，用 fallbackPower 直接投。
 9. 面板动画结束后，`SurfaceHost` 把 `dice.result` 发给控制台，ResultOverlay 播放彩带烟花并等待手动关闭。
 10. 控制台通过快照和 feed 同步状态；历史记录写入配置目录。
 
@@ -334,7 +334,8 @@ idle ──start──▶ collecting ──timeout──▶ rolling ──frames
       "countdownSeconds": 30,
       "aggregation": "median",
       "fallbackPower": 50,
-      "commandAliases": ["力度", "power"]
+      "commandAliases": ["力度", "power"],
+      "directRoll": false
     },
     "wheel": {
       "segments": ["一等奖", "二等奖", "三等奖", "谢谢参与"],

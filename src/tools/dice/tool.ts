@@ -102,6 +102,9 @@ export class DiceTool implements InteractionTool {
       case 'preview':
         await this.preview()
         return
+      case 'direct':
+        await this.rollDirect()
+        return
       case 'reset':
         this.reset()
         return
@@ -195,6 +198,27 @@ export class DiceTool implements InteractionTool {
         formatPower(summary.value) +
         '，开始投掷。'
     )
+    await this.roll(summary, true)
+  }
+
+  private async rollDirect(): Promise<void> {
+    if (!this.config.directRoll) throw new Error('直接投掷未开启')
+    if (this.phase === 'rolling') return
+
+    const context = this.requireContext()
+    this.generation += 1
+    this.clearTimers()
+    this.participants.clear()
+    this.countdownEndsAt = null
+    context.publishCommandHint(null)
+
+    const summary = fallbackSummary(this.config.fallbackPower, this.config.aggregation)
+    this.summary = summary
+    this.lastResult = null
+    context.announce(
+      '直接投掷：未收集力度，使用兜底力度 ' + formatPower(summary.value) + '。'
+    )
+    this.notify()
     await this.roll(summary, true)
   }
 

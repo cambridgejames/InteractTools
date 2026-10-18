@@ -45,6 +45,8 @@ export interface DiceConfig {
   readonly aggregation: Aggregation
   readonly fallbackPower: number
   readonly commandAliases: readonly string[]
+  /** 允许主播跳过收集，直接用兜底力度投掷。 */
+  readonly directRoll: boolean
 }
 
 export const powerSummarySchema = z
@@ -94,7 +96,8 @@ export const diceConfigSchema = z
     countdownSeconds: z.number().int().min(5).max(600),
     aggregation: z.enum(AGGREGATIONS),
     fallbackPower: z.number().int().min(0).max(100),
-    commandAliases: z.array(z.string().trim().min(1).max(16)).min(1).max(8)
+    commandAliases: z.array(z.string().trim().min(1).max(16)).min(1).max(8),
+    directRoll: z.boolean()
   })
 
 export const DEFAULT_DICE_CONFIG: DiceConfig = {
@@ -102,5 +105,6 @@ export const DEFAULT_DICE_CONFIG: DiceConfig = {
   countdownSeconds: 30,
   aggregation: 'median',
   fallbackPower: 50,
-  commandAliases: ['力度', 'power']
+  commandAliases: ['力度', 'power'],
+  directRoll: false
 }

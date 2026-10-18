@@ -4,6 +4,7 @@ import { AGGREGATIONS, DICE_FACES, type Aggregation, type DiceFaces } from '@con
 import type { DiceToolView } from '@contracts/view'
 import AppIcon from './AppIcon.vue'
 import CountdownRing from './CountdownRing.vue'
+import ToggleSwitch from './ToggleSwitch.vue'
 import { actions, state } from '../store'
 import { DiceScene } from '../result/dice-scene'
 import { formatPower, methodLabel, phaseLabel } from '../../shared/format'
@@ -78,6 +79,14 @@ const startLabel = computed(() => (props.view.phase === 'result' ? '再投一次
 
 function isDiceFaces(value: number): value is DiceFaces {
   return (DICE_FACES as readonly number[]).includes(value)
+}
+
+async function direct(): Promise<void> {
+  await actions.toolAction('dice', { type: 'direct' })
+}
+
+async function setDirectRoll(value: boolean): Promise<void> {
+  await actions.updateDiceConfig({ directRoll: value })
 }
 
 async function sendHint(power: number): Promise<void> {
@@ -189,6 +198,13 @@ function participantPower(value: number): string {
             <AppIcon name="stop" :size="15" />
             取消本轮
           </button>
+          <button
+            v-if="view.config.directRoll && !rolling"
+            class="btn secondary"
+            @click="direct"
+          >
+            直接投掷
+          </button>
           <button class="btn ghost" :disabled="locked" @click="preview">
             <AppIcon name="eye" :size="15" />
             预览
@@ -224,6 +240,14 @@ function participantPower(value: number): string {
               <option value="trimmedMean">截尾均值</option>
             </select>
           </label>
+          <label class="toggle-field">
+            <span>直接投掷</span>
+            <ToggleSwitch
+              :model-value="view.config.directRoll"
+              label="允许直接投掷"
+              @update:model-value="setDirectRoll"
+            />
+          </label>
         </div>
       </div>
 
@@ -242,6 +266,17 @@ function participantPower(value: number): string {
             <span>聚合</span>
             <strong>{{ methodLabel(view.config.aggregation) }}</strong>
           </div>
+        </div>
+
+        <div class="power-meter">
+          <div class="power-head">
+            <span>合力</span>
+            <strong>{{ power === null ? '—' : formatPower(power) }}<em>/100</em></strong>
+          </div>
+          <div class="power-track">
+            <i :style="{ width: (power ?? 0) + '%' }" />
+          </div>
+          <p>力度越高，骰子抛得越猛；最终点数仍由物理碰撞决定。</p>
         </div>
 
         <p v-if="collecting" class="hint">
@@ -489,7 +524,7 @@ h2 {
 
 .config {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--s-3);
   width: 100%;
 }
@@ -500,6 +535,10 @@ h2 {
   gap: 6px;
   color: var(--mute);
   font-size: 11px;
+}
+
+.toggle-field {
+  justify-content: flex-end;
 }
 
 .config select,
@@ -579,6 +618,66 @@ h2 {
   color: var(--faint);
   font-size: 11px;
   font-style: normal;
+}
+
+.power-meter {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--s-3);
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--hairline));
+  border-radius: var(--r-control);
+  background: var(--surface-active);
+}
+
+.power-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.power-head span {
+  color: var(--mute);
+  font-size: 10px;
+  letter-spacing: 0.8px;
+}
+
+.power-head strong {
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.power-head em {
+  color: var(--faint);
+  font-size: 10px;
+  font-style: normal;
+}
+
+.power-track {
+  height: 6px;
+  overflow: hidden;
+  border-radius: var(--r-chip);
+  background: var(--hairline);
+}
+
+.power-track i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width var(--dur-base) var(--ease-out);
+}
+
+.power-meter p {
+  margin: 0;
+  color: var(--mute);
+  font-size: 10px;
+  line-height: 15px;
 }
 
 .hint {

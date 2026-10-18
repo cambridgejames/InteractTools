@@ -57,6 +57,11 @@ const remainingSeconds = computed(() => {
   const endsAt = props.view.countdownEndsAt
   return endsAt === null ? 0 : Math.max(0, Math.ceil((endsAt - now.value) / 1000))
 })
+const countdownProgress = computed(() => {
+  const total = props.view.config.countdownSeconds
+  if (total <= 0 || props.view.countdownEndsAt === null) return 0
+  return Math.min(100, Math.max(0, (remainingSeconds.value / total) * 100))
+})
 const winnerLabel = computed(() => {
   const result = props.view.lastResult
   if (result === null) return ''
@@ -64,7 +69,7 @@ const winnerLabel = computed(() => {
   return result.winners.map((index) => result.options[index] ?? '').join(' / ')
 })
 const phaseLabel = computed(() => {
-  if (props.view.phase === 'collecting') return '投票中 · ' + String(remainingSeconds.value) + 's'
+  if (props.view.phase === 'collecting') return '投票中'
   if (props.view.phase === 'result') return '已结束'
   return '待开始'
 })
@@ -173,6 +178,15 @@ async function sendHint(index: number): Promise<void> {
 
     <div class="body">
       <div class="live">
+        <div v-if="view.phase === 'collecting'" class="countdown-hero">
+          <div class="countdown-line">
+            <strong>{{ remainingSeconds }}</strong>
+            <span>秒后结束</span>
+          </div>
+          <div class="countdown-track">
+            <i :style="{ width: countdownProgress + '%' }" />
+          </div>
+        </div>
         <p class="question">{{ view.question || '本轮投票' }}</p>
         <ul class="options">
           <li
@@ -192,7 +206,7 @@ async function sendHint(index: number): Promise<void> {
         <div class="meta">
           <span>共 {{ total }} 票</span>
           <span v-if="view.phase === 'result'" class="winner-text">胜出：{{ winnerLabel }}</span>
-          <span v-else-if="view.phase === 'collecting'">剩余 {{ remainingSeconds }} 秒 · 发送「投票 1」或选项文字</span>
+          <span v-else-if="view.phase === 'collecting'">发送「投票 1」或选项文字</span>
           <span v-else>等待开始</span>
         </div>
       </div>
@@ -355,6 +369,53 @@ h2 {
   gap: var(--s-3);
   padding-right: var(--s-5);
   border-right: 1px solid var(--hairline);
+}
+
+.countdown-hero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-4);
+  border: 1px solid color-mix(in srgb, var(--accent) 26%, var(--hairline));
+  border-radius: var(--r-card);
+  background: var(--surface-active);
+}
+
+.countdown-line {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.countdown-line strong {
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 64px;
+  font-weight: 700;
+  line-height: 64px;
+  letter-spacing: -3px;
+  font-variant-numeric: tabular-nums;
+  text-shadow: var(--glow-accent);
+}
+
+.countdown-line span {
+  color: var(--mute);
+  font-size: 12px;
+}
+
+.countdown-track {
+  height: 5px;
+  overflow: hidden;
+  border-radius: var(--r-chip);
+  background: var(--hairline);
+}
+
+.countdown-track i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width 200ms linear;
 }
 
 .question {

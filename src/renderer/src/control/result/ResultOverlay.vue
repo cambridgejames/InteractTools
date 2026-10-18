@@ -59,6 +59,14 @@ function handleKeydown(event: KeyboardEvent): void {
           <div><span>力度</span><strong>{{ formatPower(dice.power) }}</strong></div>
           <div><span>聚合</span><strong>{{ methodLabel(dice.stats.method) }}</strong></div>
         </div>
+        <div class="power-meter">
+          <div class="power-head">
+            <span>抛投力度</span>
+            <strong>{{ formatPower(dice.power) }}<em>/100</em></strong>
+          </div>
+          <div class="power-track"><i :style="{ width: dice.power + '%' }" /></div>
+          <p>力度越高，骰子抛得越猛；最终点数仍由物理碰撞决定。</p>
+        </div>
       </template>
 
       <template v-else-if="wheel">

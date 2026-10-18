@@ -186,6 +186,20 @@ describe('DiceTool', () => {
     expect(history.entries).toHaveLength(1)
     expect(announcements.some((item) => item.includes('开始投掷'))).toBe(true)
 
+    await tool.updateConfig({ ...config, directRoll: true })
+    await tool.handleAction({ type: 'direct' })
+    const direct = tool.view()
+    if (direct.toolId !== 'dice') throw new Error('expected dice view')
+    expect(direct.phase).toBe('rolling')
+    expect(direct.summary?.fallback).toBe(true)
+    expect(direct.summary?.value).toBe(config.fallbackPower)
+
+    await timers.advance(9_000)
+    await new Promise((resolve) => setImmediate(resolve))
+    const afterDirect = tool.view()
+    expect(afterDirect.phase).toBe('result')
+    expect(afterDirect.history).toHaveLength(2)
+
     await tool.deactivate()
   })
 })
