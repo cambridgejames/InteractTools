@@ -3,6 +3,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { AGGREGATIONS, DICE_FACES, type Aggregation, type DiceFaces } from '@contracts/dice'
 import type { DiceToolView } from '@contracts/view'
 import AppIcon from './AppIcon.vue'
+import AppSelect from './AppSelect.vue'
 import CountdownRing from './CountdownRing.vue'
 import ToggleSwitch from './ToggleSwitch.vue'
 import { actions, state } from '../store'
@@ -76,6 +77,12 @@ const participants = computed(() => props.view.participants)
 const power = computed(() => props.view.summary?.value ?? null)
 const resultValue = computed(() => props.view.lastResult?.value ?? null)
 const startLabel = computed(() => (props.view.phase === 'result' ? '再投一次' : '开始收集'))
+const faceOptions = DICE_FACES.map((faces) => ({ value: String(faces), label: 'D' + String(faces) }))
+const aggregationOptions = [
+  { value: 'median', label: '中位数' },
+  { value: 'mean', label: '平均值' },
+  { value: 'trimmedMean', label: '截尾均值' }
+]
 
 function isDiceFaces(value: number): value is DiceFaces {
   return (DICE_FACES as readonly number[]).includes(value)
@@ -98,15 +105,12 @@ function isAggregation(value: string): value is Aggregation {
   return (AGGREGATIONS as readonly string[]).includes(value)
 }
 
-function onFaces(event: Event): void {
-  if (!(event.target instanceof HTMLSelectElement)) return
-  const value = Number(event.target.value)
-  if (isDiceFaces(value)) void actions.updateDiceConfig({ faces: value })
+function onFaces(value: string): void {
+  const faces = Number(value)
+  if (isDiceFaces(faces)) void actions.updateDiceConfig({ faces })
 }
 
-function onAggregation(event: Event): void {
-  if (!(event.target instanceof HTMLSelectElement)) return
-  const value = event.target.value
+function onAggregation(value: string): void {
   if (isAggregation(value)) void actions.updateDiceConfig({ aggregation: value })
 }
 
@@ -214,9 +218,13 @@ function participantPower(value: number): string {
         <div class="config">
           <label>
             <span>骰子</span>
-            <select :value="view.config.faces" :disabled="locked" @change="onFaces">
-              <option v-for="faces in DICE_FACES" :key="faces" :value="faces">D{{ faces }}</option>
-            </select>
+            <AppSelect
+              :model-value="String(view.config.faces)"
+              :options="faceOptions"
+              :disabled="locked"
+              label="骰子面数"
+              @update:model-value="onFaces"
+            />
           </label>
           <label>
             <span>倒计时</span>
@@ -234,11 +242,13 @@ function participantPower(value: number): string {
           </label>
           <label>
             <span>聚合</span>
-            <select :value="view.config.aggregation" :disabled="locked" @change="onAggregation">
-              <option value="median">中位数</option>
-              <option value="mean">平均值</option>
-              <option value="trimmedMean">截尾均值</option>
-            </select>
+            <AppSelect
+              :model-value="view.config.aggregation"
+              :options="aggregationOptions"
+              :disabled="locked"
+              label="力度聚合方式"
+              @update:model-value="onAggregation"
+            />
           </label>
           <label class="toggle-field">
             <span>直接投掷</span>

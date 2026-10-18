@@ -40,7 +40,8 @@ const api: RendererApi = {
   windowDisplays: () => ipcRenderer.invoke(IPC.windowDisplays),
   setWindowDisplay: (display) => ipcRenderer.invoke(IPC.windowDisplay, display),
   setFeedMode: (mode) => ipcRenderer.invoke(IPC.feedSetMode, mode),
-  openExternal: (url) => ipcRenderer.invoke(IPC.openExternal, url)
+  openExternal: (url) => ipcRenderer.invoke(IPC.openExternal, url),
+  clearAllData: () => ipcRenderer.invoke(IPC.clearAllData)
 }
 
 contextBridge.exposeInMainWorld('api', api)

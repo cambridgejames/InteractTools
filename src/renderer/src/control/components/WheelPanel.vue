@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, watch } from 'vue'
-import type { WheelPreset } from '@contracts/wheel'
+import { WHEEL_LABEL_MAX, type WheelPreset } from '@contracts/wheel'
 import type { WheelToolView } from '@contracts/view'
 import AppIcon from './AppIcon.vue'
 import BrandMark from './BrandMark.vue'
@@ -73,9 +73,14 @@ async function persistSegments(showError: boolean): Promise<boolean> {
     return false
   }
 
-  const next = segments.slice(0, 16)
+  let next = segments.slice(0, 16)
+  const truncated = next.some((segment) => Array.from(segment).length > WHEEL_LABEL_MAX)
+  if (truncated) {
+    next = next.map((segment) => Array.from(segment).slice(0, WHEEL_LABEL_MAX).join(''))
+    showToast('单个格子最多 ' + String(WHEEL_LABEL_MAX) + ' 字，已截断', 'info')
+  }
   if (segments.length > 16 && showError) showToast('最多 16 个格子，已截断', 'info')
-  if (next.length !== segments.length) segmentsText.value = next.join('\n')
+  if (next.length !== segments.length || truncated) segmentsText.value = next.join('\n')
   return actions.updateToolConfig('wheel', { segments: next })
 }
 
@@ -290,7 +295,7 @@ async function clearHistory(): Promise<void> {
         </div>
 
         <label class="field">
-          <span>格子内容（每行一个，2–16 个）</span>
+          <span>格子内容（每行一个，2–16 个，每格最多 {{ WHEEL_LABEL_MAX }} 字）</span>
           <textarea v-model="segmentsText" rows="6" spellcheck="false" @blur="persistSegments(true)" />
         </label>
 

@@ -21,7 +21,8 @@ export const IPC = {
   windowDisplays: 'window:displays',
   windowDisplay: 'window:set-display',
   feedSetMode: 'feed:set-mode',
-  openExternal: 'app:open-external'
+  openExternal: 'app:open-external',
+  clearAllData: 'app:clear-all-data'
 } as const
 
 export interface WindowDisplayOption {
@@ -62,4 +63,5 @@ export interface RendererApi {
   setWindowDisplay(display: string): Promise<void>
   setFeedMode(mode: 'full' | 'collapsed' | 'hidden'): Promise<void>
   openExternal(url: string): Promise<void>
+  clearAllData(): Promise<boolean>
 }

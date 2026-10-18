@@ -32,6 +32,22 @@ describe('tool presets', () => {
     expect(vote.success).toBe(true)
   })
 
+  it('accepts a 48-character wheel label and rejects 49', () => {
+    const short = 'A'.repeat(48)
+    expect(
+      wheelConfigSchema.safeParse({
+        ...DEFAULT_WHEEL_CONFIG,
+        segments: [short, 'B']
+      }).success
+    ).toBe(true)
+    expect(
+      wheelConfigSchema.safeParse({
+        ...DEFAULT_WHEEL_CONFIG,
+        segments: [short + 'A', 'B']
+      }).success
+    ).toBe(false)
+  })
+
   it('rejects invalid preset shapes', () => {
     const wheel = wheelConfigSchema.safeParse({
       ...DEFAULT_WHEEL_CONFIG,

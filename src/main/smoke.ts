@@ -43,6 +43,14 @@ export async function runSmoke(application: Application): Promise<void> {
   await delay(300)
   await application.controlWindow.capture(join(output, 'control-settings.png'))
   await application.controlWindow.browserWindow.webContents.executeJavaScript(
+    "document.querySelector('.app-select .trigger')?.click()"
+  )
+  await delay(150)
+  await application.controlWindow.capture(join(output, 'control-settings-select.png'))
+  await application.controlWindow.browserWindow.webContents.executeJavaScript(
+    "document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))"
+  )
+  await application.controlWindow.browserWindow.webContents.executeJavaScript(
     "document.querySelector('.app-content')?.scrollTo(0, 99999)"
   )
   await delay(200)

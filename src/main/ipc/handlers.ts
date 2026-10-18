@@ -1,4 +1,6 @@
-import { app, ipcMain, shell } from 'electron'
+import { app, dialog, ipcMain, shell } from 'electron'
+import { rm } from 'node:fs/promises'
+import { join } from 'node:path'
 import { z } from 'zod'
 import { IPC } from '@contracts/ipc'
 import type { Engine } from '@kernel/engine'
@@ -32,6 +34,28 @@ export function registerIpc(engine: Engine, controlWindow: ControlWindow): void 
 
   ipcMain.handle(IPC.openExternal, async (_event, rawUrl: unknown) => {
     await shell.openExternal(githubUrlSchema.parse(rawUrl))
+  })
+
+  ipcMain.handle(IPC.clearAllData, async () => {
+    const choice = await dialog.showMessageBox({
+      type: 'warning',
+      buttons: ['取消', '清除并重启'],
+      defaultId: 0,
+      cancelId: 0,
+      noLink: true,
+      title: '清除所有数据',
+      message: '确定要清除所有本地数据吗？',
+      detail: '会删除配置、工具历史和日志，并重新启动应用。此操作不可撤销。'
+    })
+    if (choice.response !== 1) return false
+
+    const userData = app.getPath('userData')
+    await rm(join(userData, 'config.json'), { force: true })
+    await rm(join(userData, 'history'), { recursive: true, force: true })
+    await rm(join(userData, 'logs'), { recursive: true, force: true })
+    app.relaunch()
+    app.exit(0)
+    return true
   })
 
   ipcMain.handle(IPC.windowDisplay, async (_event, rawDisplay: unknown) => {

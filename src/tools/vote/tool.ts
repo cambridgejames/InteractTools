@@ -24,8 +24,8 @@ interface Ballot {
 /**
  * 弹幕投票工具。
  *
- * 命令驱动：观众在倒计时内发送「投票 1」或「投票 选项文字」；同一观众
- * 以最后一条有效票为准。倒计时结束后统计并列最高票，结果交给结果窗。
+ * 命令驱动：观众在倒计时内发送「投票 1」或「投票 选项文字」。默认只计
+ * 第一票；开启 allowRevote 后后投覆盖前票。倒计时结束后统计并列最高票。
  */
 export class VoteTool implements InteractionTool {
   readonly manifest = voteManifest
@@ -93,7 +93,10 @@ export class VoteTool implements InteractionTool {
       return true
     }
 
-    this.ballots.set(toUserKey(message.platform, message.userId), {
+    const userKey = toUserKey(message.platform, message.userId)
+    if (!this.config.allowRevote && this.ballots.has(userKey)) return true
+
+    this.ballots.set(userKey, {
       index: parsed.index,
       userName: message.userName,
       at: message.receivedAt
@@ -167,7 +170,10 @@ export class VoteTool implements InteractionTool {
     void context.present({ kind: 'dismiss', toolId: 'vote' }).catch(() => undefined)
     this.notify()
     context.announce(
-      '投票开始：' + displayQuestion(this.config.question) + '。发送「投票 1」或选项文字。'
+      '投票开始：' +
+        displayQuestion(this.config.question) +
+        '。发送「投票 1」或选项文字；' +
+        (this.config.allowRevote ? '可以改票，后投覆盖前票。' : '每人只计第一票。')
     )
     this.resultTimer = context.timer.setTimeout(
       Math.max(0, endsAt - context.clock.now()),

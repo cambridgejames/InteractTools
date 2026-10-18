@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import type { VoteConfig } from '@contracts/vote'
 import type { VoteToolView } from '@contracts/view'
 import AppIcon from '../components/AppIcon.vue'
+import ToggleSwitch from '../components/ToggleSwitch.vue'
 import { actions, showToast } from '../store'
 
 type VotePreset = VoteConfig['presets'][number]
@@ -72,6 +73,10 @@ const winnerLabel = computed(() => {
   if (result.winners.length === 0) return '无人投票'
   return result.winners.map((index) => result.options[index] ?? '').join(' / ')
 })
+const voteRule = computed(() =>
+  props.view.config.allowRevote ? '同一观众以最后一票为准。' : '同一观众只计第一票。'
+)
+
 const phaseLabel = computed(() => {
   if (props.view.phase === 'collecting') return '投票中'
   if (props.view.phase === 'result') return '已结束'
@@ -147,7 +152,8 @@ async function savePreset(): Promise<void> {
     name,
     question: question.value.trim(),
     options: options.value,
-    countdownSeconds: Math.round(Number(countdown.value))
+    countdownSeconds: Math.round(Number(countdown.value)),
+    allowRevote: props.view.config.allowRevote
   }
   const presets = existing === undefined
     ? [...props.view.config.presets, preset]
@@ -167,9 +173,14 @@ async function applyPreset(preset: VotePreset): Promise<void> {
   const ok = await actions.updateToolConfig('vote', {
     question: preset.question,
     options: preset.options,
-    countdownSeconds: preset.countdownSeconds
+    countdownSeconds: preset.countdownSeconds,
+    allowRevote: preset.allowRevote
   })
   if (ok) showToast('已载入「' + preset.name + '」', 'success')
+}
+
+async function setAllowRevote(value: boolean): Promise<void> {
+  await actions.updateToolConfig('vote', { allowRevote: value })
 }
 
 async function removePreset(id: string): Promise<void> {
@@ -208,7 +219,7 @@ async function sendHint(index: number): Promise<void> {
         <span class="icon"><AppIcon name="vote" :size="20" /></span>
         <div>
           <h2>弹幕投票</h2>
-          <p>观众发「投票 1」或选项文字；同一观众以最后一票为准。</p>
+          <p>观众发「投票 1」或选项文字；{{ voteRule }}</p>
         </div>
       </div>
       <span class="phase" :class="view.phase">{{ phaseLabel }}</span>
@@ -284,6 +295,19 @@ async function sendHint(index: number): Promise<void> {
             </div>
           </label>
           <span class="auto-save">自动保存</span>
+        </div>
+
+        <div class="revote-row">
+          <div>
+            <strong>允许改票</strong>
+            <span>关闭时只计第一票；开启后同一观众的后票覆盖前票。</span>
+          </div>
+          <ToggleSwitch
+            :model-value="view.config.allowRevote"
+            label="允许改票"
+            :disabled="locked"
+            @update:model-value="setAllowRevote"
+          />
         </div>
 
         <div class="presets">
@@ -628,6 +652,35 @@ h2 {
 .field textarea:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.revote-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: var(--s-3);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-control);
+  background: var(--inset);
+}
+
+.revote-row div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.revote-row strong {
+  color: var(--body);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.revote-row span {
+  color: var(--faint);
+  font-size: 10px;
+  line-height: 15px;
 }
 
 .inline {

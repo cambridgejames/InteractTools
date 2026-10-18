@@ -493,12 +493,12 @@ PlatformHost 只保留连接对象，不重复创建。
 
 物理：
 
-- cannon-es 刚体；固定步长 1/120 秒，最多 10 秒。
+- cannon-es 刚体；固定步长 1/120 秒，最多 12 秒。
 - 从中央发射台向上弹射：初始上冲速度 3.2 + power×0.23，自旋 2.5 + power×0.28；自旋轴以当前面法线为基准偏 24–54°，力度只改变能量，不参与选面。
 - d6 渲染层用 RoundedBoxGeometry 做小倒角；物理仍是原凸包，避免改变读数与碰撞。
 - 六种面数：d4/d6/d8/d10/d12/d20。
 - 凸包几何；d10 使用五角双锥。
-- 停稳判定：面朝上程度、稳定步数。
+- 停稳判定：面朝上程度、稳定步数；连续 20 步低速后判定停稳。
 - 低速停在棱上时轻推一次。
 - 记录 60Hz 帧，主进程出结果，渲染层只回放。
 
@@ -534,7 +534,7 @@ PlatformHost 只保留连接对象，不重复创建。
 - 倒计时 5–300 秒；投票中左侧顶部显示 64px 大数字 + 进度条。
 - 默认命令别名：投票、vote。
 - 支持 1-based 序号和选项文字。
-- 同一 userKey 最后一票覆盖。
+- 默认同一 userKey 只计第一票；allowRevote=true 时后票覆盖前票。
 - 实时 counts + 进度条。
 - 结束后并列最高全部展示；0 票显示无人投票。
 - 历史记录问题、选项、counts、totalVotes、winners、at。
@@ -624,6 +624,8 @@ PlatformHost 只保留连接对象，不重复创建。
 - 历史：HistoryPanel、WheelHistoryPanel、VoteHistoryPanel。
 - 公共：FeedPanel（68px 行高虚拟滚动）、ToolSwitcher、ToggleSwitch、StatusPill、Toast、AppIcon。
 - 弹幕栏模式来自 snapshot.feedMode：full 320px / collapsed 44px / hidden；设置页通过 feed:set-mode 持久化。
+- 设置页「清除所有数据」调用 app:clear-all-data：原生确认后删除 config.json、history、logs，relaunch 应用。
+- 表单下拉统一使用 AppSelect（自定义深色 listbox），不再依赖系统原生 select 弹层。
 - 设置页的 GitHub 仓库/问题反馈按钮通过 app:open-external 交给系统默认浏览器；控制台也拦截 window.open 与外部导航，禁止应用内打开。
 
 结果弹窗：
@@ -668,7 +670,7 @@ userData 默认是 %APPDATA%/interact-tools；--smoke 时切到 artifacts/smoke/
 
 测试：
 
-- 12 个测试文件，42 个用例通过，1 个 B站真连用例默认跳过。
+- 12 个测试文件，45 个用例通过，1 个 B站真连用例默认跳过。
 - 覆盖骰子 domain、几何、物理、工具、轮盘工具、投票 domain/工具、命令提示总线、MockAdapter、B站协议、WBI。
 - 真连测试：LIVE_BILIBILI=1 npx vitest run tests/bilibili-live.test.ts；最近房间 6 收到 6 条。
 

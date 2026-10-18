@@ -109,7 +109,7 @@ describe('parseVoteCommand', () => {
 })
 
 describe('VoteTool', () => {
-  it('collects last vote per viewer, ends on countdown and persists the result', async () => {
+  it('allows revote, ends on countdown and persists the result', async () => {
     const clock = new FakeClock()
     const timers = new FakeTimers(clock)
     const history = new MemoryHistory()
@@ -136,7 +136,8 @@ describe('VoteTool', () => {
       ...DEFAULT_VOTE_CONFIG,
       options: ['A', 'B', 'C'],
       countdownSeconds: 5,
-      commandAliases: ['投票', 'vote']
+      commandAliases: ['投票', 'vote'],
+      allowRevote: true
     }
     await tool.activate(context, config)
     await tool.handleAction({ type: 'start' })
@@ -176,6 +177,42 @@ describe('VoteTool', () => {
     }
 
     expect(await tool.handleChat(chat('u4', '空格', '投票 A', clock.now()))).toBe(false)
+    await tool.deactivate()
+  })
+
+  it('counts only the first vote when revote is disabled', async () => {
+    const clock = new FakeClock()
+    const timers = new FakeTimers(clock)
+    const history = new MemoryHistory()
+
+    const context: ToolContext = {
+      clock,
+      timer: timers,
+      random,
+      logger,
+      history,
+      present: async () => undefined,
+      notifyChange: () => undefined,
+      announce: () => undefined,
+      publishCommandHint: () => undefined
+    }
+
+    const tool = new VoteTool()
+    const config: VoteConfig = {
+      ...DEFAULT_VOTE_CONFIG,
+      options: ['A', 'B'],
+      countdownSeconds: 5,
+      allowRevote: false
+    }
+    await tool.activate(context, config)
+    await tool.handleAction({ type: 'start' })
+    await tool.handleChat(chat('u1', '小满', '!投票 A', clock.now()))
+    await tool.handleChat(chat('u1', '小满', '!投票 B', clock.now()))
+
+    const view = tool.view()
+    if (view.toolId !== 'vote') throw new Error('expected vote view')
+    expect(view.totalVotes).toBe(1)
+    expect(view.counts).toEqual([1, 0])
     await tool.deactivate()
   })
 })

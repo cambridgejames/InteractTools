@@ -305,8 +305,8 @@ idle ──start──▶ collecting ──timeout──▶ rolling ──frames
 - 几何：顶点定义 + 凸包算法求面；d10 用五角双锥（pentagonal bipyramid，10 个三角面），d4/d6/d8/d12/d20 用标准多面体。
 - 刚体：cannon-es `ConvexPolyhedron`，质量 1；地面 `Plane`；摩擦 0.4，弹性 0.35。
 - 初始条件：位置、朝向、角速度由 seed 派生；力度 0–100 映射到向上初速度和初始自旋，自旋轴相对面法线偏 24–54°，**不参与选面**。骰子从中央发射台弹射，面板相机随高度上升后拉。d6 渲染使用圆角倒角，物理凸包不变。
-- 固定步长 `1 / 120` 秒，最多 10 秒；每两步记录一帧（60Hz）。
-- 静止判定：线速度 < 0.08、角速度 < 0.1，连续 30 步，且存在法线接近竖直的面。
+- 固定步长 `1 / 120` 秒，最多 12 秒；每两步记录一帧（60Hz）。
+- 静止判定：线速度 < 0.08、角速度 < 0.12，连续 20 步，且存在法线接近竖直的面。
 - 读数：d4 取贴地面（法线 y 最小），其余取朝上面（法线 y 最大）。
 - 未停稳：先施加一次轻推；仍失败则取最近面，`settled: false` 写进结果，UI 明确标注。
 
@@ -347,6 +347,7 @@ idle ──start──▶ collecting ──timeout──▶ rolling ──frames
       "options": ["方案 A", "方案 B", "方案 C"],
       "countdownSeconds": 30,
       "commandAliases": ["投票", "vote"],
+      "allowRevote": false,
       "presets": []
     }
   },

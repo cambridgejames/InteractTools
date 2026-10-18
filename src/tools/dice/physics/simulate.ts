@@ -23,10 +23,10 @@ export interface DiceSimulationResult {
 const FIXED_STEP = 1 / 120
 const RECORD_EVERY = 2
 const FRAME_SECONDS = FIXED_STEP * RECORD_EVERY
-const MAX_SECONDS = 10
+const MAX_SECONDS = 12
 const MIN_SETTLE_SECONDS = 1
 const NUDGE_SECONDS = 3
-const STABLE_STEPS_REQUIRED = 30
+const STABLE_STEPS_REQUIRED = 20
 
 /**
  * 用 cannon-es 跑一次真实刚体投掷。

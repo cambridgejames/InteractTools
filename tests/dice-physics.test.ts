@@ -32,6 +32,13 @@ describe('dice simulation', () => {
     expect(result.value).toBeLessThanOrEqual(6)
   })
 
+  it('settles a d20 across representative launches', () => {
+    for (const seed of [1, 7, 42, 99, 123]) {
+      const result = simulateDice({ faces: 20, power: 65, seed })
+      expect(result.settled, 'd20 seed ' + String(seed)).toBe(true)
+    }
+  })
+
   it('reads the bottom face of a d4', () => {
     const result = simulateDice({ faces: 4, power: 55, seed: 7 })
     expect(result.value).toBeGreaterThanOrEqual(1)

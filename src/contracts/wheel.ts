@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+export const WHEEL_LABEL_MAX = 48
+
 export type WheelPhase = 'idle' | 'spinning' | 'result'
 
 export interface WheelPreset {
@@ -26,14 +28,14 @@ const wheelPresetSchema = z
   .object({
     id: z.string().min(1).max(40),
     name: z.string().trim().min(1).max(20),
-    segments: z.array(z.string().trim().min(1).max(20)).min(2).max(16),
+    segments: z.array(z.string().trim().min(1).max(WHEEL_LABEL_MAX)).min(2).max(16),
     spinDurationSeconds: z.number().min(2).max(10)
   })
   .strict()
 
 export const wheelConfigSchema = z
   .object({
-    segments: z.array(z.string().trim().min(1).max(20)).min(2).max(16),
+    segments: z.array(z.string().trim().min(1).max(WHEEL_LABEL_MAX)).min(2).max(16),
     spinDurationSeconds: z.number().min(2).max(10),
     presets: z.array(wheelPresetSchema).max(12)
   })

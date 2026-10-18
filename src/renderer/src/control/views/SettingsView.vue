@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import type { FeedMode } from '@contracts/config'
 import type { WindowDisplayOption } from '@contracts/ipc'
 import AppIcon from '../components/AppIcon.vue'
+import AppSelect from '../components/AppSelect.vue'
 import { actions, showToast, state } from '../store'
 
 const GITHUB_URL = 'https://github.com/cambridgejames/InteractTools'
@@ -11,6 +12,25 @@ const GITHUB_ISSUES_URL = GITHUB_URL + '/issues'
 const displays = ref<readonly WindowDisplayOption[]>([])
 const selectedDisplay = ref('cursor')
 const selectedFeedMode = ref<FeedMode>('full')
+const displayOptions = computed(() => [
+  { value: 'cursor', label: '跟随鼠标' },
+  { value: 'primary', label: '主显示器' },
+  ...displays.value.map((display) => ({
+    value: display.id,
+    label:
+      display.label +
+      (display.primary ? ' · 主屏' : '') +
+      ' · ' +
+      String(display.width) +
+      '×' +
+      String(display.height)
+  }))
+])
+const feedOptions = [
+  { value: 'full', label: '完整显示' },
+  { value: 'collapsed', label: '折叠成窄条' },
+  { value: 'hidden', label: '隐藏' }
+]
 
 onMounted(async () => {
   selectedDisplay.value = state.snapshot?.window.display ?? 'cursor'
@@ -21,6 +41,17 @@ onMounted(async () => {
     showToast(error instanceof Error ? error.message : '读取显示器失败', 'error')
   }
 })
+
+async function chooseDisplay(value: string): Promise<void> {
+  selectedDisplay.value = value
+  await saveDisplay()
+}
+
+async function chooseFeedMode(value: string): Promise<void> {
+  if (value !== 'full' && value !== 'collapsed' && value !== 'hidden') return
+  selectedFeedMode.value = value
+  await saveFeedMode()
+}
 
 async function saveDisplay(): Promise<void> {
   try {
@@ -47,6 +78,14 @@ async function openExternal(url: string): Promise<void> {
     showToast(error instanceof Error ? error.message : '打开链接失败', 'error')
   }
 }
+
+async function clearAllData(): Promise<void> {
+  try {
+    await window.api.clearAllData()
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : '清除数据失败', 'error')
+  }
+}
 </script>
 
 <template>
@@ -59,13 +98,12 @@ async function openExternal(url: string): Promise<void> {
 
       <label class="field">
         <span>显示器</span>
-        <select v-model="selectedDisplay" @change="saveDisplay">
-          <option value="cursor">跟随鼠标</option>
-          <option value="primary">主显示器</option>
-          <option v-for="display in displays" :key="display.id" :value="display.id">
-            {{ display.label }}{{ display.primary ? ' · 主屏' : '' }} · {{ display.width }}×{{ display.height }}
-          </option>
-        </select>
+        <AppSelect
+          :model-value="selectedDisplay"
+          :options="displayOptions"
+          label="选择显示器"
+          @update:model-value="chooseDisplay"
+        />
       </label>
     </section>
 
@@ -77,11 +115,12 @@ async function openExternal(url: string): Promise<void> {
 
       <label class="field">
         <span>直播间弹幕栏</span>
-        <select v-model="selectedFeedMode" @change="saveFeedMode">
-          <option value="full">完整显示</option>
-          <option value="collapsed">折叠成窄条</option>
-          <option value="hidden">隐藏</option>
-        </select>
+        <AppSelect
+          :model-value="selectedFeedMode"
+          :options="feedOptions"
+          label="选择弹幕栏模式"
+          @update:model-value="chooseFeedMode"
+        />
       </label>
     </section>
 
@@ -109,10 +148,14 @@ async function openExternal(url: string): Promise<void> {
         <h2>数据</h2>
         <p>配置、历史与日志都保存在本机用户目录。</p>
       </header>
-      <button class="secondary" @click="actions.openDataFolder()">
-        <AppIcon name="folder" :size="15" />
-        打开数据目录
-      </button>
+      <div class="data-actions">
+        <button class="secondary" @click="actions.openDataFolder()">
+          <AppIcon name="folder" :size="15" />
+          打开数据目录
+        </button>
+        <button class="danger" @click="clearAllData">清除所有数据…</button>
+      </div>
+      <p class="data-note">清除会删除配置、资源和工具历史，并重新启动应用。</p>
     </section>
 
     <section class="card about">
@@ -174,6 +217,32 @@ header p {
   gap: 6px;
   color: var(--mute);
   font-size: 11px;
+}
+
+.data-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.danger {
+  height: 34px;
+  padding: 0 var(--s-3);
+  border: 1px solid color-mix(in srgb, var(--danger) 45%, var(--hairline));
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--danger);
+  font-size: 12px;
+}
+
+.danger:hover {
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+}
+
+.data-note {
+  margin: 0;
+  color: var(--faint);
+  font-size: 10px;
 }
 
 .links {

@@ -12,7 +12,8 @@ const votePresetSchema = z
     name: z.string().trim().min(1).max(20),
     question: z.string().trim().max(80),
     options: z.array(z.string().trim().min(1).max(20)).min(2).max(8),
-    countdownSeconds: z.number().int().min(5).max(300)
+    countdownSeconds: z.number().int().min(5).max(300),
+    allowRevote: z.boolean().default(false)
   })
   .strict()
 
@@ -22,6 +23,8 @@ export const voteConfigSchema = z
     options: z.array(z.string().trim().min(1).max(20)).min(2).max(8),
     countdownSeconds: z.number().int().min(5).max(300),
     commandAliases: z.array(z.string().trim().min(1).max(16)).min(1).max(8),
+    /** 关闭时只计第一票；开启时后投覆盖前票。 */
+    allowRevote: z.boolean(),
     presets: z.array(votePresetSchema).max(12)
   })
   .superRefine((value, context) => {
@@ -47,6 +50,7 @@ export const DEFAULT_VOTE_CONFIG: VoteConfig = {
   options: ['方案 A', '方案 B', '方案 C'],
   countdownSeconds: 30,
   commandAliases: ['投票', 'vote'],
+  allowRevote: false,
   presets: []
 }
 
