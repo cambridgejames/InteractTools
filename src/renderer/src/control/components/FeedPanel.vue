@@ -1,39 +1,67 @@
 <script setup lang="ts">
-import { nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import type { FeedItem } from '@contracts/view'
 import AppIcon from './AppIcon.vue'
 import { actions, connectedCount, selectPlatform, showToast, state } from '../store'
 import { formatTime, initialOf } from '../../shared/format'
 
+const ROW_HEIGHT = 68
+const OVERSCAN = 4
+
 const list = ref<HTMLElement | null>(null)
 const stick = ref(true)
+const scrollTop = ref(0)
+const viewportHeight = ref(0)
 const name = ref('测试观众')
 const text = ref('')
 const sending = ref(false)
+
+const feed = computed(() => state.snapshot?.feed ?? [])
+const startIndex = computed(() =>
+  Math.max(0, Math.floor(scrollTop.value / ROW_HEIGHT) - OVERSCAN)
+)
+const visibleCount = computed(() => Math.ceil(viewportHeight.value / ROW_HEIGHT) + OVERSCAN * 2)
+const visibleFeed = computed(() => feed.value.slice(startIndex.value, startIndex.value + visibleCount.value))
+const topPad = computed(() => startIndex.value * ROW_HEIGHT)
+const bottomPad = computed(() =>
+  Math.max(0, (feed.value.length - startIndex.value - visibleFeed.value.length) * ROW_HEIGHT)
+)
 
 const sampleNames = ['小满', '阿七', '团子', '空格', '汽水', '晚风', '白露', '十一']
 const sampleLines = ['主播好', '这骰子有点东西', '来了来了', '666', '再开一轮', '这力度稳了', '晚上好', '冲冲冲']
 
 onMounted(() => {
+  updateViewport()
+  window.addEventListener('resize', updateViewport)
   scrollToBottom()
 })
 
+onUnmounted(() => {
+  window.removeEventListener('resize', updateViewport)
+})
+
 watch(
-  () => state.snapshot?.feed.length ?? 0,
+  () => feed.value.at(-1)?.id,
   () => {
     if (stick.value) void nextTick(scrollToBottom)
   }
 )
 
+function updateViewport(): void {
+  viewportHeight.value = list.value?.clientHeight ?? 0
+}
+
 function scrollToBottom(): void {
   const element = list.value
   if (element === null) return
   element.scrollTop = element.scrollHeight
+  scrollTop.value = element.scrollTop
 }
 
 function onScroll(): void {
   const element = list.value
   if (element === null) return
+  scrollTop.value = element.scrollTop
   stick.value = element.scrollHeight - element.scrollTop - element.clientHeight < 48
 }
 
@@ -93,7 +121,13 @@ function platformLabel(item: FeedItem): string {
         <span>连接本地模拟或 B站，消息会实时出现在这里。</span>
       </div>
 
-      <article v-for="item in state.snapshot?.feed" :key="item.id" :class="feedClass(item)">
+      <div :style="{ height: topPad + 'px' }" />
+      <article
+        v-for="item in visibleFeed"
+        :key="item.id"
+        :class="feedClass(item)"
+        :style="{ height: ROW_HEIGHT + 'px' }"
+      >
         <span class="avatar">{{ item.kind === 'system' ? 'S' : initialOf(item.userName) }}</span>
         <div class="content">
           <div class="meta">
@@ -104,6 +138,7 @@ function platformLabel(item: FeedItem): string {
           <p>{{ item.text }}</p>
         </div>
       </article>
+      <div :style="{ height: bottomPad + 'px' }" />
     </div>
 
     <form class="composer" @submit.prevent="send">
@@ -180,8 +215,17 @@ h2 {
 .feed-item {
   display: flex;
   gap: var(--s-2);
+  height: 68px;
+  overflow: hidden;
   padding: 8px var(--s-2);
   border-radius: 8px;
+}
+
+.feed-item .content p {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .feed-item:hover {

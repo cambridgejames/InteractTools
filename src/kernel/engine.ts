@@ -135,7 +135,8 @@ export class Engine {
 
     const host = this.requirePlatformHost()
     if (host.status(id).phase !== 'disconnected') {
-      await host.reconnect(id)
+      if (patch.enabled === false) await host.disconnect(id)
+      else await host.reconnect(id)
     }
     this.publishSnapshot()
   }

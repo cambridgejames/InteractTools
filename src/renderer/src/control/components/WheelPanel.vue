@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import type { WheelToolView } from '@contracts/view'
 import AppIcon from './AppIcon.vue'
+import BrandMark from './BrandMark.vue'
 import { actions, showToast } from '../store'
 import { formatTime } from '../../shared/format'
 
@@ -9,6 +10,7 @@ const props = defineProps<{ view: WheelToolView }>()
 
 const segmentsText = ref(props.view.config.segments.join('\n'))
 const duration = ref(props.view.config.spinDurationSeconds)
+let saveTimer: ReturnType<typeof setTimeout> | null = null
 
 watch(
   () => props.view.config.segments,
@@ -23,6 +25,46 @@ watch(
   }
 )
 
+watch(segmentsText, () => scheduleSegments())
+watch(duration, () => scheduleDuration())
+
+onUnmounted(() => {
+  if (saveTimer !== null) clearTimeout(saveTimer)
+})
+
+function scheduleSegments(): void {
+  if (saveTimer !== null) clearTimeout(saveTimer)
+  saveTimer = setTimeout(() => {
+    saveTimer = null
+    void persistSegments(false)
+  }, 500)
+}
+
+function scheduleDuration(): void {
+  const raw = Number(duration.value)
+  const next = Number.isFinite(raw)
+    ? Math.min(10, Math.max(2, Math.round(raw)))
+    : props.view.config.spinDurationSeconds
+  if (next === props.view.config.spinDurationSeconds) return
+  void actions.updateToolConfig('wheel', { spinDurationSeconds: next })
+}
+
+async function persistSegments(showError: boolean): Promise<boolean> {
+  const segments = segmentsText.value
+    .split(/[\n,，]/)
+    .map((segment) => segment.trim())
+    .filter((segment) => segment.length > 0)
+
+  if (segments.length < 2) {
+    if (showError) showToast('至少保留两个格子', 'error')
+    return false
+  }
+
+  const next = segments.slice(0, 16)
+  if (segments.length > 16 && showError) showToast('最多 16 个格子，已截断', 'info')
+  if (next.length !== segments.length) segmentsText.value = next.join('\n')
+  return actions.updateToolConfig('wheel', { segments: next })
+}
 
 const spinning = computed(() => props.view.phase === 'spinning')
 const phaseText = computed(() => {
@@ -84,44 +126,13 @@ function paletteVar(index: number): string {
 }
 
 async function spin(): Promise<void> {
-  if (props.view.segments.length < 2) {
-    showToast('转盘至少需要两个格子', 'error')
-    return
-  }
+  if (!(await persistSegments(true))) return
   await actions.toolAction('wheel', { type: 'spin' })
 }
 
 async function preview(): Promise<void> {
+  if (!(await persistSegments(true))) return
   await actions.toolAction('wheel', { type: 'preview' })
-}
-
-async function saveSegments(): Promise<void> {
-  const segments = segmentsText.value
-    .split(/[\n,，]/)
-    .map((segment) => segment.trim())
-    .filter((segment) => segment.length > 0)
-
-  if (segments.length < 2) {
-    showToast('至少保留两个格子', 'error')
-    return
-  }
-  if (segments.length > 16) {
-    showToast('最多 16 个格子，已截断', 'info')
-  }
-
-  const next = segments.slice(0, 16)
-  segmentsText.value = next.join('\n')
-  const ok = await actions.updateToolConfig('wheel', { segments: next })
-  if (ok) showToast('转盘内容已保存', 'success')
-}
-
-async function saveDuration(): Promise<void> {
-  const raw = Number(duration.value)
-  const next = Number.isFinite(raw)
-    ? Math.min(10, Math.max(2, Math.round(raw)))
-    : props.view.config.spinDurationSeconds
-  duration.value = next
-  await actions.updateToolConfig('wheel', { spinDurationSeconds: next })
 }
 
 async function clearHistory(): Promise<void> {
@@ -146,7 +157,7 @@ async function clearHistory(): Promise<void> {
       <div class="left">
         <div class="wheel-frame">
           <div class="wheel-disc" :style="wheelStyle" />
-          <span class="hub">1017</span>
+          <span class="hub"><BrandMark :size="38" /></span>
           <span class="pointer" />
         </div>
         <div class="preview-meta">
@@ -175,18 +186,18 @@ async function clearHistory(): Promise<void> {
 
         <label class="field">
           <span>格子内容（每行一个，2–16 个）</span>
-          <textarea v-model="segmentsText" rows="6" spellcheck="false" />
+          <textarea v-model="segmentsText" rows="6" spellcheck="false" @blur="persistSegments(true)" />
         </label>
 
         <div class="inline-fields">
           <label>
             <span>旋转时长</span>
             <div class="unit">
-              <input v-model.number="duration" type="number" min="2" max="10" @change="saveDuration" />
+              <input v-model.number="duration" type="number" min="2" max="10" />
               <em>秒</em>
             </div>
           </label>
-          <button class="btn secondary save" @click="saveSegments">保存转盘</button>
+          <span class="auto-save">自动保存</span>
         </div>
 
         <div class="history">
@@ -316,10 +327,6 @@ h2 {
   border-radius: 50%;
   background: var(--canvas);
   color: var(--accent);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
   transform: translate(-50%, -50%);
 }
 
@@ -472,6 +479,13 @@ textarea {
   font-size: 12px;
   line-height: 20px;
   resize: vertical;
+}
+
+.auto-save {
+  margin-left: auto;
+  align-self: flex-end;
+  color: var(--faint);
+  font-size: 10px;
 }
 
 .inline-fields {

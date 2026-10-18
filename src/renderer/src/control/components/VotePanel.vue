@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import type { VoteToolView } from '@contracts/view'
 import AppIcon from '../components/AppIcon.vue'
 import { actions, showToast } from '../store'
@@ -9,6 +9,20 @@ const props = defineProps<{ view: VoteToolView }>()
 const question = ref(props.view.config.question)
 const optionsText = ref(props.view.config.options.join(String.fromCharCode(10)))
 const countdown = ref(props.view.config.countdownSeconds)
+const now = ref(Date.now())
+let ticker: ReturnType<typeof setInterval> | null = null
+let saveTimer: ReturnType<typeof setTimeout> | null = null
+
+onMounted(() => {
+  ticker = setInterval(() => {
+    now.value = Date.now()
+  }, 200)
+})
+
+onUnmounted(() => {
+  if (ticker !== null) clearInterval(ticker)
+  if (saveTimer !== null) clearTimeout(saveTimer)
+})
 
 watch(
   () => props.view.config.question,
@@ -39,6 +53,10 @@ const options = computed(() =>
     .filter((item) => item.length > 0)
 )
 const total = computed(() => props.view.totalVotes)
+const remainingSeconds = computed(() => {
+  const endsAt = props.view.countdownEndsAt
+  return endsAt === null ? 0 : Math.max(0, Math.ceil((endsAt - now.value) / 1000))
+})
 const winnerLabel = computed(() => {
   const result = props.view.lastResult
   if (result === null) return ''
@@ -46,7 +64,7 @@ const winnerLabel = computed(() => {
   return result.winners.map((index) => result.options[index] ?? '').join(' / ')
 })
 const phaseLabel = computed(() => {
-  if (props.view.phase === 'collecting') return '投票中'
+  if (props.view.phase === 'collecting') return '投票中 · ' + String(remainingSeconds.value) + 's'
   if (props.view.phase === 'result') return '已结束'
   return '待开始'
 })
@@ -55,46 +73,54 @@ function percent(count: number): number {
   return total.value === 0 ? 0 : (count / total.value) * 100
 }
 
-function validate(): boolean {
+function validate(showError: boolean): boolean {
   if (options.value.length < 2 || options.value.length > 8) {
-    showToast('投票需要 2–8 个选项', 'error')
+    if (showError) showToast('投票需要 2–8 个选项', 'error')
     return false
   }
   if (options.value.some((item) => item.length > 20)) {
-    showToast('单个选项最多 20 个字', 'error')
+    if (showError) showToast('单个选项最多 20 个字', 'error')
     return false
   }
   const seen = new Set<string>()
   for (const option of options.value) {
     const key = option.toLocaleLowerCase()
     if (seen.has(key)) {
-      showToast('投票选项不能重复', 'error')
+      if (showError) showToast('投票选项不能重复', 'error')
       return false
     }
     seen.add(key)
   }
   const seconds = Math.round(Number(countdown.value))
   if (!Number.isFinite(seconds) || seconds < 5 || seconds > 300) {
-    showToast('倒计时需在 5–300 秒之间', 'error')
+    if (showError) showToast('倒计时需在 5–300 秒之间', 'error')
     return false
   }
   return true
 }
 
-async function save(): Promise<boolean> {
-  if (!validate()) return false
-  const ok = await actions.updateToolConfig('vote', {
+async function persist(showError: boolean): Promise<boolean> {
+  if (!validate(showError)) return false
+  return actions.updateToolConfig('vote', {
     question: question.value.trim(),
     options: options.value,
     countdownSeconds: Math.round(Number(countdown.value)),
     commandAliases: [...props.view.config.commandAliases]
   })
-  if (ok) showToast('投票配置已保存', 'success')
-  return ok
 }
 
+function scheduleSave(): void {
+  if (saveTimer !== null) clearTimeout(saveTimer)
+  saveTimer = setTimeout(() => {
+    saveTimer = null
+    void persist(false)
+  }, 500)
+}
+
+watch([question, optionsText, countdown], () => scheduleSave())
+
 async function start(): Promise<void> {
-  if (!(await save())) return
+  if (!(await persist(true))) return
   await actions.toolAction('vote', { type: 'start' })
 }
 
@@ -107,6 +133,7 @@ async function cancel(): Promise<void> {
 }
 
 async function preview(): Promise<void> {
+  if (!(await persist(true))) return
   await actions.toolAction('vote', { type: 'preview' })
 }
 
@@ -165,7 +192,7 @@ async function sendHint(index: number): Promise<void> {
         <div class="meta">
           <span>共 {{ total }} 票</span>
           <span v-if="view.phase === 'result'" class="winner-text">胜出：{{ winnerLabel }}</span>
-          <span v-else-if="view.phase === 'collecting'">发送「投票 1」或选项文字</span>
+          <span v-else-if="view.phase === 'collecting'">剩余 {{ remainingSeconds }} 秒 · 发送「投票 1」或选项文字</span>
           <span v-else>等待开始</span>
         </div>
       </div>
@@ -189,7 +216,7 @@ async function sendHint(index: number): Promise<void> {
               <em>秒</em>
             </div>
           </label>
-          <button class="btn secondary" :disabled="locked" @click="save">保存配置</button>
+          <span class="auto-save">自动保存</span>
         </div>
 
         <div class="actions">
@@ -305,6 +332,13 @@ h2 {
 
 .hint-note {
   margin-left: auto;
+  color: var(--faint);
+  font-size: 10px;
+}
+
+.auto-save {
+  margin-left: auto;
+  align-self: center;
   color: var(--faint);
   font-size: 10px;
 }

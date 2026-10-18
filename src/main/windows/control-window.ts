@@ -22,7 +22,7 @@ export class ControlWindow {
       show: false,
       backgroundColor: '#08090b',
       autoHideMenuBar: true,
-      title: '1017 互动工坊',
+      title: '互动工坊',
       webPreferences: {
         preload: preloadPath,
         contextIsolation: true,

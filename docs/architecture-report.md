@@ -1,26 +1,26 @@
-# 1017 互动工坊 架构报告
+# 互动工坊 架构报告
 
 版本：0.1.0
-代码基线：main 分支，提交 60c8582
+代码基线：main 分支，提交 934ad71
 报告范围：src 全部模块、Electron 主进程与两个渲染器、三个互动工具、两个平台适配器、数据持久化、构建与测试。
 
 ## 1. 摘要
 
-1017 互动工坊是一个本地优先的 Electron 桌面应用，面向直播间弹幕互动。它把不同平台的弹幕翻译成统一事件，再交给可插拔的互动工具处理；工具只负责玩法状态，窗口、存储、网络、定时器都由端口注入。
+互动工坊是一个本地优先的 Electron 桌面应用，面向直播间弹幕互动。它把不同平台的弹幕翻译成统一事件，再交给可插拔的互动工具处理；工具只负责玩法状态，窗口、存储、网络、定时器都由端口注入。
 
 当前能力：
 
 - 平台：B站匿名只读弹幕、本地模拟源，可同时连接。
 - 工具：投骰子、转转盘、弹幕投票。
 - 交互：弹幕命令、主播手动、倒计时、实时票数、物理模拟。
-- 呈现：动画在工具面板内播放，最终结果用原生小窗展示，带彩带和烟花，手动关闭。
+- 呈现：动画在工具面板内播放，最终结果在控制台内用 ResultOverlay 展示，带彩带和烟花，手动关闭。
 - 控制台：通用工具切换器、全局右侧弹幕栏、平台开关、配置与历史。
 
 非目标：
 
 - 不做 B站登录、发弹幕、送礼、关注。
 - 不做云端服务、账号体系、远程同步。
-- 不做 OBS 专用 HTTP 浏览器源；当前结果窗是原生窗口。
+- 不做 OBS 专用 HTTP 浏览器源；当前结果弹窗在控制台窗口内，OBS 直接采集控制台。
 
 ## 2. 技术栈
 
@@ -45,7 +45,7 @@
     │                                                                      │
     │  composition                                                         │
     │    ├─ ControlWindow      1560×960 控制台（按工作区收缩）             │
-    │    ├─ ResultWindow       760×540 原生结果小窗                        │
+    │    ├─ ResultOverlay       控制台内结果弹窗（580px 卡）                 │
     │    ├─ JsonConfigStore    配置读写                                    │
     │    ├─ JsonHistoryStore   每个工具一份历史                            │
     │    └─ Engine                                                         │
@@ -58,7 +58,7 @@
                     │ IPC                              │ IPC
                     ▼                                  ▼
           Control Renderer                    Result Renderer
-          Vue 控制台                          Vue 结果窗
+          Vue 控制台                          Vue 结果弹窗
           工具面板 / feed / 配置              结果卡 / 彩带烟花
 
 控制台渲染器不加载 Node，不直接访问文件、网络或窗口；所有能力通过 preload 暴露的窄接口进入主进程。
@@ -106,7 +106,7 @@
 | platform.ts | PlatformAdapter、事件、状态、userKey |
 | tool.ts | InteractionTool、ToolContext、ToolAction |
 | command-hint.ts | 命令提示发布/订阅类型 |
-| ipc.ts | IPC channel、RendererApi、ResultApi |
+| ipc.ts | IPC channel、RendererApi |
 | engine.ts | EngineEvent |
 | time.ts | Clock、RandomSource、TimerScope、Cancellable |
 | history.ts | ToolHistory 端口 |
@@ -156,7 +156,7 @@
 | index.ts | 单实例锁、app 生命周期、--smoke |
 | composition.ts | 组合根 |
 | windows/control-window.ts | 控制台窗口、捕获截图 |
-| windows/result-window.ts | 结果小窗、定位、ready 握手 |
+| windows/result-window.ts | 结果弹窗、定位、ready 握手 |
 | surface/result-surface.ts | 动画/结果/关闭分流 |
 | ipc/handlers.ts | IPC 注册与 zod 校验 |
 | services/config-store.ts | 默认值合并、配置解析、保存 |
@@ -172,15 +172,14 @@
 | 文件 | 作用 |
 | --- | --- |
 | preload/index.ts | window.api |
-| preload/result.ts | window.resultApi |
 | renderer/control/App.vue | 三栏 shell、页面切换 |
 | renderer/control/store.ts | 快照、feed、toast、动作 |
 | renderer/control/tool-panels.ts | 工具 id 到面板组件注册表 |
 | renderer/control/components | 面板、feed、历史、开关、图标 |
 | renderer/control/views | 控制台、工具、平台、设置 |
 | renderer/control/result/dice-scene.ts | 面板内 Three.js 骰子场景 |
-| renderer/result/ResultApp.vue | 原生结果窗内容 |
-| renderer/result/confetti.ts | 彩带 + 烟花 |
+| renderer/control/result/ResultOverlay.vue | 应用内结果弹窗 |
+| renderer/control/result/confetti.ts | 彩带 + 烟花 |
 | renderer/src/styles/tokens.css | 唯一视觉 token |
 
 ## 6. 核心契约
@@ -200,7 +199,7 @@
 
 配置读取时先与 DEFAULT_APP_CONFIG 深合并，再走 appConfigSchema 解析；失败回落默认值并记日志。保存使用临时文件 + rename 原子替换。
 
-说明：overlay.alwaysOnTop 是早期结果窗配置的兼容字段；当前结果窗固定置顶，UI 不再暴露该开关。
+说明：overlay.alwaysOnTop 是早期结果弹窗配置的兼容字段；当前结果弹窗固定置顶，UI 不再暴露该开关。
 
 ### 6.2 EngineSnapshot
 
@@ -239,12 +238,12 @@ publishCommandHint 是发布订阅的写端：工具在 collecting 阶段发布�
 ### 6.5 Presentation
 
 - dice.roll：骰子动画数据，发到控制台面板。
-- dice.result：最终点数，发到结果窗。
-- wheel.result：转盘最终格，发到结果窗。
-- vote.result：投票票数，发到结果窗。
+- dice.result：最终点数，发到结果弹窗。
+- wheel.result：转盘最终格，发到结果弹窗。
+- vote.result：投票票数，发到结果弹窗。
 - dismiss：关闭动画/结果。
 
-数据流中，动画与结果明确分离：dice.roll 只给控制台，result 只给结果窗。
+数据流中，动画与结果明确分离：dice.roll 只给控制台，result 只给结果弹窗。
 
 ### 6.6 IPC
 
@@ -258,9 +257,6 @@ publishCommandHint 是发布订阅的写端：工具在 collecting 阶段发布�
 | overlay:preview | invoke | 预览当前工具 |
 | overlay:present | main -> control | dice.roll / dismiss |
 | overlay:dismissed | invoke | 控制台请求关闭 |
-| result:present | main -> result | 结果 payload |
-| result:ready | result -> main | 结果窗挂载完成 |
-| result:dismissed | result -> main | 结果窗手动关闭 |
 | feed:clear | invoke | 清空 feed |
 | app:open-data-folder | invoke | 打开数据目录 |
 
@@ -269,14 +265,14 @@ publishCommandHint 是发布订阅的写端：工具在 collecting 阶段发布�
 1. main/index.ts 判断 --smoke；smoke 使用 artifacts/smoke/data 作为 userData。
 2. requestSingleInstanceLock；第二实例只唤起控制台。
 3. app.whenReady 后 createApplication：
-   - 创建 ControlWindow 和 ResultWindow。
+   - 创建 ControlWindow；结果弹窗由控制台渲染器内的 ResultOverlay 承担。
    - 创建 JsonConfigStore 并预加载配置。
    - 创建 ResultSurface。
    - 订阅 logger 到控制台。
    - 创建 Engine，注入时钟、随机、日志、存储、定时器工厂、历史工厂、Surface、平台工厂、三个工具、事件回调。
    - registerIpc 先注册。
    - engine.start。
-   - 加载控制台页面和结果窗页面。
+   - 加载控制台页面。
 4. Engine.start：
    - 读取配置。
    - 创建 PlatformHost、ToolHost、CommandBus。
@@ -364,8 +360,8 @@ publishCommandHint 是发布订阅的写端：工具在 collecting 阶段发布�
       -> phase result + history.append
       -> present(dice.result)
       -> ResultSurface.moveTo(控制台当前屏幕)
-      -> ResultWindow 显示
-      -> ResultApp 结果卡 + 彩带烟花
+      -> 控制台 ResultOverlay 显示
+      -> 结果卡 + 彩带烟花
 
 物理结果是唯一事实源；Three.js 只回放帧。
 
@@ -380,7 +376,7 @@ publishCommandHint 是发布订阅的写端：工具在 collecting 阶段发布�
       -> duration + 350ms
       -> phase result + history
       -> present(wheel.result)
-      -> ResultWindow 显示结果卡
+      -> 控制台 ResultOverlay 显示结果卡
 
 没有弹幕命令，没有物理。
 
@@ -398,25 +394,25 @@ publishCommandHint 是发布订阅的写端：工具在 collecting 阶段发布�
       -> tallyVotes + pollWinners
       -> phase result + history
       -> present(vote.result)
-      -> ResultWindow 显示票数与并列最高
+      -> 控制台 ResultOverlay 显示票数与并列最高
 
 并列最高票全部展示；0 票不伪造赢家。
 
-### 8.8 结果窗关闭
+### 8.8 结果弹窗关闭
 
-    结果窗 X / Esc
-      -> resultApi.dismiss()
-      -> IPC result:dismissed
+    结果弹窗 X / Esc / 点击遮罩
+      -> actions.dismissOverlay
+      -> IPC overlay:dismissed
       -> Engine.dismissOverlay
       -> ResultSurface.dismiss
-      -> ResultWindow.hide + control 收到 dismiss
-      -> 控制台清理 diceRoll
+      -> 控制台收到 dismiss presentation
+      -> store 清理 diceRoll + resultPopup
 
-结果窗不自动关闭。
+结果弹窗不自动关闭。
 
 ### 8.9 配置保存
 
-    面板保存
+    面板输入（500ms debounce；平台 600ms）
       -> IPC tool:update-config
       -> Engine.updateToolConfig
       -> 合并 patch
@@ -508,7 +504,7 @@ PlatformHost 只保留连接对象，不重复创建。
 
 - dice.roll 给 DicePanel，面板 3D 骰盒内播放。
 - 面板骰盒响应式，最大 760px，4:3；空闲倒计时环 220px。
-- 播完后 dice.result 给原生结果窗。
+- 播完后 dice.result 给应用内结果弹窗。
 
 ### 9.2 转转盘
 
@@ -520,7 +516,7 @@ PlatformHost 只保留连接对象，不重复创建。
 - RandomSource 均匀选格。
 - WheelPanel 用 CSS rotate 原地旋转；圆盘 280px，指针和中心不转。
 - duration + 350ms 后出结果。
-- 结果窗只显示最终格，不重播转盘。
+- 结果弹窗只显示最终格，不重播转盘。
 
 ### 9.3 弹幕投票
 
@@ -589,37 +585,37 @@ PlatformHost 只保留连接对象，不重复创建。
 - 不加载远程页面；开发模式只加载 ELECTRON_RENDERER_URL。
 - 三栏布局：左导航 216px、中内容、右 feed 320px；小于 1180px 隐藏 feed。
 
-### 11.2 结果窗
+### 11.2 应用内结果弹窗
 
-- 760×540，透明、无边框、置顶、跳过任务栏、hasShadow。
-- 结果卡 580px。
-- 每次结果前 moveTo(control.getBounds())，按控制台所在显示器居中。
-- result:ready 握手，避免 Vue 未挂载时丢消息。
-- 手动关闭；不自动消失。
+- ResultOverlay 覆盖控制台窗口，z-index 40，背景 color-mix + blur 4px。
+- 卡片 580px，--surface 实底，20px 圆角，--shadow-pop。
+- 彩带画布铺满控制台窗口，盖在卡片上方。
+- 点击遮罩、右上角或 Esc 关闭；不自动消失。
+- OBS 采集控制台窗口即可包含结果弹窗。
 
 ### 11.3 ResultSurface
 
-    dice.roll -> 控制台
-    dice.result / wheel.result / vote.result -> 结果窗
-    dismiss -> 两边都清理
+    dice.roll -> 控制台工具面板
+    dice.result / wheel.result / vote.result -> 控制台 ResultOverlay
+    dismiss -> 控制台清理
 
-动画和结果分离，避免在弹窗里重播整套动画。
+动画和结果分离，避免在弹窗里重播整套动画；不再有第二窗口。
 
 ## 12. 渲染进程
 
 控制台：
 
-- reactive store：snapshot、logs、toast、activeToolId、diceRoll。
+- reactive store：snapshot、logs、toast、activeToolId、diceRoll、resultPopup。
 - initStore：首屏快照 + 订阅事件 + 订阅 presentation。
 - actions：工具动作、配置、平台连接、模拟弹幕、预览、关闭结果。
 - tool-panels.ts：工具 id 到面板组件的注册表，Dashboard 用动态 component。
 - 面板：DicePanel、WheelPanel、VotePanel。每个工具 header 下方有测试命令条；骰子 3 个力度 chip，投票按选项数显示投票 chip，转盘无命令。feed 底部不再放工具命令。
 - 历史：HistoryPanel、WheelHistoryPanel、VoteHistoryPanel。
-- 公共：FeedPanel、ToolSwitcher、ToggleSwitch、StatusPill、Toast、AppIcon。
+- 公共：FeedPanel（68px 行高虚拟滚动）、ToolSwitcher、ToggleSwitch、StatusPill、Toast、AppIcon。
 
-结果窗：
+结果弹窗：
 
-- ResultApp 根据 toolId 渲染骰子点数、转盘结果或投票票数。
+- ResultOverlay 根据 toolId 渲染骰子点数、转盘结果或投票票数。
 - confetti.ts 画彩带 + 三簇烟花，2.2 秒。
 - 结果卡不播放工具动画。
 
@@ -643,17 +639,17 @@ userData 默认是 %APPDATA%/interact-tools；--smoke 时切到 artifacts/smoke/
 - DESIGN.md 是唯一视觉事实源。
 - tokens.css 是唯一颜色/间距/圆角/动效变量来源。
 - check:design 扫描 Vue/CSS 中的裸 hex/rgb/rgba。
-- 控件规格：开关 36×20；按钮 34/36 高；卡片 14px 圆角；结果窗 20px 圆角。
+- 控件规格：开关 36×20；按钮 34/36 高；卡片 14px 圆角；结果弹窗 20px 圆角。
 - 青柠只用于主操作、当前状态、结果数字。
-- 控制台卡片无投影；浮层/结果窗才允许阴影。
-- 结果窗 760×540，结果卡 580px，彩带画布覆盖卡片上方。
+- 控制台卡片无投影；浮层/结果弹窗才允许阴影。
+- 结果弹窗为控制台内浮层，结果卡 580px，彩带画布铺满控制台窗口、覆盖卡片上方。
 
 ## 15. 测试、构建与发布
 
 测试：
 
 - 10 个测试文件，37 个用例通过，1 个 B站真连用例默认跳过。
-- 覆盖骰子 domain、几何、物理、工具、轮盘工具、投票 domain/工具、B站协议、WBI。
+- 覆盖骰子 domain、几何、物理、工具、轮盘工具、投票 domain/工具、命令提示总线、MockAdapter、B站协议、WBI。
 - 真连测试：LIVE_BILIBILI=1 npx vitest run tests/bilibili-live.test.ts；最近房间 6 收到 6 条。
 
 构建：
@@ -677,8 +673,8 @@ smoke 流程：
 
 产物：
 
-- release/1017-Interact-Studio-0.1.0-setup.exe
-- release/1017-Interact-Studio-0.1.0-portable.exe
+- release/Interact-Studio-0.1.0-setup.exe
+- release/Interact-Studio-0.1.0-portable.exe
 
 ## 16. 扩展点
 
@@ -699,15 +695,15 @@ smoke 流程：
 5. control/tool-panels.ts 注册面板。
 6. Dashboard 加历史分支。
 7. ToolsView 加入口。
-8. 有呈现时在 presentation 和 ResultApp 加 kind。
+8. 有呈现时在 presentation 和 ResultOverlay 加 kind。
 9. 测试状态机、命令、配置、历史。
 
 ### 加结果形态
 
 - contracts/presentation.ts 加 kind。
 - main/surface/result-surface.ts 分流。
-- renderer/result/ResultApp.vue 渲染。
-- ResultWindow/preload 类型加 payload。
+- renderer/src/control/result/ResultOverlay.vue 渲染。
+- ResultOverlay/preload 类型加 payload。
 
 ## 17. 安全与合规
 
@@ -719,18 +715,18 @@ smoke 流程：
 - 不保存 cookie/token/SESSDATA。
 - B站只读匿名，不发送互动。
 - 单实例锁避免多开写入配置。
-- 结果窗/控制台都无 Node 直通。
+- 结果弹窗/控制台都无 Node 直通。
 
 ## 18. 已知限制与技术债
 
 1. B站匿名读；未开播/轮播房间连接成功但 0 弹幕；-352 仍可能由网络/风控触发。
 2. B站不登录、不发弹幕、不支持 SESSDATA。
-3. OBS 窗口捕获未实机验证；结果窗透明/原生阴影依赖平台。
+3. OBS 直接采集控制台窗口；尚未在真实 OBS 内实测。
 4. 没有隐藏控制台的纯净舞台模式；动画只在控制台面板内。
 5. d10 使用五角双锥，不是标准五角偏方面体。
 6. Engine 的快照当前是即时全量广播，没有 50ms 合并；高频弹幕时依赖 feed 增量，但工具 notify 仍可能触发整包。
-7. overlay.alwaysOnTop 是兼容字段，当前结果窗固定置顶。
-8. 结果窗不自动关闭，忘记关闭会保持置顶。
+7. overlay.alwaysOnTop 是历史兼容字段，当前应用内结果弹窗不使用它。
+8. 结果弹窗不自动关闭，忘记关闭会一直覆盖控制台。
 9. 没有窗口大小/位置持久化；默认按工作区取 1560×960 上限。
 10. Mock 自动观众依赖工具发布的命令提示；没有工具 collecting 时只发普通聊天/礼物。
 11. NSIS 安装向导未逐页点击验证；只做了打包后 smoke。
@@ -748,8 +744,7 @@ smoke 流程：
     src/tools/vote/               投票
     src/main/                     Electron 主进程
     src/preload/                  contextBridge
-    src/renderer/src/control/     控制台
-    src/renderer/src/result/      原生结果窗
+    src/renderer/src/control/     控制台 + ResultOverlay
     src/renderer/src/styles/      tokens/base
     scripts/                     边界/设计检查/启动
     tests/                       Vitest
@@ -757,7 +752,7 @@ smoke 流程：
 
 ## 20. 结论
 
-这是一个分层清晰的本地优先 Electron 应用：contracts 定义数据，kernel 组合平台/工具/呈现，main 负责 Electron 与磁盘，renderer 只做展示与交互。三个工具共享同一套快照、命令总线、定时器端口、历史存储与结果窗，新增玩法主要改 contracts、tools、panel 注册表和结果渲染。
+这是一个分层清晰的本地优先 Electron 应用：contracts 定义数据，kernel 组合平台/工具/呈现，main 负责 Electron 与磁盘，renderer 只做展示与交互。三个工具共享同一套快照、命令总线、定时器端口、历史存储与应用内结果弹窗，新增玩法主要改 contracts、tools、panel 注册表和结果渲染。
 
 当前最值得继续投入的方向：
 
@@ -765,4 +760,4 @@ smoke 流程：
 2. 快照广播合并与高频弹幕性能。
 3. B站真实房间/多显示器/OBS 的现场验证。
 4. 窗口大小/位置持久化。
-5. 结果窗的显示器选择策略（跟随控制台之外，是否允许手动指定）。
+5. 结果弹窗的显示器选择策略（跟随控制台之外，是否允许手动指定）。

@@ -4,7 +4,13 @@ import type { ToolAction } from '@contracts/tool'
 import type { EngineEvent } from '@contracts/engine'
 import type { LogEntry } from '@contracts/log'
 import type { PlatformId, PlatformPhase } from '@contracts/platform'
-import type { DiceRollPresentation, Presentation } from '@contracts/presentation'
+import type {
+  DiceResultPresentation,
+  DiceRollPresentation,
+  Presentation,
+  VoteResultPresentation,
+  WheelResultPresentation
+} from '@contracts/presentation'
 import type { DiceToolView, EngineSnapshot, PlatformView } from '@contracts/view'
 
 export type Tone = 'success' | 'error' | 'info'
@@ -22,13 +28,15 @@ export const state = reactive<{
   loading: boolean
   activeToolId: string
   diceRoll: DiceRollPresentation | null
+  resultPopup: DiceResultPresentation | WheelResultPresentation | VoteResultPresentation | null
 }>({
   snapshot: null,
   logs: [],
   toast: null,
   loading: true,
   activeToolId: 'dice',
-  diceRoll: null
+  diceRoll: null,
+  resultPopup: null
 })
 
 let started = false
@@ -175,6 +183,7 @@ export const actions = {
     try {
       await window.api.dismissOverlay()
       state.diceRoll = null
+      state.resultPopup = null
     } catch (error) {
       showToast(errorMessage(error), 'error')
     }
@@ -192,6 +201,7 @@ export const actions = {
   selectTool(toolId: string): void {
     state.activeToolId = toolId
     state.diceRoll = null
+    state.resultPopup = null
     void window.api.dismissOverlay().catch(() => undefined)
   },
 
@@ -236,14 +246,17 @@ function handleEvent(event: EngineEvent): void {
 function handlePresentation(presentation: Presentation): void {
   switch (presentation.kind) {
     case 'dice.roll':
+      state.resultPopup = null
       state.diceRoll = presentation.payload
       return
     case 'dice.result':
     case 'wheel.result':
     case 'vote.result':
+      state.resultPopup = presentation.payload
       return
     case 'dismiss':
       state.diceRoll = null
+      state.resultPopup = null
       return
   }
 }

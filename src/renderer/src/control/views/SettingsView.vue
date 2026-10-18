@@ -38,7 +38,7 @@ import { actions } from '../store'
     <section class="card about">
       <header>
         <h2>关于</h2>
-        <p>1017 互动工坊 v0.1.0</p>
+        <p>互动工坊 v0.1.0</p>
       </header>
       <ul>
         <li>本地优先：B站匿名弹幕 + 本地模拟，不依赖自建服务端。</li>

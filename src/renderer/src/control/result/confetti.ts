@@ -1,4 +1,4 @@
-import { SCENE } from '../control/result/palette'
+import { SCENE } from './palette'
 
 interface Particle {
   x: number

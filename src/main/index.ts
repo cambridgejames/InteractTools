@@ -20,7 +20,7 @@ if (!hasLock) {
 
   app.whenReady().then(start).catch((error: unknown) => {
     const message = error instanceof Error ? error.message : String(error)
-    dialog.showErrorBox('1017 互动工坊启动失败', message)
+    dialog.showErrorBox('互动工坊启动失败', message)
     app.quit()
   })
 

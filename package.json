@@ -2,7 +2,7 @@
   "name": "interact-tools",
   "version": "0.1.0",
   "private": true,
-  "description": "1017 互动工坊：直播间弹幕互动工具集",
+  "description": "互动工坊：直播间弹幕互动工具集",
   "main": "./out/main/index.js",
   "author": "powerinv",
   "license": "UNLICENSED",

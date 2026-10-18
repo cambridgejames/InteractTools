@@ -1,24 +1,24 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import type {
   DiceResultPresentation,
   VoteResultPresentation,
   WheelResultPresentation
 } from '@contracts/presentation'
-import AppIcon from '../control/components/AppIcon.vue'
+import AppIcon from '../components/AppIcon.vue'
 import { burstConfetti } from './confetti'
-import { facesLabel, formatPower, methodLabel } from '../shared/format'
+import { facesLabel, formatPower, methodLabel } from '../../shared/format'
 
-type ResultPayload = DiceResultPresentation | WheelResultPresentation | VoteResultPresentation
+const props = defineProps<{
+  result: DiceResultPresentation | WheelResultPresentation | VoteResultPresentation
+}>()
+const emit = defineEmits<{ close: [] }>()
 
-const result = ref<ResultPayload | null>(null)
 const canvas = ref<HTMLCanvasElement | null>(null)
-let unsubscribe: (() => void) | null = null
-
-const dice = computed(() => (result.value?.toolId === 'dice' ? result.value : null))
-const wheel = computed(() => (result.value?.toolId === 'wheel' ? result.value : null))
-const vote = computed(() => (result.value?.toolId === 'vote' ? result.value : null))
-const voteMax = computed(() => (vote.value === null ? 0 : Math.max(1, ...vote.value.counts)))
+const dice = computed(() => (props.result.toolId === 'dice' ? props.result : null))
+const wheel = computed(() => (props.result.toolId === 'wheel' ? props.result : null))
+const vote = computed(() => (props.result.toolId === 'vote' ? props.result : null))
+const voteMax = computed(() => (vote.value === null ? 1 : Math.max(1, ...vote.value.counts)))
 const voteLabel = computed(() => {
   if (vote.value === null) return ''
   if (vote.value.winners.length === 0) return '无人投票'
@@ -26,36 +26,24 @@ const voteLabel = computed(() => {
 })
 
 onMounted(() => {
-  unsubscribe = window.resultApi.onPresentation(handleResult)
-  window.resultApi.ready()
   window.addEventListener('keydown', handleKeydown)
+  if (canvas.value !== null) burstConfetti(canvas.value)
 })
 
 onUnmounted(() => {
-  unsubscribe?.()
   window.removeEventListener('keydown', handleKeydown)
 })
 
-async function handleResult(next: ResultPayload): Promise<void> {
-  result.value = next
-  await nextTick()
-  if (canvas.value !== null) burstConfetti(canvas.value)
-}
-
-function close(): void {
-  window.resultApi.dismiss()
-}
-
 function handleKeydown(event: KeyboardEvent): void {
-  if (event.key === 'Escape') close()
+  if (event.key === 'Escape') emit('close')
 }
 </script>
 
 <template>
-  <div v-if="result" class="result-root">
+  <div class="result-pop" role="dialog" aria-modal="true" @click.self="emit('close')">
     <canvas ref="canvas" class="confetti" />
     <section class="result-card">
-      <button class="result-close" aria-label="关闭结果" @click="close">
+      <button class="result-close" aria-label="关闭结果" @click="emit('close')">
         <AppIcon name="close" :size="16" />
       </button>
 
@@ -96,7 +84,7 @@ function handleKeydown(event: KeyboardEvent): void {
         </div>
       </template>
 
-      <button class="result-ok" @click="close">知道了</button>
+      <button class="result-ok" @click="emit('close')">知道了</button>
     </section>
   </div>
 </template>

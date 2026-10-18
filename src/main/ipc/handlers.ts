@@ -2,7 +2,6 @@ import { app, ipcMain, shell } from 'electron'
 import { z } from 'zod'
 import { IPC } from '@contracts/ipc'
 import type { Engine } from '@kernel/engine'
-import type { ResultWindow } from '../windows/result-window'
 
 const platformIdSchema = z.enum(['bilibili', 'mock'])
 const patchSchema = z.record(z.string(), z.unknown())
@@ -14,7 +13,7 @@ const mockChatSchema = z.object({
   userName: z.string().trim().min(1).max(24),
   text: z.string().trim().min(1).max(200)
 })
-export function registerIpc(engine: Engine, result: ResultWindow): void {
+export function registerIpc(engine: Engine): void {
   ipcMain.handle(IPC.snapshot, async () => engine.snapshot())
 
   ipcMain.handle(IPC.platformConnect, async (_event, rawId: unknown) => {
@@ -66,10 +65,6 @@ export function registerIpc(engine: Engine, result: ResultWindow): void {
     await engine.previewTool(toolId)
   })
   ipcMain.handle(IPC.overlayDismissed, async () => engine.dismissOverlay())
-  ipcMain.on(IPC.resultReady, () => result.markReady())
-  ipcMain.on(IPC.resultDismissed, () => {
-    void engine.dismissOverlay()
-  })
 
   ipcMain.handle(IPC.openDataFolder, async () => {
     const error = await shell.openPath(app.getPath('userData'))

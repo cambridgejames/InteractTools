@@ -1,45 +1,27 @@
 import type { Presentation } from '@contracts/presentation'
 import type { SurfaceHost } from '@kernel/ports'
 import type { ControlWindow } from '../windows/control-window'
-import type { ResultWindow } from '../windows/result-window'
 
 /**
- * 动画走主窗口面板，最终结果走原生小窗。
- * 这样面板里转/掷，结果再弹窗，不会在弹窗里重播整套动画。
+ * 所有呈现都回主窗口：动画给工具面板，结果给应用内 ResultOverlay。
+ * 这样 OBS 采集控制台窗口时，结果弹窗也在画面里。
  */
 export class ResultSurface implements SurfaceHost {
   private open = false
 
-  constructor(
-    private readonly control: ControlWindow,
-    private readonly result: ResultWindow
-  ) {}
+  constructor(private readonly control: ControlWindow) {}
 
   async present(presentation: Presentation): Promise<void> {
-    switch (presentation.kind) {
-      case 'dice.roll':
-        this.open = false
-        this.result.dismiss()
-        this.control.sendPresentation(presentation)
-        return
-      case 'dice.result':
-      case 'wheel.result':
-      case 'vote.result':
-        this.open = true
-        this.result.moveTo(this.control.browserWindow.getBounds())
-        this.result.present(presentation.payload)
-        return
-      case 'dismiss':
-        this.open = false
-        this.result.dismiss()
-        this.control.sendPresentation(presentation)
-        return
+    if (presentation.kind === 'dismiss' || presentation.kind === 'dice.roll') {
+      this.open = false
+    } else {
+      this.open = true
     }
+    this.control.sendPresentation(presentation)
   }
 
   async dismiss(toolId: string): Promise<void> {
     this.open = false
-    this.result.dismiss()
     this.control.sendPresentation({ kind: 'dismiss', toolId })
   }
 

@@ -6,9 +6,10 @@ import PlatformsView from './views/PlatformsView.vue'
 import SettingsView from './views/SettingsView.vue'
 import ToolsView from './views/ToolsView.vue'
 import Sidebar from './components/Sidebar.vue'
+import ResultOverlay from './result/ResultOverlay.vue'
 import Topbar from './components/Topbar.vue'
 import Toast from './components/Toast.vue'
-import { initStore, state } from './store'
+import { actions, initStore, state } from './store'
 
 type Page = 'dashboard' | 'tools' | 'platforms' | 'settings'
 
@@ -43,6 +44,11 @@ onMounted(() => {
       </main>
     </div>
     <FeedPanel class="feed-sidebar" />
+    <ResultOverlay
+      v-if="state.resultPopup"
+      :result="state.resultPopup"
+      @close="actions.dismissOverlay"
+    />
     <Toast />
   </div>
 </template>

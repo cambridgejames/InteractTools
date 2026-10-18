@@ -8,7 +8,6 @@ import { MathRandom } from '@kernel/random'
 import { bilibiliAdapterFactory } from '@platforms/bilibili'
 import { mockAdapterFactory } from '@platforms/mock'
 import { ControlWindow } from './windows/control-window'
-import { ResultWindow } from './windows/result-window'
 import { ResultSurface } from './surface/result-surface'
 import { AppLogger } from './services/logger'
 import { JsonConfigStore } from './services/config-store'
@@ -20,7 +19,6 @@ import { registerIpc } from './ipc/handlers'
 export interface Application {
   readonly engine: Engine
   readonly controlWindow: ControlWindow
-  readonly resultWindow: ResultWindow
   readonly logger: AppLogger
   dispose(): Promise<void>
 }
@@ -31,13 +29,9 @@ export async function createApplication(): Promise<Application> {
   const clock = new SystemClock()
 
   const controlWindow = new ControlWindow(join(__dirname, '../preload/index.js'))
-  const resultWindow = new ResultWindow(
-    join(__dirname, '../preload/result.js'),
-    controlWindow.browserWindow.getBounds()
-  )
   const store = new JsonConfigStore(join(userData, 'config.json'), logger)
   await store.load()
-  const surface = new ResultSurface(controlWindow, resultWindow)
+  const surface = new ResultSurface(controlWindow)
 
   logger.subscribe((entry) => controlWindow.send({ type: 'log', entry }))
 
@@ -54,16 +48,13 @@ export async function createApplication(): Promise<Application> {
     onEvent: (event) => controlWindow.send(event)
   })
 
-  // 先注册 IPC、启动内核，再加载窗口：渲染进程一挂载就会取快照。
-  registerIpc(engine, resultWindow)
+  registerIpc(engine)
   await engine.start()
   await controlWindow.load()
-  await resultWindow.load()
 
   return {
     engine,
     controlWindow,
-    resultWindow,
     logger,
     async dispose() {
       await engine.shutdown()

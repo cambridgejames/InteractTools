@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppIcon from './AppIcon.vue'
+import BrandMark from './BrandMark.vue'
 import { actions } from '../store'
 
 type Page = 'dashboard' | 'tools' | 'platforms' | 'settings'
@@ -18,10 +19,10 @@ const nav: Array<{ id: Page; label: string; icon: 'dashboard' | 'tools' | 'platf
 <template>
   <aside class="sidebar">
     <div class="brand">
-      <div class="brand-mark">1017</div>
+      <div class="brand-mark"><BrandMark :size="24" /></div>
       <div class="brand-text">
-        <strong>1017</strong>
-        <span>互动工坊</span>
+        <strong>互动工坊</strong>
+        <span>直播互动工具集</span>
       </div>
     </div>
 
@@ -74,10 +75,6 @@ const nav: Array<{ id: Page; label: string; icon: 'dashboard' | 'tools' | 'platf
   border-radius: var(--r-control);
   background: var(--accent);
   color: var(--accent-ink);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: -0.4px;
 }
 
 .brand-text {

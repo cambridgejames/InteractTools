@@ -1,11 +1,6 @@
 import type { EngineEvent } from './engine'
 import type { PlatformId } from './platform'
-import type {
-  DiceResultPresentation,
-  Presentation,
-  VoteResultPresentation,
-  WheelResultPresentation
-} from './presentation'
+import type { Presentation } from './presentation'
 import type { ToolAction } from './tool'
 import type { EngineSnapshot } from './view'
 
@@ -21,9 +16,6 @@ export const IPC = {
   overlayPreview: 'overlay:preview',
   overlayPresent: 'overlay:present',
   overlayDismissed: 'overlay:dismissed',
-  resultPresent: 'result:present',
-  resultReady: 'result:ready',
-  resultDismissed: 'result:dismissed',
   openDataFolder: 'app:open-data-folder',
   clearFeed: 'feed:clear'
 } as const
@@ -54,14 +46,4 @@ export interface RendererApi {
   dismissOverlay(): Promise<void>
 
   openDataFolder(): Promise<void>
-}
-
-export interface ResultApi {
-  onPresentation(
-    listener: (
-      result: DiceResultPresentation | WheelResultPresentation | VoteResultPresentation
-    ) => void
-  ): () => void
-  ready(): void
-  dismiss(): void
 }

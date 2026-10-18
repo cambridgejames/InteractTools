@@ -4,7 +4,7 @@
 
 ## 1. 目标与约束
 
-1017 互动工坊是一个**单机 Electron 桌面应用**，同时接入多个直播间，把不同平台的弹幕翻译成统一事件，再交给可插拔的互动工具处理。第一个工具是投骰子。
+互动工坊是一个**单机 Electron 桌面应用**，同时接入多个直播间，把不同平台的弹幕翻译成统一事件，再交给可插拔的互动工具处理。第一个工具是投骰子。
 
 设计约束：
 
@@ -12,13 +12,13 @@
 - 工具可扩展：新增玩法不修改内核。
 - 物理可信：结果由刚体模拟产生，不是随机抽面。
 - 离线可用：不依赖自建服务端；B站不可用时本地模拟仍能完整跑通。
-- 结果可见：动画在工具面板内就地播放；停稳后再用原生结果小窗展示最终结果。
+- 结果可见：动画在工具面板内就地播放；停稳后在控制台内弹出应用内结果弹窗，OBS 采集控制台即可。
 
 ## 2. 分层
 
 ```
 ┌──────────────────────────── Electron App Shell ────────────────────────────┐
-│  main（组合根）      preload（类型化桥）      renderer（控制台 / 结果窗）    │
+│  main（组合根）      preload（类型化桥）      renderer（控制台 + 结果弹窗）  │
 └───────────────────────────────┬────────────────────────────────────────────┘
                                 │ Surface Port
 ┌───────────────────────────────▼────────────────────────────────────────────┐
@@ -192,7 +192,7 @@ export interface DiceRollPresentation {
 }
 ```
 
-呈现是**数据**，不是回调。`SurfaceHost` 把 `dice.roll` 发到控制台面板，把 `dice.result` / `wheel.result` 发到原生结果小窗；动画和结果分开。
+呈现是**数据**，不是回调。`SurfaceHost` 全部发到控制台：`dice.roll` 给工具面板，`dice.result` / `wheel.result` / `vote.result` 给应用内 ResultOverlay；动画和结果分开，不创建第二窗口。
 
 ### 4.5 引擎事件与快照
 
@@ -204,7 +204,7 @@ export type EngineEvent =
   | { readonly type: 'presentation'; readonly presentation: Presentation };
 ```
 
-控制台通过 `snapshot` 渲染全部状态，通过 `feed` 追加时间线。快照广播做 50ms 合并，避免弹幕高峰把 IPC 打满。结果窗只订阅最终 result，不接收逐帧动画。
+控制台通过 `snapshot` 渲染全部状态，通过 `feed` 追加时间线。当前快照在状态变化时即时广播，没有 50ms 合并；feed 使用增量事件与虚拟滚动降低渲染压力。ResultOverlay 只接收最终 result，不接收逐帧动画。
 
 ## 5. 运行时对象图
 
@@ -220,7 +220,7 @@ Electron main
        │    └─ DiceTool
        ├─ SurfaceHost
        │    ├─ ControlWindow
-       │    └─ ResultWindow（原生结果小窗）
+       │    └─ ResultOverlay（应用内结果弹窗）
        └─ Engine
             ├─ CommandBus
             └─ EventPublisher（→ IPC → renderer）
@@ -238,12 +238,12 @@ Electron main
 6. `physics/simulate.ts` 用固定 seed 跑 cannon-es，得到点数与逐帧位姿。
 7. `DiceTool` 调 `ctx.present({ kind: 'dice.roll', payload })`。
 8. `SurfaceHost` 把 `dice.roll` 发给控制台，`DicePanel` 用 Three.js 就地回放。
-9. 面板动画结束后，`SurfaceHost` 把 `dice.result` 发给原生结果小窗，播放彩带烟花并等待手动关闭。
+9. 面板动画结束后，`SurfaceHost` 把 `dice.result` 发给控制台，ResultOverlay 播放彩带烟花并等待手动关闭。
 10. 控制台通过快照和 feed 同步状态；历史记录写入配置目录。
 
-转盘是另一条链路：主播在控制台点「开始旋转」→ `Engine.toolAction('wheel', { type: 'spin' })` → `WheelTool` 用 `RandomSource` 选格 → `WheelToolView.currentSpin` 驱动 `WheelPanel` 原地 CSS 旋转 → 停稳后 `wheel.result` 弹结果小窗。它**不经过 CommandBus**，也没有物理模拟。
+转盘是另一条链路：主播在控制台点「开始旋转」→ `Engine.toolAction('wheel', { type: 'spin' })` → `WheelTool` 用 `RandomSource` 选格 → `WheelToolView.currentSpin` 驱动 `WheelPanel` 原地 CSS 旋转 → 停稳后 `wheel.result` 弹应用内结果弹窗。它**不经过 CommandBus**，也没有物理模拟。
 
-投票是第三条链路：`VoteTool` 在倒计时内解析 `投票 1` / `投票 选项文字`，按 `userKey` 只保留最后一票；`view()` 把实时票数给 `VotePanel`，倒计时结束或「提前结束」后统计并列最高票，发 `vote.result` 给结果窗。它不物理、不随机、不写弹幕。
+投票是第三条链路：`VoteTool` 在倒计时内解析 `投票 1` / `投票 选项文字`，按 `userKey` 只保留最后一票；`view()` 把实时票数和剩余时间给 `VotePanel`，倒计时结束或「提前结束」后统计并列最高票，发 `vote.result` 给 ResultOverlay。它不物理、不随机、不写弹幕。
 
 命令提示走 `CommandHintBus` 发布订阅：dice/vote 进入 collecting 时通过 `ToolContext.publishCommandHint` 发布命令样本，结束时清空；`MockAdapter` 订阅后只在有提示时按概率注入当前工具命令。这样模拟源不 import 任何工具，新增玩法只需发布自己的样本。
 
@@ -264,7 +264,7 @@ export interface DiceConfig {
 }
 ```
 
-默认值：d6、30 秒、中位数、兜底 50、别名 `['力度', 'power']`；结果窗手动关闭。
+默认值：d6、30 秒、中位数、兜底 50、别名 `['力度', 'power']`；结果弹窗手动关闭。
 
 ### 7.2 命令
 
@@ -295,7 +295,7 @@ idle ──start──▶ collecting ──timeout──▶ rolling ──frames
 
 - 无弹幕命令：`handleChat` 永远返回 `false`，不抢骰子的指令。
 - 配置：`segments`（2–16 个标签）、`spinDurationSeconds`（2–10）。
-- 结果：`RandomSource.next()` 均匀选格；`currentSpin` 只给面板提供 `resultIndex / durationMs`，面板负责把对应格子转到指针下，最终标签由结果窗展示。
+- 结果：`RandomSource.next()` 均匀选格；`currentSpin` 只给面板提供 `resultIndex / durationMs`，面板负责把对应格子转到指针下，最终标签由 ResultOverlay 展示。
 - 历史：`history/wheel.json`，与骰子分开。
 - 控制台入口：`control/tool-panels.ts` 注册 `wheel → WheelPanel`；工具切换器选中后动态渲染，Dashboard 不知道具体工具。
 
@@ -357,7 +357,7 @@ idle ──start──▶ collecting ──timeout──▶ rolling ──frames
 - 渲染进程只能看到 `window.api`；preload 暴露固定方法，不暴露 `ipcRenderer`。
 - 每个 `invoke` 通道在 main 侧有 zod 入参校验；返回值也必须是可序列化数据。
 - 主进程 → 渲染进程只有一条事件通道 `engine:event`，携带 `EngineEvent`。
-- 结果窗单独使用 `result:present` / `result:dismissed`；`dice.roll` 走控制台的 `overlay:present`，避免把逐帧动画发给结果窗。
+- 所有 presentation 都走控制台的 `overlay:present`；结果关闭走 `overlay:dismissed`，不再有 result 通道。
 - 所有通道名集中在 `contracts/ipc.ts`，禁止散落字符串。
 
 ## 11. 错误与生命周期
@@ -366,7 +366,7 @@ idle ──start──▶ collecting ──timeout──▶ rolling ──frames
 - `throw` 只用于违反不变量（例如未知工具 id）；由 main 的全局 handler 记录并展示。
 - 每个平台连接持有独立 `AbortController`；`disconnect` 先 abort，再等待 socket 关闭。
 - 重连指数退避 1s、2s、4s……上限 30s，带 ±20% 抖动；用户手动断开后不再重连。
-- 工具 `deactivate` 必须清空定时器、取消未完成的呈现；结果窗关闭时通知 SurfaceHost。
+- 工具 `deactivate` 必须清空定时器、取消未完成的呈现；结果弹窗关闭时通知 SurfaceHost。
 
 ## 12. 可测试性
 
@@ -383,7 +383,7 @@ idle ──start──▶ collecting ──timeout──▶ rolling ──frames
 | 平台 | 新增 `platforms/<id>/` 工厂，注册到 composition，补 config schema 与 fixture 测试 |
 | 工具 | 新增 `tools/<id>/`，实现 `InteractionTool`，注册到 ToolHost，并在控制台加一个面板分支 |
 | 控制台面板 | 在 `control/tool-panels.ts` 注册工具 id → 面板组件；有动画时在面板内消费 view / presentation |
-| 结果窗形态 | 在 `Presentation` 增加 result kind，在 `ResultApp` 注册结果渲染 |
+| 结果弹窗形态 | 在 `Presentation` 增加 result kind，在 `ResultOverlay` 注册结果渲染 |
 | 呈现介质 | 实现新的 Surface（例如 HTTP 浏览器源），内核与工具不动 |
 
 ## 14. 非目标

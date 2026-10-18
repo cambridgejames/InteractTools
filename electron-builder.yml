@@ -1,5 +1,5 @@
 appId: studio.interact1017.app
-productName: 1017 互动工坊
+productName: 互动工坊
 directories:
   output: release
   buildResources: build
@@ -19,7 +19,7 @@ nsis:
   perMachine: false
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
-  shortcutName: 1017 互动工坊
-  artifactName: 1017-Interact-Studio-${version}-setup.${ext}
+  shortcutName: 互动工坊
+  artifactName: Interact-Studio-${version}-setup.${ext}
 portable:
-  artifactName: 1017-Interact-Studio-${version}-portable.${ext}
+  artifactName: Interact-Studio-${version}-portable.${ext}

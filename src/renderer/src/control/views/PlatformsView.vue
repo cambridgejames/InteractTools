@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import AppIcon from '../components/AppIcon.vue'
 import StatusPill from '../components/StatusPill.vue'
 import ToggleSwitch from '../components/ToggleSwitch.vue'
@@ -14,6 +14,13 @@ const biliEnabled = ref(false)
 const mockEnabled = ref(false)
 const botsEnabled = ref(true)
 const botsInterval = ref(3)
+let biliTimer: ReturnType<typeof setTimeout> | null = null
+let mockTimer: ReturnType<typeof setTimeout> | null = null
+
+onUnmounted(() => {
+  if (biliTimer !== null) clearTimeout(biliTimer)
+  if (mockTimer !== null) clearTimeout(mockTimer)
+})
 
 watch(
   () => bilibili.value?.config,
@@ -35,6 +42,45 @@ watch(
   },
   { immediate: true }
 )
+
+watch(roomId, () => scheduleBiliSave())
+watch(botsInterval, () => scheduleMockSave())
+
+function scheduleBiliSave(): void {
+  if (biliTimer !== null) clearTimeout(biliTimer)
+  biliTimer = setTimeout(() => {
+    biliTimer = null
+    void persistBilibili()
+  }, 600)
+}
+
+function scheduleMockSave(): void {
+  if (mockTimer !== null) clearTimeout(mockTimer)
+  mockTimer = setTimeout(() => {
+    mockTimer = null
+    void persistMock()
+  }, 600)
+}
+
+async function persistBilibili(): Promise<void> {
+  const config = bilibili.value?.config
+  if (config === undefined) return
+  const nextRoom = roomId.value.trim()
+  if (nextRoom.length === 0 && biliEnabled.value) biliEnabled.value = false
+  const enabled = biliEnabled.value
+  if (nextRoom === String(config.roomId ?? '') && enabled === Boolean(config.enabled)) return
+  await actions.updatePlatformConfig('bilibili', { roomId: nextRoom, enabled })
+}
+
+async function persistMock(): Promise<void> {
+  const config = mock.value?.config
+  if (config === undefined) return
+  const raw = Number(botsInterval.value)
+  const next = Number.isFinite(raw) ? Math.min(60, Math.max(1, Math.round(raw))) : 3
+  botsInterval.value = next
+  if (next === config.botsIntervalSeconds) return
+  await actions.updatePlatformConfig('mock', { botsIntervalSeconds: next })
+}
 
 async function setBiliEnabled(next: boolean): Promise<void> {
   if (next && roomId.value.trim().length === 0) {
@@ -74,14 +120,6 @@ async function setBotsEnabled(next: boolean): Promise<void> {
   await actions.updatePlatformConfig('mock', { botsEnabled: next })
 }
 
-async function saveBilibili(): Promise<void> {
-  const ok = await actions.updatePlatformConfig('bilibili', {
-    roomId: roomId.value.trim(),
-    enabled: biliEnabled.value
-  })
-  if (ok) showToast('B站配置已保存', 'success')
-}
-
 async function connectBilibili(): Promise<void> {
   if (roomId.value.trim().length === 0) {
     showToast('先填写直播间房间号', 'error')
@@ -94,14 +132,6 @@ async function connectBilibili(): Promise<void> {
   if (!ok) return
   biliEnabled.value = true
   await actions.connect('bilibili')
-}
-
-async function saveMock(): Promise<void> {
-  const ok = await actions.updatePlatformConfig('mock', {
-    botsEnabled: botsEnabled.value,
-    botsIntervalSeconds: botsInterval.value
-  })
-  if (ok) showToast('模拟源配置已保存', 'success')
 }
 
 async function connectMock(): Promise<void> {
@@ -154,7 +184,7 @@ async function connectMock(): Promise<void> {
       </div>
 
       <footer>
-        <button class="secondary" @click="saveBilibili">保存配置</button>
+        <span class="auto-save">自动保存</span>
         <div class="right">
           <button
             v-if="biliEnabled"
@@ -224,7 +254,7 @@ async function connectMock(): Promise<void> {
       </div>
 
       <footer>
-        <button class="secondary" @click="saveMock">保存配置</button>
+        <span class="auto-save">自动保存</span>
         <div class="right">
           <button
             v-if="mockEnabled"
@@ -434,6 +464,11 @@ footer {
   margin-top: auto;
   padding-top: var(--s-4);
   border-top: 1px solid var(--hairline);
+}
+
+.auto-save {
+  color: var(--faint);
+  font-size: 10px;
 }
 
 .right {
