@@ -65,7 +65,10 @@ export function registerIpc(engine: Engine, overlay: OverlayWindow): void {
   })
 
   ipcMain.handle(IPC.clearFeed, async () => engine.clearFeed())
-  ipcMain.handle(IPC.overlayPreview, async () => engine.previewOverlay())
+  ipcMain.handle(IPC.overlayPreview, async (_event, rawToolId: unknown) => {
+    const toolId = z.string().min(1).max(40).parse(rawToolId)
+    await engine.previewTool(toolId)
+  })
   ipcMain.handle(IPC.overlayDismiss, async () => engine.dismissOverlay())
   ipcMain.handle(IPC.overlayReady, async () => overlay.markReady())
   ipcMain.handle(IPC.overlayDismissed, async () => engine.dismissOverlay())

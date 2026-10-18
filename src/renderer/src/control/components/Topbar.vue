@@ -37,7 +37,7 @@ const bilibili = computed(() => state.snapshot?.platforms.find((item) => item.de
           :label="'B站 · ' + platformPhaseLabel(bilibili.status.phase)"
         />
       </div>
-      <button class="preview" @click="actions.previewOverlay()">
+      <button class="preview" @click="actions.previewActiveTool()">
         <AppIcon name="eye" :size="16" />
         预览弹窗
       </button>

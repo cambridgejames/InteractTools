@@ -149,6 +149,8 @@ describe('DiceTool', () => {
     await tool.handleChat(chat('c', '团子', '!力度 999', clock.now()))
 
     const collecting = tool.view()
+    expect(collecting.toolId).toBe('dice')
+    if (collecting.toolId !== 'dice') throw new Error('expected dice view')
     expect(collecting.phase).toBe('collecting')
     expect(collecting.participants).toHaveLength(2)
     expect(collecting.participants.find((person) => person.userKey === 'mock:a')?.power).toBe(90)

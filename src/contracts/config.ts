@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { DEFAULT_DICE_CONFIG, diceConfigSchema, type DiceConfig } from './dice'
+import { DEFAULT_WHEEL_CONFIG, wheelConfigSchema } from './wheel'
 
 export const bilibiliConfigSchema = z
   .object({
@@ -37,7 +38,8 @@ export const appConfigSchema = z
       mock: mockConfigSchema
     }),
     tools: z.object({
-      dice: diceConfigSchema
+      dice: diceConfigSchema,
+      wheel: wheelConfigSchema
     }),
     overlay: overlayConfigSchema
   })
@@ -60,6 +62,10 @@ export const DEFAULT_APP_CONFIG: AppConfig = {
     dice: {
       ...DEFAULT_DICE_CONFIG,
       commandAliases: [...DEFAULT_DICE_CONFIG.commandAliases]
+    },
+    wheel: {
+      ...DEFAULT_WHEEL_CONFIG,
+      segments: [...DEFAULT_WHEEL_CONFIG.segments]
     }
   },
   overlay: {

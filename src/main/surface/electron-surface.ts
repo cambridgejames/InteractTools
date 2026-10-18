@@ -10,12 +10,13 @@ export class ElectronSurface implements SurfaceHost {
   ) {}
 
   async present(presentation: Presentation): Promise<void> {
-    if (presentation.kind === 'dice.roll') {
-      this.overlay.setAlwaysOnTop(this.alwaysOnTop)
-      this.overlay.present(presentation.payload)
+    if (presentation.kind === 'dismiss') {
+      this.overlay.dismiss()
       return
     }
-    this.overlay.dismiss()
+
+    this.overlay.setAlwaysOnTop(this.alwaysOnTop)
+    this.overlay.present(presentation)
   }
 
   async dismiss(_toolId: string): Promise<void> {

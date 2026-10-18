@@ -10,12 +10,24 @@ export async function runSmoke(application: Application): Promise<void> {
   await delay(1_200)
   await application.controlWindow.capture(join(output, 'control.png'))
 
-  await application.engine.previewOverlay()
+  await application.controlWindow.browserWindow.webContents.executeJavaScript(
+    "document.querySelectorAll('.tool-tab')[1]?.click()"
+  )
+  await delay(400)
+  await application.controlWindow.capture(join(output, 'control-wheel.png'))
+
+  await application.engine.previewTool('dice')
   await delay(1_800)
   await application.overlayWindow.capture(join(output, 'overlay-rolling.png'))
 
   await delay(8_500)
   await application.overlayWindow.capture(join(output, 'overlay.png'))
+
+  await application.engine.previewTool('wheel')
+  await delay(1_500)
+  await application.overlayWindow.capture(join(output, 'overlay-wheel-spinning.png'))
+  await delay(5_500)
+  await application.overlayWindow.capture(join(output, 'overlay-wheel.png'))
 
   console.info('[smoke] screenshots:', output)
   app.quit()

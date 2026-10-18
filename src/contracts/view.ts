@@ -1,5 +1,6 @@
 import type { Aggregation, DiceConfig, DiceFaces, DiceResult, PowerSummary } from './dice'
 import type { PlatformDescriptor, PlatformStatus } from './platform'
+import type { WheelConfig, WheelPhase, WheelResult } from './wheel'
 
 export interface PlatformView {
   readonly descriptor: PlatformDescriptor
@@ -23,6 +24,14 @@ export interface OverlayView {
   readonly alwaysOnTop: boolean
 }
 
+/** 所有工具视图共有的展示字段；控制台不依赖具体工具类型。 */
+export interface BaseToolView {
+  readonly toolId: string
+  readonly name: string
+  readonly description: string
+  readonly icon: string
+}
+
 export type DicePhase = 'idle' | 'collecting' | 'rolling' | 'result'
 
 export interface DiceParticipantView {
@@ -32,7 +41,7 @@ export interface DiceParticipantView {
   readonly receivedAt: number
 }
 
-export interface DiceToolView {
+export interface DiceToolView extends BaseToolView {
   readonly toolId: 'dice'
   readonly phase: DicePhase
   readonly faces: DiceFaces
@@ -44,7 +53,16 @@ export interface DiceToolView {
   readonly config: DiceConfig
 }
 
-export type ToolView = DiceToolView
+export interface WheelToolView extends BaseToolView {
+  readonly toolId: 'wheel'
+  readonly phase: WheelPhase
+  readonly segments: readonly string[]
+  readonly lastResult: WheelResult | null
+  readonly history: readonly WheelResult[]
+  readonly config: WheelConfig
+}
+
+export type ToolView = DiceToolView | WheelToolView
 
 export interface EngineSnapshot {
   readonly revision: number

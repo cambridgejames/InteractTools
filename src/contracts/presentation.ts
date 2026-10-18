@@ -39,6 +39,17 @@ export interface DiceRollPresentation {
   readonly autoCloseSeconds: number
 }
 
+export interface WheelSpinPresentation {
+  readonly toolId: 'wheel'
+  readonly spinId: string
+  readonly segments: readonly string[]
+  readonly resultIndex: number
+  readonly resultLabel: string
+  readonly durationMs: number
+  readonly autoCloseSeconds: number
+}
+
 export type Presentation =
   | { readonly kind: 'dice.roll'; readonly payload: DiceRollPresentation }
+  | { readonly kind: 'wheel.spin'; readonly payload: WheelSpinPresentation }
   | { readonly kind: 'dismiss'; readonly toolId: string }

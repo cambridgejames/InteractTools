@@ -56,7 +56,8 @@ npx vitest run tests/bilibili-live.test.ts --reporter=verbose
 `npm run smoke` 启动 Electron，加载控制台，触发一次本地模拟投骰：
 
 - 截图保存到 `artifacts/smoke/`。
-- 人工检查控制台不是白屏、overlay 能看到骰子与结果数字。
+- 控制台会截图骰子面板和转盘面板；overlay 会截图骰子结果、转盘旋转中与转盘结果。
+- 人工检查控制台不是白屏、两个 overlay 都能看到正确结果。
 - 当前冒烟不自动断言 console error；交付前仍要查看终端与截图。
 
 ## CI 顺序

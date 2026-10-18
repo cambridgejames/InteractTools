@@ -1,26 +1,42 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import DicePanel from '../components/DicePanel.vue'
 import FeedPanel from '../components/FeedPanel.vue'
 import HistoryPanel from '../components/HistoryPanel.vue'
-import { selectDice, state } from '../store'
+import ToolSwitcher from '../components/ToolSwitcher.vue'
+import WheelHistoryPanel from '../components/WheelHistoryPanel.vue'
+import { actions, selectActiveTool, state } from '../store'
+import { TOOL_PANELS } from '../tool-panels'
 
 defineEmits<{ navigate: [page: 'dashboard'] }>()
 
-const dice = computed(() => selectDice(state.snapshot))
+const tools = computed(() => state.snapshot?.tools ?? [])
+const active = computed(() => selectActiveTool(state.snapshot))
+const dice = computed(() => (active.value?.toolId === 'dice' ? active.value : null))
+const wheel = computed(() => (active.value?.toolId === 'wheel' ? active.value : null))
+const panel = computed(() => (active.value === null ? null : TOOL_PANELS[active.value.toolId] ?? null))
 </script>
 
 <template>
   <div class="dashboard">
+    <ToolSwitcher
+      class="switcher"
+      :tools="tools"
+      :active-id="state.activeToolId"
+      @select="actions.selectTool"
+    />
+
     <div class="main-col">
-      <DicePanel v-if="dice" :view="dice" />
+      <component :is="panel" v-if="panel && active" :view="active" />
       <section v-else class="empty-card">
-        <strong>正在加载投骰子工具…</strong>
-        <span>如果持续出现，检查主进程日志。</span>
+        <strong>这个工具还没有控制面板</strong>
+        <span>在 renderer/src/control/tool-panels.ts 注册组件，框架和 overlay 不用改。</span>
       </section>
     </div>
+
     <FeedPanel />
-    <HistoryPanel class="history" :history="dice?.history ?? []" />
+
+    <HistoryPanel v-if="dice" class="history" :history="dice.history" />
+    <WheelHistoryPanel v-else-if="wheel" class="history" :history="wheel.history" />
   </div>
 </template>
 
@@ -32,6 +48,10 @@ const dice = computed(() => selectDice(state.snapshot))
   align-items: start;
   max-width: var(--content-max);
   margin: 0 auto;
+}
+
+.switcher {
+  grid-column: 1 / -1;
 }
 
 .main-col {

@@ -135,15 +135,18 @@ export class Engine {
   }
 
   async updateToolConfig(toolId: string, patch: Readonly<Record<string, unknown>>): Promise<void> {
-    if (toolId !== 'dice') throw new Error('未知工具：' + toolId)
-
     const current = this.requireConfig()
-    const next = appConfigSchema.parse({
-      ...current,
-      tools: { ...current.tools, dice: { ...current.tools.dice, ...patch } }
-    })
+    const tools = { ...current.tools } as Record<string, unknown>
+    const existing = tools[toolId]
+    if (typeof existing !== 'object' || existing === null) {
+      throw new Error('未知工具：' + toolId)
+    }
 
-    await this.requireToolHost().updateConfig(toolId, next.tools.dice)
+    tools[toolId] = { ...existing, ...patch }
+    const next = appConfigSchema.parse({ ...current, tools })
+    const nextToolConfig = (next.tools as Record<string, unknown>)[toolId]
+
+    await this.requireToolHost().updateConfig(toolId, nextToolConfig)
     this.config = next
     await this.options.store.save(next)
     this.publishSnapshot()
@@ -154,8 +157,9 @@ export class Engine {
     this.publishSnapshot()
   }
 
-  async previewOverlay(): Promise<void> {
-    await this.toolAction('dice', { type: 'preview' })
+  /** 预览任意工具的呈现；具体 action 由工具自己解释。 */
+  async previewTool(toolId: string): Promise<void> {
+    await this.toolAction(toolId, { type: 'preview' })
   }
 
   async dismissOverlay(): Promise<void> {

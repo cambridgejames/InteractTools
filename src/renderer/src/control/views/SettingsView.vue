@@ -55,7 +55,7 @@ function saveAutoClose(): void {
         </div>
       </div>
 
-      <button class="secondary" @click="actions.previewOverlay()">
+      <button class="secondary" @click="actions.previewActiveTool()">
         <AppIcon name="eye" :size="15" />
         预览结果弹窗
       </button>

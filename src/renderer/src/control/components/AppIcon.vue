@@ -2,6 +2,7 @@
 type IconName =
   | 'dashboard'
   | 'dice'
+  | 'wheel'
   | 'tools'
   | 'platforms'
   | 'settings'
@@ -28,6 +29,7 @@ const props = withDefaults(defineProps<{ name: IconName; size?: number; strokeWi
 const paths: Record<IconName, string> = {
   dashboard: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z',
   dice: 'M4 7l8-4 8 4v10l-8 4-8-4zM4 7l8 4 8-4M12 11v10',
+  wheel: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1M12 9v3l2 1',
   tools: 'M14 6a3 3 0 0 0-4 4L4 16v4h4l6-6a3 3 0 0 0 4-4l-3 3-2-2z',
   platforms: 'M12 4v16M8 8a6 6 0 0 0 0 8M16 8a6 6 0 0 1 0 8M5 5a10 10 0 0 0 0 14M19 5a10 10 0 0 1 0 14',
   settings: 'M4 7h10M18 7h2M4 17h2M10 17h10M8 4v6M16 14v6',

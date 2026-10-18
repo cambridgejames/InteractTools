@@ -168,6 +168,7 @@ export interface InteractionTool {
 ```ts
 export type Presentation =
   | { readonly kind: 'dice.roll'; readonly payload: DiceRollPresentation }
+  | { readonly kind: 'wheel.spin'; readonly payload: WheelSpinPresentation }
   | { readonly kind: 'dismiss'; readonly toolId: ToolId };
 
 export interface DiceFrame {
@@ -238,6 +239,8 @@ Electron main
 9. overlay 按 `frameSeconds` 回放 Three.js 动画；播放结束显示结果卡。
 10. 主窗口通过快照和 feed 同步状态；历史记录写入配置目录。
 
+转盘是另一条链路：主播在控制台点「开始旋转」→ `Engine.toolAction('wheel', { type: 'spin' })` → `WheelTool` 用 `RandomSource` 选格 → `wheel.spin` 呈现 → overlay 用 2D Canvas 旋转。它**不经过 CommandBus**，也没有物理模拟。
+
 ## 7. 骰子领域
 
 ### 7.1 配置
@@ -283,6 +286,14 @@ idle ──start──▶ collecting ──timeout──▶ rolling ──frames
 - `result` 保留最后一次结果与历史；自动回到 `idle` 由 `reset` 或下一次开始触发。
 - 所有定时器通过 `TimerService` 创建，`deactivate` 时统一取消。
 
+### 7.5 转盘
+
+- 无弹幕命令：`handleChat` 永远返回 `false`，不抢骰子的指令。
+- 配置：`segments`（2–16 个标签）、`spinDurationSeconds`（2–10）、`overlayAutoCloseSeconds`。
+- 结果：`RandomSource.next()` 均匀选格；主进程把 `segments / resultIndex / durationMs` 交给 overlay，overlay 只负责把对应格子转到指针下。
+- 历史：`history/wheel.json`，与骰子分开。
+- 控制台入口：`control/tool-panels.ts` 注册 `wheel → WheelPanel`；工具切换器选中后动态渲染，Dashboard 不知道具体工具。
+
 ## 8. 物理
 
 - 坐标：Y 轴向上，地面 `y = 0`，长度单位约等于骰子外接球半径。
@@ -304,17 +315,34 @@ idle ──start──▶ collecting ──timeout──▶ rolling ──frames
 {
   "schemaVersion": 1,
   "platforms": {
-    "bilibili": { "roomId": "", "enabled": false },
-    "mock": { "botsEnabled": true, "botsIntervalSeconds": 3 }
+    "bilibili": { "enabled": false, "roomId": "" },
+    "mock": {
+      "enabled": true,
+      "botsEnabled": true,
+      "botsIntervalSeconds": 3,
+      "botNames": ["小满", "阿七"]
+    }
   },
   "tools": {
-    "dice": { "faces": 6, "countdownSeconds": 30, "aggregation": "median" }
+    "dice": {
+      "faces": 6,
+      "countdownSeconds": 30,
+      "aggregation": "median",
+      "fallbackPower": 50,
+      "commandAliases": ["力度", "power"],
+      "overlayAutoCloseSeconds": 12
+    },
+    "wheel": {
+      "segments": ["一等奖", "二等奖", "三等奖", "谢谢参与"],
+      "spinDurationSeconds": 5,
+      "overlayAutoCloseSeconds": 8
+    }
   },
-  "overlay": { "autoCloseSeconds": 12, "alwaysOnTop": true }
+  "overlay": { "alwaysOnTop": true }
 }
 ```
 
-写入采用「临时文件 + rename」的原子替换，300ms 防抖。读取时 zod 解析；失败则备份坏文件、回落默认值并记错误日志，不阻塞启动。任何平台 token、cookie 都不写入该文件。
+写入采用「临时文件 + rename」的原子替换。读取时先用默认值深合并，再用 zod 解析；失败则回落默认值并记错误日志，不阻塞启动。任何平台 token、cookie 都不写入该文件。
 
 ## 10. IPC
 
@@ -345,7 +373,8 @@ idle ──start──▶ collecting ──timeout──▶ rolling ──frames
 | 要加的东西 | 改动 |
 | --- | --- |
 | 平台 | 新增 `platforms/<id>/` 工厂，注册到 composition，补 config schema 与 fixture 测试 |
-| 工具 | 新增 `tools/<id>/`，实现 `InteractionTool`，注册到 ToolHost |
+| 工具 | 新增 `tools/<id>/`，实现 `InteractionTool`，注册到 ToolHost，并在控制台加一个面板分支 |
+| 控制台面板 | 在 `control/tool-panels.ts` 注册工具 id → 面板组件；overlay 加对应呈现分支 |
 | 弹窗形态 | 在 `Presentation` 增加 kind，在 SurfaceHost 注册 renderer |
 | 呈现介质 | 实现新的 Surface（例如 HTTP 浏览器源），内核与工具不动 |
 

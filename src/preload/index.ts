@@ -23,7 +23,7 @@ const api: RendererApi = {
   simulateChat: (input) => ipcRenderer.invoke(IPC.mockChat, input),
   clearFeed: () => ipcRenderer.invoke(IPC.clearFeed),
 
-  previewOverlay: () => ipcRenderer.invoke(IPC.overlayPreview),
+  previewTool: (toolId) => ipcRenderer.invoke(IPC.overlayPreview, toolId),
   dismissOverlay: () => ipcRenderer.invoke(IPC.overlayDismiss),
   updateOverlaySettings: (patch) => ipcRenderer.invoke(IPC.overlaySettings, patch),
 

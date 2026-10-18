@@ -1,5 +1,6 @@
 import { reactive } from 'vue'
 import type { DiceConfig } from '@contracts/dice'
+import type { ToolAction } from '@contracts/tool'
 import type { EngineEvent } from '@contracts/engine'
 import type { LogEntry } from '@contracts/log'
 import type { PlatformId, PlatformPhase } from '@contracts/platform'
@@ -18,11 +19,13 @@ export const state = reactive<{
   logs: LogEntry[]
   toast: Toast | null
   loading: boolean
+  activeToolId: string
 }>({
   snapshot: null,
   logs: [],
   toast: null,
-  loading: true
+  loading: true,
+  activeToolId: 'dice'
 })
 
 let started = false
@@ -33,7 +36,7 @@ export async function initStore(): Promise<void> {
   if (started) return
   started = true
   try {
-    state.snapshot = await window.api.snapshot()
+    applySnapshot(await window.api.snapshot())
     window.api.onEvent(handleEvent)
   } catch (error) {
     showToast(errorMessage(error), 'error')
@@ -54,6 +57,14 @@ export function showToast(message: string, tone: Tone = 'info'): void {
 export function selectDice(snapshot: EngineSnapshot | null): DiceToolView | null {
   const tool = snapshot?.tools.find((item) => item.toolId === 'dice')
   return tool ?? null
+}
+
+export function selectTool(snapshot: EngineSnapshot | null, toolId: string) {
+  return snapshot?.tools.find((item) => item.toolId === toolId) ?? null
+}
+
+export function selectActiveTool(snapshot: EngineSnapshot | null) {
+  return selectTool(snapshot, state.activeToolId) ?? snapshot?.tools[0] ?? null
 }
 
 export function selectPlatform(snapshot: EngineSnapshot | null, id: PlatformId): PlatformView | null {
@@ -90,6 +101,23 @@ export const actions = {
 
   async previewDice(): Promise<void> {
     await run(() => window.api.toolAction('dice', { type: 'preview' }))
+  },
+
+  async toolAction(toolId: string, action: ToolAction): Promise<void> {
+    await run(() => window.api.toolAction(toolId, action))
+  },
+
+  async updateToolConfig(
+    toolId: string,
+    patch: Readonly<Record<string, unknown>>
+  ): Promise<boolean> {
+    try {
+      await window.api.updateToolConfig(toolId, patch)
+      return true
+    } catch (error) {
+      showToast(errorMessage(error), 'error')
+      return false
+    }
   },
 
   async clearHistory(): Promise<void> {
@@ -135,8 +163,21 @@ export const actions = {
     await run(() => window.api.clearFeed())
   },
 
-  async previewOverlay(): Promise<void> {
-    await run(() => window.api.previewOverlay())
+  async previewTool(toolId: string): Promise<void> {
+    await run(() => window.api.previewTool(toolId))
+  },
+
+  async previewActiveTool(): Promise<void> {
+    const tool = selectActiveTool(state.snapshot)
+    if (tool === null) {
+      showToast('当前没有可用工具', 'error')
+      return
+    }
+    await actions.previewTool(tool.toolId)
+  },
+
+  selectTool(toolId: string): void {
+    state.activeToolId = toolId
   },
 
   async updateOverlaySettings(patch: { alwaysOnTop?: boolean }): Promise<void> {
@@ -162,7 +203,7 @@ async function run<T>(task: () => Promise<T>, success?: string): Promise<T | und
 function handleEvent(event: EngineEvent): void {
   switch (event.type) {
     case 'snapshot':
-      state.snapshot = event.snapshot
+      applySnapshot(event.snapshot)
       return
     case 'feed': {
       const snapshot = state.snapshot
@@ -178,6 +219,13 @@ function handleEvent(event: EngineEvent): void {
       return
     case 'presentation':
       return
+  }
+}
+
+function applySnapshot(snapshot: EngineSnapshot): void {
+  state.snapshot = snapshot
+  if (!snapshot.tools.some((tool) => tool.toolId === state.activeToolId)) {
+    state.activeToolId = snapshot.tools[0]?.toolId ?? ''
   }
 }
 

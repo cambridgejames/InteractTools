@@ -12,7 +12,9 @@ export interface ToolManifest {
   readonly name: string
   readonly description: string
   readonly version: string
-  /** 供 UI 展示与冲突检查；真正的解析在工具内部。 */
+  /** AppIcon 的图标名；未知值由 UI 回退到通用工具图标。 */
+  readonly icon: string
+  /** 供 UI 展示与冲突检查；无弹幕命令的工具留空数组。 */
   readonly commands: readonly string[]
 }
 

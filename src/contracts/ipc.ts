@@ -47,7 +47,7 @@ export interface RendererApi {
   simulateChat(input: InjectedChat): Promise<void>
   clearFeed(): Promise<void>
 
-  previewOverlay(): Promise<void>
+  previewTool(toolId: string): Promise<void>
   dismissOverlay(): Promise<void>
   updateOverlaySettings(patch: OverlaySettingsPatch): Promise<void>
 

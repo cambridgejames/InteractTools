@@ -1,11 +1,20 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import AppIcon from '../components/AppIcon.vue'
-import { selectDice, state } from '../store'
+import { actions, selectDice, selectTool, state } from '../store'
 import { DICE_FACES } from '@contracts/dice'
 
 const emit = defineEmits<{ navigate: [page: 'dashboard'] }>()
 const dice = computed(() => selectDice(state.snapshot))
+const wheel = computed(() => {
+  const tool = selectTool(state.snapshot, 'wheel')
+  return tool?.toolId === 'wheel' ? tool : null
+})
+
+function openTool(toolId: string): void {
+  actions.selectTool(toolId)
+  emit('navigate', 'dashboard')
+}
 </script>
 
 <template>
@@ -22,7 +31,25 @@ const dice = computed(() => selectDice(state.snapshot))
       </div>
       <footer>
         <span class="meta">{{ dice ? dice.history.length + ' 条记录' : '加载中' }}</span>
-        <button class="open" @click="emit('navigate', 'dashboard')">去控制台</button>
+        <button class="open" @click="openTool('dice')">去控制台</button>
+      </footer>
+    </section>
+
+    <section class="tool-card active">
+      <header>
+        <span class="icon"><AppIcon name="wheel" :size="20" /></span>
+        <span class="status">已启用</span>
+      </header>
+      <h2>转转盘</h2>
+      <p>主播手动旋转，不需要弹幕命令。适合抽奖、选品和现场做决定。</p>
+      <div class="tags">
+        <span class="tag">主播手动</span>
+        <span class="tag">无命令</span>
+        <span class="tag">2–16 格</span>
+      </div>
+      <footer>
+        <span class="meta">{{ wheel ? wheel.history.length + ' 条记录' : '加载中' }}</span>
+        <button class="open" @click="openTool('wheel')">去控制台</button>
       </footer>
     </section>
 

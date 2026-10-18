@@ -119,6 +119,9 @@ export class DiceTool implements InteractionTool {
 
     return {
       toolId: 'dice',
+      name: this.manifest.name,
+      description: this.manifest.description,
+      icon: this.manifest.icon,
       phase: this.phase,
       faces: this.config.faces,
       countdownEndsAt: this.countdownEndsAt,
