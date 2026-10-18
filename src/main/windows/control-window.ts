@@ -1,4 +1,4 @@
-import { BrowserWindow, screen, type Display } from 'electron'
+import { BrowserWindow, screen, shell, type Display } from 'electron'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import type { EngineEvent } from '@contracts/engine'
@@ -31,6 +31,17 @@ export class ControlWindow {
         nodeIntegration: false,
         sandbox: false
       }
+    })
+
+    // 所有外部链接都交给系统默认浏览器，绝不在 Electron 窗口里打开 GitHub。
+    this.window.webContents.setWindowOpenHandler(({ url }) => {
+      if (url.startsWith('https://')) void shell.openExternal(url).catch(() => undefined)
+      return { action: 'deny' }
+    })
+    this.window.webContents.on('will-navigate', (event, url) => {
+      if (!url.startsWith('https://')) return
+      event.preventDefault()
+      void shell.openExternal(url).catch(() => undefined)
     })
 
     this.window.once('ready-to-show', () => this.window.show())

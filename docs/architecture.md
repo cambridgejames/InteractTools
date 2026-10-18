@@ -351,7 +351,8 @@ idle ──start──▶ collecting ──timeout──▶ rolling ──frames
     }
   },
   "overlay": { "alwaysOnTop": true },
-  "window": { "display": "cursor" }
+  "window": { "display": "cursor" },
+  "feed": { "mode": "full" }
 }
 ```
 

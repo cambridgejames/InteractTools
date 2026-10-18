@@ -207,6 +207,10 @@ export const actions = {
 
   async openDataFolder(): Promise<void> {
     await run(() => window.api.openDataFolder())
+  },
+
+  async setFeedMode(mode: 'full' | 'collapsed' | 'hidden'): Promise<void> {
+    await run(() => window.api.setFeedMode(mode))
   }
 }
 

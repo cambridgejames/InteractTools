@@ -99,6 +99,7 @@ export interface EngineSnapshot {
   readonly feed: readonly FeedItem[]
   readonly overlay: OverlayView
   readonly window: WindowView
+  readonly feedMode: 'full' | 'collapsed' | 'hidden'
 }
 
 export type { Aggregation }

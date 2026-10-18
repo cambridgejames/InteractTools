@@ -101,7 +101,8 @@ export class Engine {
       },
       window: {
         display: this.requireConfig().window.display
-      }
+      },
+      feedMode: this.requireConfig().feed.mode
     }
   }
 
@@ -111,6 +112,18 @@ export class Engine {
     const next = appConfigSchema.parse({
       ...config,
       window: { display }
+    })
+    this.config = next
+    await this.options.store.save(next)
+    this.publishSnapshot()
+  }
+
+  /** 弹幕栏显示模式：完整 / 折叠成窄条 / 隐藏（主播使用自己的弹幕机）。 */
+  async updateFeedMode(mode: 'full' | 'collapsed' | 'hidden'): Promise<void> {
+    const config = this.requireConfig()
+    const next = appConfigSchema.parse({
+      ...config,
+      feed: { mode }
     })
     this.config = next
     await this.options.store.save(next)

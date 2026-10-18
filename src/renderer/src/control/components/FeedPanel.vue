@@ -5,6 +5,8 @@ import AppIcon from './AppIcon.vue'
 import { actions, connectedCount, selectPlatform, showToast, state } from '../store'
 import { formatTime, initialOf } from '../../shared/format'
 
+const emit = defineEmits<{ collapse: [] }>()
+
 const ROW_HEIGHT = 68
 const OVERSCAN = 4
 
@@ -111,6 +113,9 @@ function platformLabel(item: FeedItem): string {
       <div class="head-actions">
         <button class="mini" @click="fill">填充 8 条</button>
         <button class="mini" @click="actions.clearFeed()">清空</button>
+        <button class="mini collapse" title="收起弹幕栏" @click="emit('collapse')">
+          <AppIcon name="chevron" :size="14" />
+        </button>
       </div>
     </header>
 

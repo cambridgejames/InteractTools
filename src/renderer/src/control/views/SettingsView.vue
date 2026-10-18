@@ -1,14 +1,20 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import type { FeedMode } from '@contracts/config'
 import type { WindowDisplayOption } from '@contracts/ipc'
 import AppIcon from '../components/AppIcon.vue'
 import { actions, showToast, state } from '../store'
 
+const GITHUB_URL = 'https://github.com/cambridgejames/interact-tools'
+const GITHUB_ISSUES_URL = GITHUB_URL + '/issues'
+
 const displays = ref<readonly WindowDisplayOption[]>([])
 const selectedDisplay = ref('cursor')
+const selectedFeedMode = ref<FeedMode>('full')
 
 onMounted(async () => {
   selectedDisplay.value = state.snapshot?.window.display ?? 'cursor'
+  selectedFeedMode.value = state.snapshot?.feedMode ?? 'full'
   try {
     displays.value = await window.api.windowDisplays()
   } catch (error) {
@@ -22,6 +28,23 @@ async function saveDisplay(): Promise<void> {
     showToast('窗口位置已更新', 'success')
   } catch (error) {
     showToast(error instanceof Error ? error.message : '更新窗口位置失败', 'error')
+  }
+}
+
+async function saveFeedMode(): Promise<void> {
+  try {
+    await window.api.setFeedMode(selectedFeedMode.value)
+    showToast('弹幕栏设置已更新', 'success')
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : '更新弹幕栏失败', 'error')
+  }
+}
+
+async function openExternal(url: string): Promise<void> {
+  try {
+    await window.api.openExternal(url)
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : '打开链接失败', 'error')
   }
 }
 </script>
@@ -42,6 +65,22 @@ async function saveDisplay(): Promise<void> {
           <option v-for="display in displays" :key="display.id" :value="display.id">
             {{ display.label }}{{ display.primary ? ' · 主屏' : '' }} · {{ display.width }}×{{ display.height }}
           </option>
+        </select>
+      </label>
+    </section>
+
+    <section class="card">
+      <header>
+        <h2>界面</h2>
+        <p>右侧弹幕栏可以折叠或隐藏；使用自己的弹幕机时选「隐藏」。</p>
+      </header>
+
+      <label class="field">
+        <span>直播间弹幕栏</span>
+        <select v-model="selectedFeedMode" @change="saveFeedMode">
+          <option value="full">完整显示</option>
+          <option value="collapsed">折叠成窄条</option>
+          <option value="hidden">隐藏</option>
         </select>
       </label>
     </section>
@@ -86,6 +125,13 @@ async function saveDisplay(): Promise<void> {
         <li>物理结果由 cannon-es 刚体模拟产生，结果动画只回放录制数据。</li>
         <li>视觉规格见 DESIGN.md，组件只使用 tokens.css 的变量。</li>
       </ul>
+      <div class="links">
+        <button class="link" @click="openExternal(GITHUB_URL)">
+          <AppIcon name="external" :size="14" />
+          GitHub 仓库
+        </button>
+        <button class="link" @click="openExternal(GITHUB_ISSUES_URL)">问题反馈</button>
+      </div>
     </section>
   </div>
 </template>
@@ -128,6 +174,29 @@ header p {
   gap: 6px;
   color: var(--mute);
   font-size: 11px;
+}
+
+.links {
+  display: flex;
+  gap: var(--s-2);
+  margin-top: var(--s-2);
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-control);
+  background: var(--inset);
+  color: var(--body);
+  font-size: 11px;
+}
+
+.link:hover {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .field select {

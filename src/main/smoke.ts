@@ -43,6 +43,23 @@ export async function runSmoke(application: Application): Promise<void> {
   await delay(300)
   await application.controlWindow.capture(join(output, 'control-settings.png'))
   await application.controlWindow.browserWindow.webContents.executeJavaScript(
+    "document.querySelector('.app-content')?.scrollTo(0, 99999)"
+  )
+  await delay(200)
+  await application.controlWindow.capture(join(output, 'control-settings-about.png'))
+  await application.controlWindow.browserWindow.webContents.executeJavaScript(
+    "document.querySelector('.app-content')?.scrollTo(0, 0)"
+  )
+  await delay(150)
+  await application.engine.updateFeedMode('collapsed')
+  await delay(300)
+  await application.controlWindow.capture(join(output, 'control-feed-collapsed.png'))
+  await application.engine.updateFeedMode('hidden')
+  await delay(300)
+  await application.controlWindow.capture(join(output, 'control-feed-hidden.png'))
+  await application.engine.updateFeedMode('full')
+  await delay(300)
+  await application.controlWindow.browserWindow.webContents.executeJavaScript(
     "document.querySelectorAll('.nav-item')[0]?.click()"
   )
   await delay(300)

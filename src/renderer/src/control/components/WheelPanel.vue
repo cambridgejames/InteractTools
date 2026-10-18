@@ -185,14 +185,28 @@ function paletteVar(index: number): string {
   return palette[index % palette.length] ?? '--surface-active'
 }
 
+function maxLabelFont(count: number): number {
+  if (count <= 4) return 22
+  if (count <= 6) return 20
+  if (count <= 8) return 18
+  if (count <= 10) return 16
+  if (count <= 12) return 14
+  return 12
+}
+
 function labelStyle(index: number): Record<string, string> {
-  const step = 360 / Math.max(1, props.view.segments.length)
+  const count = props.view.segments.length
+  const label = props.view.segments[index] ?? ''
+  const step = 360 / Math.max(1, count)
   const angle = (index + 0.5) * step
   const radians = ((angle - 90) * Math.PI) / 180
-  const radius = 128
-  const count = props.view.segments.length
-  const width = count <= 6 ? 118 : count <= 8 ? 96 : count <= 10 ? 80 : 64
-  const fontSize = count <= 8 ? 13 : count <= 12 ? 12 : 11
+  const radius = count <= 4 ? 116 : 128
+  const width = count <= 4 ? 130 : count <= 6 ? 118 : count <= 8 ? 96 : count <= 10 ? 80 : 64
+  const chars = Array.from(label).length
+  // 两行容量近似：字宽 × 字号 × 2 ≈ width × 2；短词封顶，长词缩字号。
+  const fit = (width * 2) / Math.max(1, chars)
+  const fontSize = Math.max(9, Math.min(maxLabelFont(count), fit))
+
   return {
     left: 'calc(50% + ' + Math.cos(radians) * radius + 'px)',
     top: 'calc(50% + ' + Math.sin(radians) * radius + 'px)',
@@ -200,7 +214,7 @@ function labelStyle(index: number): Record<string, string> {
     transform: 'translate(-50%, -50%) rotate(' + (angle - 90 + (angle > 180 ? 180 : 0)) + 'deg)',
     color: index % 7 === 3 ? 'var(--ink)' : 'var(--canvas)',
     width: width + 'px',
-    fontSize: fontSize + 'px'
+    fontSize: fontSize.toFixed(1) + 'px'
   }
 }
 

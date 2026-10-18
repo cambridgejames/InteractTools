@@ -36,6 +36,15 @@ export const windowConfigSchema = z
   })
   .strict()
 
+export const FEED_MODES = ['full', 'collapsed', 'hidden'] as const
+export type FeedMode = (typeof FEED_MODES)[number]
+
+export const feedConfigSchema = z
+  .object({
+    mode: z.enum(FEED_MODES)
+  })
+  .strict()
+
 export type OverlayConfig = z.infer<typeof overlayConfigSchema>
 
 export const appConfigSchema = z
@@ -51,7 +60,8 @@ export const appConfigSchema = z
       vote: voteConfigSchema
     }),
     overlay: overlayConfigSchema,
-    window: windowConfigSchema
+    window: windowConfigSchema,
+    feed: feedConfigSchema
   })
   .strict()
 
@@ -96,6 +106,9 @@ export const DEFAULT_APP_CONFIG: AppConfig = {
   },
   window: {
     display: 'cursor'
+  },
+  feed: {
+    mode: 'full'
   }
 }
 

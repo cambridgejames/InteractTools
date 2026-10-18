@@ -21,6 +21,7 @@ type IconName =
   | 'bilibili'
   | 'gift'
   | 'users'
+  | 'external'
 
 const props = withDefaults(defineProps<{ name: IconName; size?: number; strokeWidth?: number }>(), {
   size: 18,
@@ -48,7 +49,8 @@ const paths: Record<IconName, string> = {
   chevron: 'M6 9l6 6 6-6',
   bilibili: 'M5 8h14v9H5zM8 5l2 3M16 5l-2 3M9 12v2M15 12v2',
   gift: 'M4 10h16v10H4zM2 6h20v4H2zM12 6v14M8 6a2 2 0 1 1 4 0M16 6a2 2 0 1 0-4 0',
-  users: 'M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2 20c0-3 2.7-5 6-5s6 2 6 5M17 11a3 3 0 1 0 0-6M16 15c3 0 5 2 5 5'
+  users: 'M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2 20c0-3 2.7-5 6-5s6 2 6 5M17 11a3 3 0 1 0 0-6M16 15c3 0 5 2 5 5',
+  external: 'M14 4h6v6M20 4l-9 9M18 14v5H5V6h5'
 }
 </script>
 

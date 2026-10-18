@@ -5,6 +5,13 @@ import type { Engine } from '@kernel/engine'
 import type { ControlWindow } from '../windows/control-window'
 
 const platformIdSchema = z.enum(['bilibili', 'mock'])
+const feedModeSchema = z.enum(['full', 'collapsed', 'hidden'])
+const githubUrlSchema = z
+  .string()
+  .url()
+  .refine((value) => value.startsWith('https://github.com/cambridgejames/'), {
+    message: '只允许打开项目 GitHub 链接'
+  })
 const patchSchema = z.record(z.string(), z.unknown())
 const toolActionSchema = z.object({
   type: z.string().min(1).max(40),
@@ -18,6 +25,14 @@ export function registerIpc(engine: Engine, controlWindow: ControlWindow): void 
   ipcMain.handle(IPC.snapshot, async () => engine.snapshot())
 
   ipcMain.handle(IPC.windowDisplays, async () => controlWindow.displayOptions())
+
+  ipcMain.handle(IPC.feedSetMode, async (_event, rawMode: unknown) => {
+    await engine.updateFeedMode(feedModeSchema.parse(rawMode))
+  })
+
+  ipcMain.handle(IPC.openExternal, async (_event, rawUrl: unknown) => {
+    await shell.openExternal(githubUrlSchema.parse(rawUrl))
+  })
 
   ipcMain.handle(IPC.windowDisplay, async (_event, rawDisplay: unknown) => {
     const display = z.string().trim().min(1).max(40).parse(rawDisplay)

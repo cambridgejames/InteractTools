@@ -19,7 +19,9 @@ export const IPC = {
   openDataFolder: 'app:open-data-folder',
   clearFeed: 'feed:clear',
   windowDisplays: 'window:displays',
-  windowDisplay: 'window:set-display'
+  windowDisplay: 'window:set-display',
+  feedSetMode: 'feed:set-mode',
+  openExternal: 'app:open-external'
 } as const
 
 export interface WindowDisplayOption {
@@ -58,4 +60,6 @@ export interface RendererApi {
   openDataFolder(): Promise<void>
   windowDisplays(): Promise<readonly WindowDisplayOption[]>
   setWindowDisplay(display: string): Promise<void>
+  setFeedMode(mode: 'full' | 'collapsed' | 'hidden'): Promise<void>
+  openExternal(url: string): Promise<void>
 }

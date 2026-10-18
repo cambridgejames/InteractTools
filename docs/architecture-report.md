@@ -520,6 +520,7 @@ PlatformHost 只保留连接对象，不重复创建。
 - 主播手动，无命令。
 - RandomSource 均匀选格。
 - WheelPanel 用 CSS rotate 原地旋转；圆盘 400px，扇形内标签随盘面旋转，中心品牌图标顶部的小三角作为固定指针（带深色投影，避免和同色扇形糊在一起）。
+- 标签字号有上限并按文本长度自适应：短选项封顶，长选项缩到两行容量内；不同格数上限 22/20/18/16/14/12px。
 - 预设：最多 12 个命名转盘，保存 segments + spinDurationSeconds；同名覆盖。
 - duration + 350ms 后出结果。
 - 结果弹窗只显示最终格，不重播转盘。
@@ -589,6 +590,7 @@ PlatformHost 只保留连接对象，不重复创建。
 
 - 目标 1560×960，按配置的显示器（默认鼠标所在屏）workArea 自动收缩并居中；最小 1120×720。
 - 设置页通过 window:displays / window:set-display 选择屏幕；配置持久化到 appConfig.window.display。
+- 弹幕栏模式配置为 appConfig.feed.mode；snapshot.feedMode 驱动 App 栅格。
 - 开发模式窗口图标读取 `build/icon.png`；打包后从 `extraResources/icon.png` 读取，任务栏不再显示 Electron 默认图标。
 - contextIsolation true，nodeIntegration false。
 - 不加载远程页面；开发模式只加载 ELECTRON_RENDERER_URL。
@@ -621,6 +623,8 @@ PlatformHost 只保留连接对象，不重复创建。
 - 面板：DicePanel、WheelPanel、VotePanel。每个工具 header 下方有测试命令条；骰子 3 个力度 chip，投票按选项数显示投票 chip，转盘无命令。feed 底部不再放工具命令。
 - 历史：HistoryPanel、WheelHistoryPanel、VoteHistoryPanel。
 - 公共：FeedPanel（68px 行高虚拟滚动）、ToolSwitcher、ToggleSwitch、StatusPill、Toast、AppIcon。
+- 弹幕栏模式来自 snapshot.feedMode：full 320px / collapsed 44px / hidden；设置页通过 feed:set-mode 持久化。
+- 设置页的 GitHub 仓库/问题反馈按钮通过 app:open-external 交给系统默认浏览器；控制台也拦截 window.open 与外部导航，禁止应用内打开。
 
 结果弹窗：
 
@@ -664,7 +668,7 @@ userData 默认是 %APPDATA%/interact-tools；--smoke 时切到 artifacts/smoke/
 
 测试：
 
-- 11 个测试文件，40 个用例通过，1 个 B站真连用例默认跳过。
+- 12 个测试文件，42 个用例通过，1 个 B站真连用例默认跳过。
 - 覆盖骰子 domain、几何、物理、工具、轮盘工具、投票 domain/工具、命令提示总线、MockAdapter、B站协议、WBI。
 - 真连测试：LIVE_BILIBILI=1 npx vitest run tests/bilibili-live.test.ts；最近房间 6 收到 6 条。
 

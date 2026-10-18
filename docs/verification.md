@@ -10,7 +10,7 @@
 | --- | --- | --- |
 | 类型 | `npm run typecheck` | 通过 |
 | 静态检查 | `npm run lint` | 通过（ESLint + 依赖边界 + 设计 token） |
-| 单元测试 | `npm run test` | 通过，11 个文件 / 40 个用例（另 1 个真连测试默认跳过） |
+| 单元测试 | `npm run test` | 通过，12 个文件 / 42 个用例（另 1 个真连测试默认跳过） |
 | 构建 | `npm run build` | 通过 |
 | 冒烟 | `npm run smoke` | 通过，生成控制台面板动画与应用内结果弹窗截图 |
 | 打包 | `npm run package:win` | 通过，NSIS + portable |
@@ -24,7 +24,9 @@
 - `control.png`：控制台，含平台状态、骰子面板、事件流、历史记录。
 - `control-wheel.png`：转盘扇形标签、中心指针和命名预设列表。
 - `control-platforms.png`：平台设置页仍保留右侧实时弹幕栏。
-- `control-settings.png`：窗口位置（跟随鼠标/显示器选择）与结果展示设置。
+- `control-settings.png`：窗口位置、弹幕栏模式、结果展示与 GitHub 入口。
+- `control-settings-about.png`：关于区的 GitHub 仓库/问题反馈入口。
+- `control-feed-collapsed.png` / `control-feed-hidden.png`：弹幕栏折叠窄条与隐藏。
 - `control-vote.png` / `control-vote-collecting.png`：投票面板待开始（含预设）与投票中大倒计时。
 - `control-vote-result.png`：应用内投票结果弹窗（票数与并列最高）。
 - `control-dice-rolling.png`：骰子从发射台上升、镜头跟随中。
