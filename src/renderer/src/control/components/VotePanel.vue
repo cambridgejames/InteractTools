@@ -109,6 +109,11 @@ async function cancel(): Promise<void> {
 async function preview(): Promise<void> {
   await actions.toolAction('vote', { type: 'preview' })
 }
+
+async function sendHint(index: number): Promise<void> {
+  const alias = props.view.config.commandAliases[0] ?? '投票'
+  await actions.simulateChat('测试观众', '!' + alias + ' ' + String(index))
+}
 </script>
 
 <template>
@@ -123,6 +128,21 @@ async function preview(): Promise<void> {
       </div>
       <span class="phase" :class="view.phase">{{ phaseLabel }}</span>
     </header>
+
+    <div class="command-hints">
+      <span class="hint-label">测试命令</span>
+      <button
+        v-for="index in view.options.length"
+        :key="index"
+        type="button"
+        class="hint-chip"
+        :disabled="!locked"
+        @click="sendHint(index)"
+      >
+        !{{ view.config.commandAliases[0] ?? '投票' }} {{ index }}
+      </button>
+      <span class="hint-note">投票中才会被计数</span>
+    </div>
 
     <div class="body">
       <div class="live">
@@ -247,6 +267,46 @@ h2 {
 
 .phase.result {
   color: var(--success);
+}
+
+.command-hints {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.hint-label {
+  color: var(--mute);
+  font-size: 10px;
+  letter-spacing: 0.8px;
+}
+
+.hint-chip {
+  height: 24px;
+  padding: 0 8px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-chip);
+  background: transparent;
+  color: var(--body);
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+.hint-chip:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.hint-chip:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.hint-note {
+  margin-left: auto;
+  color: var(--faint);
+  font-size: 10px;
 }
 
 .body {

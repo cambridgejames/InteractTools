@@ -245,6 +245,8 @@ Electron main
 
 投票是第三条链路：`VoteTool` 在倒计时内解析 `投票 1` / `投票 选项文字`，按 `userKey` 只保留最后一票；`view()` 把实时票数给 `VotePanel`，倒计时结束或「提前结束」后统计并列最高票，发 `vote.result` 给结果窗。它不物理、不随机、不写弹幕。
 
+命令提示走 `CommandHintBus` 发布订阅：dice/vote 进入 collecting 时通过 `ToolContext.publishCommandHint` 发布命令样本，结束时清空；`MockAdapter` 订阅后只在有提示时按概率注入当前工具命令。这样模拟源不 import 任何工具，新增玩法只需发布自己的样本。
+
 ## 7. 骰子领域
 
 ### 7.1 配置

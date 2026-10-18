@@ -13,9 +13,9 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
-  width: 72px;
-  height: 72px;
-  padding: 10px;
+  width: 84px;
+  height: 84px;
+  padding: 12px;
   border: 1px solid color-mix(in srgb, var(--die-pip) 18%, transparent);
   border-radius: var(--r-card);
   background: linear-gradient(145deg, var(--die-face), color-mix(in srgb, var(--die-face) 82%, var(--die-pip)));
@@ -24,8 +24,8 @@
 }
 
 .pip {
-  width: 10px;
-  height: 10px;
+  width: 11px;
+  height: 11px;
   border-radius: 50%;
   background: var(--die-pip);
   align-self: center;

@@ -76,6 +76,7 @@ export class VoteTool implements InteractionTool {
     this.ballots.clear()
     this.countdownEndsAt = null
     const context = this.context
+    context?.publishCommandHint(null)
     this.context = null
     if (context !== null) {
       await context.present({ kind: 'dismiss', toolId: 'vote' }).catch(() => undefined)
@@ -162,6 +163,7 @@ export class VoteTool implements InteractionTool {
     this.phase = 'collecting'
     const endsAt = context.clock.now() + this.config.countdownSeconds * 1000
     this.countdownEndsAt = endsAt
+    context.publishCommandHint(this.commandSamples())
     void context.present({ kind: 'dismiss', toolId: 'vote' }).catch(() => undefined)
     this.notify()
     context.announce(
@@ -179,6 +181,7 @@ export class VoteTool implements InteractionTool {
   private async finish(persist: boolean): Promise<void> {
     if (this.phase !== 'collecting') return
     const context = this.requireContext()
+    context.publishCommandHint(null)
     this.generation += 1
     this.clearTimer()
     this.phase = 'result'
@@ -259,6 +262,7 @@ export class VoteTool implements InteractionTool {
   }
 
   private async cancelRound(): Promise<void> {
+    this.context?.publishCommandHint(null)
     this.generation += 1
     this.clearTimer()
     this.phase = 'idle'
@@ -276,6 +280,11 @@ export class VoteTool implements InteractionTool {
     this.history = []
     await this.context?.history.clear()
     this.notify()
+  }
+
+  private commandSamples(): readonly string[] {
+    const alias = this.config.commandAliases[0] ?? '投票'
+    return this.config.options.map((_, index) => '!' + alias + ' ' + String(index + 1))
   }
 
   private clearTimer(): void {

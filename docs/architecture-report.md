@@ -44,7 +44,7 @@
     ┌──────────────────────────── Main Process ────────────────────────────┐
     │                                                                      │
     │  composition                                                         │
-    │    ├─ ControlWindow      1440×900 控制台                             │
+    │    ├─ ControlWindow      1560×960 控制台（按工作区收缩）             │
     │    ├─ ResultWindow       760×540 原生结果小窗                        │
     │    ├─ JsonConfigStore    配置读写                                    │
     │    ├─ JsonHistoryStore   每个工具一份历史                            │
@@ -105,6 +105,7 @@
 | presentation.ts | 骰子/转盘/投票的呈现数据与 dismiss |
 | platform.ts | PlatformAdapter、事件、状态、userKey |
 | tool.ts | InteractionTool、ToolContext、ToolAction |
+| command-hint.ts | 命令提示发布/订阅类型 |
 | ipc.ts | IPC channel、RendererApi、ResultApi |
 | engine.ts | EngineEvent |
 | time.ts | Clock、RandomSource、TimerScope、Cancellable |
@@ -124,6 +125,7 @@
 | engine.ts | 应用状态、配置、feed、工具/平台 Host 组合、快照广播 |
 | platform-host.ts | 适配器工厂、连接/断开/重连、状态表、注入弹幕 |
 | tool-host.ts | 工具激活/停用、每工具 TimerScope、历史、ToolContext |
+| command-hint-bus.ts | 工具收集命令 -> 模拟源的发布订阅 |
 | command-bus.ts | 按工具注册顺序调用 handleChat，第一个消费者终止 |
 | ports.ts | ConfigStore、SurfaceHost、TimerFactory |
 | random.ts | MathRandom |
@@ -137,7 +139,7 @@
 | bilibili/wbi.ts | mixinKey 表、参数排序、w_rid MD5 |
 | bilibili/schema.ts | room_init、getDanmuInfo、nav、finger 的 zod schema |
 | bilibili/index.ts | 导出适配器工厂 |
-| mock/index.ts | 本地模拟源、自动观众、手动注入 |
+| mock/index.ts | 本地模拟源、自动观众（消费命令提示）、手动注入 |
 
 ### 5.4 tools
 
@@ -230,7 +232,9 @@ ToolView 是 DiceToolView、WheelToolView、VoteToolView 的联合；所有都�
     handleAction(action)
     view(): ToolView
 
-ToolContext 注入 clock、timer、random、logger、history、present、notifyChange、announce。工具不碰窗口、不读写磁盘。
+ToolContext 注入 clock、timer、random、logger、history、present、notifyChange、announce、publishCommandHint。工具不碰窗口、不读写磁盘。
+
+publishCommandHint 是发布订阅的写端：工具在 collecting 阶段发布当前命令样本，结束时发布 null；ToolHost 转发给 CommandHintBus，MockAdapter 订阅后决定是否注入。新增玩法不需要修改模拟源。
 
 ### 6.5 Presentation
 
@@ -451,6 +455,26 @@ B站适配器内部负责重连：
 
 PlatformHost 只保留连接对象，不重复创建。
 
+### 8.13 命令提示发布订阅
+
+    dice/vote start
+      -> ToolContext.publishCommandHint(samples)
+      -> ToolHost
+      -> CommandHintBus.publish
+      -> 通知订阅者
+      -> MockAdapter.hints = snapshot
+      -> 下一次 3 秒定时
+      -> 70% 注入当前工具命令 / 20% 普通聊天 / 10% 礼物
+
+    dice/vote finish/cancel/deactivate
+      -> publishCommandHint(null)
+      -> CommandHintBus.clear
+      -> MockAdapter 回到只发普通聊天/礼物
+
+- wheel 没有命令，不发布提示。
+- 多个工具同时收集时，MockAdapter 从当前提示里随机挑一个。
+- 发布订阅让模拟源与具体玩法解耦；新增工具只要在收集阶段发布样本。
+
 ## 9. 三个工具
 
 ### 9.1 投骰子
@@ -483,7 +507,7 @@ PlatformHost 只保留连接对象，不重复创建。
 呈现：
 
 - dice.roll 给 DicePanel，面板 3D 骰盒内播放。
-- 面板骰盒响应式，最大 680px，4:3。
+- 面板骰盒响应式，最大 760px，4:3；空闲倒计时环 220px。
 - 播完后 dice.result 给原生结果窗。
 
 ### 9.2 转转盘
@@ -560,10 +584,10 @@ PlatformHost 只保留连接对象，不重复创建。
 
 ### 11.1 控制台
 
-- 1440×900，最小 1120×720。
+- 目标 1560×960，按主屏工作区自动收缩；最小 1120×720。
 - contextIsolation true，nodeIntegration false。
 - 不加载远程页面；开发模式只加载 ELECTRON_RENDERER_URL。
-- 三栏布局：左导航 216px、中内容、右 feed 340px；小于 1180px 隐藏 feed。
+- 三栏布局：左导航 216px、中内容、右 feed 320px；小于 1180px 隐藏 feed。
 
 ### 11.2 结果窗
 
@@ -589,7 +613,7 @@ PlatformHost 只保留连接对象，不重复创建。
 - initStore：首屏快照 + 订阅事件 + 订阅 presentation。
 - actions：工具动作、配置、平台连接、模拟弹幕、预览、关闭结果。
 - tool-panels.ts：工具 id 到面板组件的注册表，Dashboard 用动态 component。
-- 面板：DicePanel、WheelPanel、VotePanel。
+- 面板：DicePanel、WheelPanel、VotePanel。每个工具 header 下方有测试命令条；骰子 3 个力度 chip，投票按选项数显示投票 chip，转盘无命令。feed 底部不再放工具命令。
 - 历史：HistoryPanel、WheelHistoryPanel、VoteHistoryPanel。
 - 公共：FeedPanel、ToolSwitcher、ToggleSwitch、StatusPill、Toast、AppIcon。
 
@@ -628,7 +652,7 @@ userData 默认是 %APPDATA%/interact-tools；--smoke 时切到 artifacts/smoke/
 
 测试：
 
-- 8 个测试文件，35 个用例通过，1 个 B站真连用例默认跳过。
+- 10 个测试文件，37 个用例通过，1 个 B站真连用例默认跳过。
 - 覆盖骰子 domain、几何、物理、工具、轮盘工具、投票 domain/工具、B站协议、WBI。
 - 真连测试：LIVE_BILIBILI=1 npx vitest run tests/bilibili-live.test.ts；最近房间 6 收到 6 条。
 
@@ -707,8 +731,8 @@ smoke 流程：
 6. Engine 的快照当前是即时全量广播，没有 50ms 合并；高频弹幕时依赖 feed 增量，但工具 notify 仍可能触发整包。
 7. overlay.alwaysOnTop 是兼容字段，当前结果窗固定置顶。
 8. 结果窗不自动关闭，忘记关闭会保持置顶。
-9. 没有窗口大小/位置持久化；默认 1440×900。
-10. Mock 自动观众只发力度，不会自动发投票命令。
+9. 没有窗口大小/位置持久化；默认按工作区取 1560×960 上限。
+10. Mock 自动观众依赖工具发布的命令提示；没有工具 collecting 时只发普通聊天/礼物。
 11. NSIS 安装向导未逐页点击验证；只做了打包后 smoke。
 12. UI 组件没有独立单测，主要靠 smoke 截图。
 13. Engine.dismissOverlay 仍把 dice 作为 toolId 传给 SurfaceHost；只影响 dismiss 标签，不影响关闭行为，但语义上应改成 overlay 或当前工具。

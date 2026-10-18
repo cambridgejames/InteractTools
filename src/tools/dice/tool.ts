@@ -63,6 +63,7 @@ export class DiceTool implements InteractionTool {
     this.phase = 'idle'
     this.countdownEndsAt = null
     const context = this.context
+    context?.publishCommandHint(null)
     this.context = null
     if (context !== null) {
       await context.present({ kind: 'dismiss', toolId: 'dice' }).catch(() => undefined)
@@ -153,6 +154,7 @@ export class DiceTool implements InteractionTool {
     this.lastResult = null
     this.phase = 'collecting'
     this.countdownEndsAt = context.clock.now() + this.config.countdownSeconds * 1000
+    context.publishCommandHint(this.commandSamples())
 
     context.announce(
       '开始收集力度：发送 ' + this.commandHint() + '，' + this.config.countdownSeconds + ' 秒后投掷。'
@@ -172,6 +174,7 @@ export class DiceTool implements InteractionTool {
   private async finishCollection(): Promise<void> {
     if (this.phase !== 'collecting') return
     const context = this.requireContext()
+    context.publishCommandHint(null)
 
     this.countdown?.cancel()
     this.countdown = null
@@ -321,6 +324,7 @@ export class DiceTool implements InteractionTool {
     this.countdownEndsAt = null
     this.participants.clear()
     this.summary = null
+    context?.publishCommandHint(null)
     this.notify()
     if (context !== null) {
       await context.present({ kind: 'dismiss', toolId: 'dice' }).catch(() => undefined)
@@ -334,6 +338,7 @@ export class DiceTool implements InteractionTool {
     this.countdownEndsAt = null
     this.participants.clear()
     this.summary = null
+    this.context?.publishCommandHint(null)
     this.notify()
   }
 
@@ -357,6 +362,11 @@ export class DiceTool implements InteractionTool {
   private commandHint(): string {
     const alias = this.config.commandAliases[0] ?? '力度'
     return '!' + alias + ' 80'
+  }
+
+  private commandSamples(): readonly string[] {
+    const alias = this.config.commandAliases[0] ?? '力度'
+    return ['!' + alias + ' 30', '!' + alias + ' 60', '!' + alias + ' 90']
   }
 
   private requireContext(): ToolContext {

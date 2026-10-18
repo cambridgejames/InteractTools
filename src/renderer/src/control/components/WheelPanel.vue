@@ -273,7 +273,7 @@ h2 {
 
 .card-body {
   display: grid;
-  grid-template-columns: minmax(260px, 0.9fr) minmax(300px, 1.1fr);
+  grid-template-columns: minmax(300px, 1.1fr) minmax(300px, 0.9fr);
   gap: var(--s-5);
   padding: var(--s-5);
 }
@@ -289,8 +289,8 @@ h2 {
 
 .wheel-frame {
   position: relative;
-  width: 190px;
-  height: 190px;
+  width: 280px;
+  height: 280px;
   border-radius: 50%;
   box-shadow: 0 0 0 1px var(--hairline-strong), var(--glow-accent);
 }
@@ -310,8 +310,8 @@ h2 {
   z-index: 2;
   display: grid;
   place-items: center;
-  width: 60px;
-  height: 60px;
+  width: 80px;
+  height: 80px;
   border: 2px solid var(--accent);
   border-radius: 50%;
   background: var(--canvas);

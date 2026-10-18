@@ -115,6 +115,7 @@ describe('VoteTool', () => {
     const history = new MemoryHistory()
     const presentations: Presentation[] = []
     const announcements: string[] = []
+    const hints: (readonly string[] | null)[] = []
 
     const context: ToolContext = {
       clock,
@@ -126,7 +127,8 @@ describe('VoteTool', () => {
         presentations.push(presentation)
       },
       notifyChange: () => undefined,
-      announce: (text) => announcements.push(text)
+      announce: (text) => announcements.push(text),
+      publishCommandHint: (samples) => hints.push(samples)
     }
 
     const tool = new VoteTool()
@@ -138,6 +140,7 @@ describe('VoteTool', () => {
     }
     await tool.activate(context, config)
     await tool.handleAction({ type: 'start' })
+    expect(hints.at(-1)).toContain('!投票 1')
 
     expect(await tool.handleChat(chat('u1', '小满', '!投票 A', clock.now()))).toBe(true)
     expect(await tool.handleChat(chat('u2', '阿七', '投票 2', clock.now()))).toBe(true)
@@ -154,6 +157,7 @@ describe('VoteTool', () => {
 
     await timers.advance(5_000)
     await new Promise((resolve) => setImmediate(resolve))
+    expect(hints.at(-1)).toBeNull()
 
     const result = tool.view()
     if (result.toolId !== 'vote') throw new Error('expected vote view')

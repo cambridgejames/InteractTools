@@ -35,6 +35,11 @@ export interface ToolContext {
   readonly notifyChange: () => void
   /** 往直播事件流里追加一条系统提示。 */
   readonly announce: (text: string) => void
+  /**
+   * 发布当前收集阶段的模拟命令样本；传 null 表示本工具不再收集。
+   * 模拟源通过发布订阅消费，工具不需要知道具体平台。
+   */
+  readonly publishCommandHint: (samples: readonly string[] | null) => void
 }
 
 export interface InteractionTool {

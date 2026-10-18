@@ -1,6 +1,7 @@
 import type { ZodType } from 'zod'
 import type { Clock } from './time'
 import type { Logger } from './log'
+import type { CommandHintSource } from './command-hint'
 
 export type PlatformId = 'bilibili' | 'mock'
 
@@ -67,6 +68,8 @@ export interface PlatformContext {
   readonly clock: Clock
   readonly logger: Logger
   readonly emit: (event: PlatformEvent) => void
+  /** 可选：模拟源订阅当前正在收集的工具命令。 */
+  readonly hints?: CommandHintSource
 }
 
 export interface PlatformAdapter {

@@ -1,4 +1,4 @@
-import { BrowserWindow } from 'electron'
+import { BrowserWindow, screen } from 'electron'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import type { EngineEvent } from '@contracts/engine'
@@ -10,9 +10,13 @@ export class ControlWindow {
   private readonly window: BrowserWindow
 
   constructor(preloadPath: string) {
+    const workArea = screen.getPrimaryDisplay().workAreaSize
+    const width = Math.min(1560, Math.max(1120, workArea.width - 120))
+    const height = Math.min(960, Math.max(720, workArea.height - 100))
+
     this.window = new BrowserWindow({
-      width: 1440,
-      height: 900,
+      width,
+      height,
       minWidth: 1120,
       minHeight: 720,
       show: false,

@@ -66,9 +66,9 @@ const warning = computed(() => props.phase === 'collecting' && props.remaining <
 <style scoped>
 .ring {
   position: relative;
-  width: 180px;
-  height: 180px;
-  flex: 0 0 180px;
+  width: 220px;
+  height: 220px;
+  flex: 0 0 220px;
 }
 
 svg {

@@ -80,6 +80,11 @@ function isDiceFaces(value: number): value is DiceFaces {
   return (DICE_FACES as readonly number[]).includes(value)
 }
 
+async function sendHint(power: number): Promise<void> {
+  const alias = props.view.config.commandAliases[0] ?? '力度'
+  await actions.simulateChat('测试观众', '!' + alias + ' ' + String(power))
+}
+
 function isAggregation(value: string): value is Aggregation {
   return (AGGREGATIONS as readonly string[]).includes(value)
 }
@@ -139,6 +144,21 @@ function participantPower(value: number): string {
       </div>
       <span class="phase" :class="'phase-' + view.phase">{{ phaseLabel(view.phase) }}</span>
     </header>
+
+    <div class="command-hints">
+      <span class="hint-label">测试命令</span>
+      <button
+        v-for="power in [30, 60, 90]"
+        :key="power"
+        type="button"
+        class="hint-chip"
+        :disabled="!collecting"
+        @click="sendHint(power)"
+      >
+        !{{ view.config.commandAliases[0] ?? '力度' }} {{ power }}
+      </button>
+      <span class="hint-note">收集时才会被计数</span>
+    </div>
 
     <div class="card-body">
       <div class="left">
@@ -326,6 +346,46 @@ h2 {
   background: color-mix(in srgb, var(--success) 12%, transparent);
 }
 
+.command-hints {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 var(--s-5) var(--s-3);
+}
+
+.hint-label {
+  color: var(--mute);
+  font-size: 10px;
+  letter-spacing: 0.8px;
+}
+
+.hint-chip {
+  height: 24px;
+  padding: 0 8px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-chip);
+  background: transparent;
+  color: var(--body);
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+.hint-chip:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.hint-chip:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.hint-note {
+  margin-left: auto;
+  color: var(--faint);
+  font-size: 10px;
+}
+
 .card-body {
   display: grid;
   grid-template-columns: minmax(320px, 1.3fr) minmax(300px, 0.9fr);
@@ -344,7 +404,7 @@ h2 {
 
 .dice-stage {
   width: 100%;
-  max-width: 680px;
+  max-width: 760px;
   aspect-ratio: 4 / 3;
   height: auto;
   overflow: hidden;

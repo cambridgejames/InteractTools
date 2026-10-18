@@ -9,6 +9,7 @@ import type { Clock, RandomSource } from '@contracts/time'
 import type { InteractionTool, ToolAction } from '@contracts/tool'
 import type { EngineSnapshot, FeedItem, FeedKind } from '@contracts/view'
 import { CommandBus } from './command-bus'
+import { CommandHintBus } from './command-hint-bus'
 import { PlatformHost } from './platform-host'
 import type { ConfigStore, SurfaceHost, TimerFactory } from './ports'
 import { ToolHost } from './tool-host'
@@ -33,6 +34,7 @@ export class Engine {
   private config: AppConfig | null = null
   private platformHost: PlatformHost | null = null
   private toolHost: ToolHost | null = null
+  private hints: CommandHintBus | null = null
   private commandBus: CommandBus | null = null
   private feed: FeedItem[] = []
   private feedSeq = 0
@@ -46,11 +48,13 @@ export class Engine {
   async start(): Promise<void> {
     const config = await this.options.store.load()
     this.config = config
+    this.hints = new CommandHintBus()
 
     this.platformHost = new PlatformHost({
       factories: this.options.platformFactories,
       clock: this.options.clock,
       logger: this.options.logger,
+      hints: this.hints,
       getConfig: () => this.requireConfig(),
       onChange: () => this.publishSnapshot(),
       onEvent: (event) => this.handlePlatformEvent(event)
@@ -62,6 +66,7 @@ export class Engine {
       timerFactory: this.options.timerFactory,
       random: this.options.random,
       logger: this.options.logger,
+      hints: this.hints,
       historyFactory: this.options.historyFactory,
       surface: this.options.surface,
       notifyChange: () => this.publishSnapshot(),
@@ -79,6 +84,7 @@ export class Engine {
 
   async shutdown(): Promise<void> {
     await this.toolHost?.deactivateAll()
+    this.hints?.clearAll()
     await this.platformHost?.shutdown()
   }
 

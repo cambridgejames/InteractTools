@@ -10,7 +10,7 @@
 | --- | --- | --- |
 | 类型 | `npm run typecheck` | 通过 |
 | 静态检查 | `npm run lint` | 通过（ESLint + 依赖边界 + 设计 token） |
-| 单元测试 | `npm run test` | 通过，8 个文件 / 35 个用例（另 1 个真连测试默认跳过） |
+| 单元测试 | `npm run test` | 通过，10 个文件 / 37 个用例（另 1 个真连测试默认跳过） |
 | 构建 | `npm run build` | 通过 |
 | 冒烟 | `npm run smoke` | 通过，生成控制台面板动画与原生结果窗截图 |
 | 打包 | `npm run package:win` | 通过，NSIS + portable |

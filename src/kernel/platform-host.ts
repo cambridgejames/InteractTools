@@ -1,4 +1,5 @@
 import type { AppConfig } from '@contracts/config'
+import type { CommandHintSource } from '@contracts/command-hint'
 import type { Logger } from '@contracts/log'
 import type {
   PlatformAdapter,
@@ -20,6 +21,7 @@ interface PlatformHostOptions {
   readonly factories: readonly PlatformAdapterFactory[]
   readonly clock: Clock
   readonly logger: Logger
+  readonly hints: CommandHintSource
   readonly getConfig: () => AppConfig
   readonly onChange: () => void
   readonly onEvent: (event: PlatformEvent) => void
@@ -66,6 +68,7 @@ export class PlatformHost {
     const adapter = factory.create({
       clock: this.options.clock,
       logger: this.options.logger,
+      hints: this.options.hints,
       emit: (event) => this.handleEvent(id, event)
     })
     this.connections.set(id, { adapter, abort })

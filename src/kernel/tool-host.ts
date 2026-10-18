@@ -1,4 +1,5 @@
 import type { AppConfig } from '@contracts/config'
+import type { CommandHintBus } from './command-hint-bus'
 import type { ToolHistory } from '@contracts/history'
 import type { Logger } from '@contracts/log'
 import type { Presentation } from '@contracts/presentation'
@@ -13,6 +14,7 @@ interface ToolHostOptions {
   readonly timerFactory: TimerFactory
   readonly random: RandomSource
   readonly logger: Logger
+  readonly hints: CommandHintBus
   readonly historyFactory: (toolId: string) => ToolHistory
   readonly surface: SurfaceHost
   readonly notifyChange: () => void
@@ -41,7 +43,11 @@ export class ToolHost {
         history: this.options.historyFactory(id),
         present: (presentation: Presentation) => this.options.surface.present(presentation),
         notifyChange: this.options.notifyChange,
-        announce: this.options.announce
+        announce: this.options.announce,
+        publishCommandHint: (samples: readonly string[] | null) => {
+          if (samples === null) this.options.hints.clear(id)
+          else this.options.hints.publish({ toolId: id, samples })
+        }
       }
 
       const toolConfig = readToolConfig(config, id)

@@ -124,6 +124,7 @@ describe('DiceTool', () => {
     const history = new MemoryHistory()
     const presentations: Presentation[] = []
     const announcements: string[] = []
+    const hints: (readonly string[] | null)[] = []
 
     const context: ToolContext = {
       clock,
@@ -135,13 +136,15 @@ describe('DiceTool', () => {
         presentations.push(presentation)
       },
       notifyChange: () => undefined,
-      announce: (text) => announcements.push(text)
+      announce: (text) => announcements.push(text),
+      publishCommandHint: (samples) => hints.push(samples)
     }
 
     const tool: InteractionTool = new DiceTool()
     const config: DiceConfig = { ...DEFAULT_DICE_CONFIG, countdownSeconds: 5 }
     await tool.activate(context, config)
     await tool.handleAction({ type: 'start' })
+    expect(hints.at(-1)).toContain('!力度 30')
 
     await tool.handleChat(chat('a', '小满', '!力度 20', clock.now()))
     await tool.handleChat(chat('b', '阿七', '!力度 80', clock.now()))
@@ -157,6 +160,7 @@ describe('DiceTool', () => {
 
     await timers.advance(5_000)
     await new Promise((resolve) => setImmediate(resolve))
+    expect(hints.at(-1)).toBeNull()
 
     const presentation = presentations.find((item) => item.kind === 'dice.roll')
     expect(presentation?.kind).toBe('dice.roll')

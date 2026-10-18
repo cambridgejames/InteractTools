@@ -102,7 +102,8 @@ describe('WheelTool', () => {
         presentations.push(presentation)
       },
       notifyChange: () => undefined,
-      announce: (text) => announcements.push(text)
+      announce: (text) => announcements.push(text),
+      publishCommandHint: () => undefined
     }
 
     const tool = new WheelTool()

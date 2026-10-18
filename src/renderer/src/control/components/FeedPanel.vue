@@ -11,8 +11,8 @@ const name = ref('测试观众')
 const text = ref('')
 const sending = ref(false)
 
-const quick = [30, 60, 90]
 const sampleNames = ['小满', '阿七', '团子', '空格', '汽水', '晚风', '白露', '十一']
+const sampleLines = ['主播好', '这骰子有点东西', '来了来了', '666', '再开一轮', '这力度稳了', '晚上好', '冲冲冲']
 
 onMounted(() => {
   scrollToBottom()
@@ -49,11 +49,6 @@ async function send(): Promise<void> {
   }
 }
 
-async function sendQuick(power: number): Promise<void> {
-  text.value = '!力度 ' + power
-  await send()
-}
-
 async function fill(): Promise<void> {
   if (selectPlatform(state.snapshot, 'mock')?.status.phase !== 'connected') {
     showToast('先连接本地模拟', 'error')
@@ -61,8 +56,7 @@ async function fill(): Promise<void> {
   }
   sending.value = true
   for (let index = 0; index < sampleNames.length; index += 1) {
-    const power = 25 + index * 9
-    await actions.simulateChat(sampleNames[index] ?? '观众', '!力度 ' + power)
+    await actions.simulateChat(sampleNames[index] ?? '观众', sampleLines[index] ?? '666')
   }
   sending.value = false
   stick.value = true
@@ -119,12 +113,6 @@ function platformLabel(item: FeedItem): string {
         <button class="send" type="submit" :disabled="sending || text.trim().length === 0">
           <AppIcon name="plus" :size="15" />
         </button>
-      </div>
-      <div class="quick-row">
-        <button v-for="power in quick" :key="power" type="button" class="chip" @click="sendQuick(power)">
-          !力度 {{ power }}
-        </button>
-        <span class="tip">连接「本地模拟」后可发送</span>
       </div>
     </form>
   </section>
@@ -344,34 +332,5 @@ p {
 .send:disabled {
   opacity: 0.35;
   cursor: not-allowed;
-}
-
-.quick-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.chip {
-  height: 22px;
-  padding: 0 8px;
-  border: 1px solid var(--hairline);
-  border-radius: var(--r-chip);
-  background: transparent;
-  color: var(--mute);
-  font-family: var(--font-mono);
-  font-size: 10px;
-}
-
-.chip:hover {
-  border-color: var(--hairline-strong);
-  color: var(--body);
-}
-
-.tip {
-  margin-left: auto;
-  color: var(--faint);
-  font-size: 10px;
 }
 </style>
