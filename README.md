@@ -32,6 +32,7 @@ B站匿名接口在部分网络会返回 `-352` 风控；此时 UI 会明确提�
 - [docs/usage.md](docs/usage.md) — 使用与 OBS 配置
 - [docs/roadmap.md](docs/roadmap.md) — 进度
 - [docs/testing.md](docs/testing.md) — 测试策略
+- [docs/verification.md](docs/verification.md) — 实机验证记录
 
 ## 命令
 

@@ -1,0 +1,60 @@
+# 验证记录
+
+- 日期：2026-10-18
+- 验证时代码：`134f2ef`（后续文档提交不改变功能）
+- 环境：Windows 10.0.26200 / Node 24.19 / Electron 44.9.0 / electron-vite 6.0.0
+
+## 自动检查
+
+| 检查 | 命令 | 结果 |
+| --- | --- | --- |
+| 类型 | `npm run typecheck` | 通过 |
+| 静态检查 | `npm run lint` | 通过（ESLint + 依赖边界 + 设计 token） |
+| 单元测试 | `npm run test` | 通过，5 个文件 / 28 个用例 |
+| 构建 | `npm run build` | 通过 |
+| 冒烟 | `npm run smoke` | 通过，生成控制台与 overlay 截图 |
+| 打包 | `npm run package:win` | 通过，NSIS + portable |
+| 打包后冒烟 | `release/win-unpacked/1017 互动工坊.exe --smoke` | 通过，进程正常退出 |
+
+## 冒烟截图
+
+本地生成在 `artifacts/smoke/`，未入库：
+
+- `control.png`：控制台，含平台状态、骰子面板、事件流、历史记录。
+- `overlay-rolling.png`：结果窗投掷中。
+- `overlay.png`：结果窗停稳，点数与骰子朝上面一致。
+
+## 打包产物
+
+- `release/1017-Interact-Studio-0.1.0-setup.exe`
+- `release/1017-Interact-Studio-0.1.0-portable.exe`
+
+## 覆盖范围
+
+- 基础设施：AGENTS.md、DESIGN.md、docs、ADR、4 个 agent skill、CI。
+- 平台层：统一 `PlatformAdapter`，本地模拟 + B站匿名弹幕，协议 fixture 测试。
+- 工具层：统一 `InteractionTool`，投骰子完整状态机与历史记录。
+- 物理：六种面数、凸包、cannon-es 固定步长、停稳判定、d4 读底面。
+- 呈现：主进程录制帧，overlay 回放 Three.js，透明置顶窗。
+- 配置：zod 校验、原子写、坏配置回落。
+- 设计：DESIGN.md 规格 + tokens.css + `check:design` 强制。
+
+## 已知限制
+
+1. B站匿名 `getDanmuInfo` 在验证网络返回 `-352` 风控，无法完成真连；适配器错误处理与协议解析已测试。
+2. d10 使用五角双锥，而非标准五角偏方面体。
+3. OBS 窗口捕获尚未在 OBS 内实测；截图确认透明通道存在。
+4. NSIS 安装包已构建，但未走完整安装向导点击验证。
+
+## 复现
+
+```bash
+npm install
+npm run typecheck
+npm run lint
+npm run test
+npm run smoke
+npm run package:win
+```
+
+如果 Electron 被宿主以 `ELECTRON_RUN_AS_NODE=1` 启动，使用 `npm run smoke`（内置启动器会清理该变量），或先手动清除环境变量。
