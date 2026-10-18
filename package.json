@@ -16,12 +16,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/cambridgejames/interact-tools.git"
+    "url": "https://github.com/cambridgejames/InteractTools.git"
   },
   "bugs": {
-    "url": "https://github.com/cambridgejames/interact-tools/issues"
+    "url": "https://github.com/cambridgejames/InteractTools/issues"
   },
-  "homepage": "https://github.com/cambridgejames/interact-tools#readme",
+  "homepage": "https://github.com/cambridgejames/InteractTools#readme",
   "engines": {
     "node": ">=22.12.0"
   },

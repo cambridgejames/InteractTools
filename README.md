@@ -1,6 +1,6 @@
 # 互动工坊
 
-[![Verify](https://github.com/cambridgejames/interact-tools/actions/workflows/verify.yml/badge.svg)](https://github.com/cambridgejames/interact-tools/actions/workflows/verify.yml)
+[![Verify](https://github.com/cambridgejames/InteractTools/actions/workflows/verify.yml/badge.svg)](https://github.com/cambridgejames/InteractTools/actions/workflows/verify.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-c8ff3d.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%E2%89%A522.12-339933.svg)](package.json)
 

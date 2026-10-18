@@ -17,8 +17,8 @@
 | 操作系统 | Windows / macOS / Linux；当前主要验证 Windows |
 
 ~~~bash
-git clone https://github.com/cambridgejames/interact-tools.git
-cd interact-tools
+git clone https://github.com/cambridgejames/InteractTools.git
+cd InteractTools
 npm install
 npm run dev
 ~~~

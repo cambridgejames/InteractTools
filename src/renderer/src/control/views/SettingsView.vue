@@ -5,7 +5,7 @@ import type { WindowDisplayOption } from '@contracts/ipc'
 import AppIcon from '../components/AppIcon.vue'
 import { actions, showToast, state } from '../store'
 
-const GITHUB_URL = 'https://github.com/cambridgejames/interact-tools'
+const GITHUB_URL = 'https://github.com/cambridgejames/InteractTools'
 const GITHUB_ISSUES_URL = GITHUB_URL + '/issues'
 
 const displays = ref<readonly WindowDisplayOption[]>([])
