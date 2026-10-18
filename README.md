@@ -35,6 +35,7 @@ B站弹幕已通过 WBI 签名 + WSS 认证真连：房间 6、21144080 均可�
 - [DESIGN.md](DESIGN.md) — 唯一视觉规格
 - [AGENTS.md](AGENTS.md) — 协作规范与架构不变量
 - [docs/architecture.md](docs/architecture.md) — 分层、契约、数据流
+- [docs/architecture-report.md](docs/architecture-report.md) — 完整架构报告（含全量数据流）
 - [docs/usage.md](docs/usage.md) — 使用与 OBS 配置
 - [docs/roadmap.md](docs/roadmap.md) — 进度
 - [docs/testing.md](docs/testing.md) — 测试策略
