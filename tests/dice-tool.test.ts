@@ -193,7 +193,7 @@ describe('DiceTool', () => {
     if (direct.toolId !== 'dice') throw new Error('expected dice view')
     expect(direct.phase).toBe('rolling')
     expect(direct.summary?.fallback).toBe(true)
-    expect(direct.summary?.value).toBe(config.fallbackPower)
+    expect(direct.summary?.value).toBe(42)
 
     await timers.advance(9_000)
     await new Promise((resolve) => setImmediate(resolve))

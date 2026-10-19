@@ -2,7 +2,8 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import type { VoteConfig } from '@contracts/vote'
 import type { VoteToolView } from '@contracts/view'
-import AppIcon from '../components/AppIcon.vue'
+import PresetManager from './PresetManager.vue'
+import ToolHeader from './ToolHeader.vue'
 import ToggleSwitch from '../components/ToggleSwitch.vue'
 import { actions, showToast } from '../store'
 
@@ -13,7 +14,6 @@ const props = defineProps<{ view: VoteToolView }>()
 const question = ref(props.view.config.question)
 const optionsText = ref(props.view.config.options.join(String.fromCharCode(10)))
 const countdown = ref(props.view.config.countdownSeconds)
-const presetName = ref('')
 const now = ref(Date.now())
 let ticker: ReturnType<typeof setInterval> | null = null
 let saveTimer: ReturnType<typeof setTimeout> | null = null
@@ -73,6 +73,14 @@ const winnerLabel = computed(() => {
   if (result.winners.length === 0) return '无人投票'
   return result.winners.map((index) => result.options[index] ?? '').join(' / ')
 })
+const presetRows = computed(() =>
+  props.view.config.presets.map((preset) => ({
+    id: preset.id,
+    name: preset.name,
+    meta: String(preset.options.length) + ' 项 · ' + String(preset.countdownSeconds) + ' 秒'
+  }))
+)
+
 const voteRule = computed(() =>
   props.view.config.allowRevote ? '同一观众以最后一票为准。' : '同一观众只计第一票。'
 )
@@ -133,9 +141,8 @@ function scheduleSave(): void {
 
 watch([question, optionsText, countdown], () => scheduleSave())
 
-async function savePreset(): Promise<void> {
+async function savePreset(name: string): Promise<void> {
   if (!(await persist(true))) return
-  const name = presetName.value.trim()
   if (name.length === 0) {
     showToast('先给预设起个名字', 'error')
     return
@@ -159,14 +166,13 @@ async function savePreset(): Promise<void> {
     ? [...props.view.config.presets, preset]
     : props.view.config.presets.map((item) => (item.id === existing.id ? preset : item))
   const ok = await actions.updateToolConfig('vote', { presets })
-  if (ok) {
-    presetName.value = ''
-    showToast('预设已保存', 'success')
-  }
+  if (ok) showToast('预设已保存', 'success')
 }
 
-async function applyPreset(preset: VotePreset): Promise<void> {
+async function applyPreset(id: string): Promise<void> {
   if (locked.value) return
+  const preset = props.view.config.presets.find((item) => item.id === id)
+  if (preset === undefined) return
   question.value = preset.question
   optionsText.value = preset.options.join(String.fromCharCode(10))
   countdown.value = preset.countdownSeconds
@@ -214,16 +220,13 @@ async function sendHint(index: number): Promise<void> {
 
 <template>
   <section class="card">
-    <header>
-      <div class="title">
-        <span class="icon"><AppIcon name="vote" :size="20" /></span>
-        <div>
-          <h2>弹幕投票</h2>
-          <p>观众发「投票 1」或选项文字；{{ voteRule }}</p>
-        </div>
-      </div>
-      <span class="phase" :class="view.phase">{{ phaseLabel }}</span>
-    </header>
+    <ToolHeader
+      icon="vote"
+      title="弹幕投票"
+      :description="'观众发「投票 1」或选项文字；' + voteRule"
+      :phase-text="phaseLabel"
+      :tone="view.phase === 'result' ? 'done' : locked ? 'active' : 'idle'"
+    />
 
     <div class="command-hints">
       <span class="hint-label">测试命令</span>
@@ -310,38 +313,15 @@ async function sendHint(index: number): Promise<void> {
           />
         </div>
 
-        <div class="presets">
-          <div class="preset-head">
-            <span>预设</span>
-            <span>保存当前配置</span>
-          </div>
-          <div class="preset-save">
-            <input
-              v-model="presetName"
-              maxlength="20"
-              placeholder="例如 真心话"
-              :disabled="locked"
-              @keyup.enter="savePreset"
-            />
-            <button class="preset-add" :disabled="locked" @click="savePreset">保存</button>
-          </div>
-          <div v-if="view.config.presets.length > 0" class="preset-list">
-            <div v-for="preset in view.config.presets" :key="preset.id" class="preset-row">
-              <button class="preset-apply" :disabled="locked" @click="applyPreset(preset)">
-                <strong>{{ preset.name }}</strong>
-                <small>{{ preset.options.length }} 项 · {{ preset.countdownSeconds }} 秒</small>
-              </button>
-              <button
-                class="preset-remove"
-                :aria-label="'删除预设 ' + preset.name"
-                @click="removePreset(preset.id)"
-              >
-                ×
-              </button>
-            </div>
-          </div>
-          <p v-else class="preset-empty">把当前投票存成预设，下次一键载入。</p>
-        </div>
+        <PresetManager
+          :presets="presetRows"
+          :disabled="locked"
+          placeholder="例如 真心话"
+          empty-text="把当前投票存成预设，下次一键载入。"
+          @save="savePreset"
+          @apply="applyPreset"
+          @remove="removePreset"
+        />
 
         <div class="actions">
           <button v-if="view.phase === 'collecting'" class="btn primary" @click="end">提前结束</button>
@@ -365,59 +345,6 @@ async function sendHint(index: number): Promise<void> {
   border: 1px solid var(--hairline);
   border-radius: var(--r-card);
   background: var(--surface);
-}
-
-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--s-3);
-}
-
-.title {
-  display: flex;
-  align-items: center;
-  gap: var(--s-3);
-}
-
-.icon {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--r-icon);
-  background: var(--surface-active);
-  color: var(--accent);
-}
-
-h2 {
-  margin: 0;
-  color: var(--ink);
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.title p {
-  margin: 2px 0 0;
-  color: var(--mute);
-  font-size: 11px;
-}
-
-.phase {
-  padding: 3px 8px;
-  border-radius: var(--r-chip);
-  background: var(--surface-active);
-  color: var(--mute);
-  font-size: 10px;
-  white-space: nowrap;
-}
-
-.phase.collecting {
-  color: var(--info);
-}
-
-.phase.result {
-  color: var(--success);
 }
 
 .command-hints {
@@ -704,118 +631,6 @@ h2 {
   color: var(--faint);
   font-size: 11px;
   font-style: normal;
-}
-
-.presets {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-2);
-}
-
-.preset-head {
-  display: flex;
-  justify-content: space-between;
-  color: var(--mute);
-  font-size: 10px;
-}
-
-.preset-save {
-  display: flex;
-  gap: var(--s-2);
-}
-
-.preset-save input {
-  min-width: 0;
-  flex: 1;
-  height: 32px;
-  padding: 0 var(--s-3);
-  border: 1px solid var(--hairline);
-  border-radius: var(--r-control);
-  background: var(--inset);
-  color: var(--ink);
-  font-size: 11px;
-}
-
-.preset-add,
-.preset-remove {
-  border: 1px solid var(--hairline);
-  border-radius: var(--r-control);
-  background: var(--surface-active);
-  color: var(--body);
-  font-size: 11px;
-}
-
-.preset-add {
-  padding: 0 var(--s-3);
-}
-
-.preset-add:hover:not(:disabled),
-.preset-remove:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.preset-add:disabled,
-.preset-apply:disabled {
-  opacity: 0.5;
-}
-
-.preset-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.preset-row {
-  display: flex;
-  gap: 4px;
-}
-
-.preset-apply {
-  display: flex;
-  flex: 1;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--s-2);
-  min-width: 0;
-  padding: 6px var(--s-3);
-  border: 1px solid var(--hairline);
-  border-radius: var(--r-control);
-  background: var(--inset);
-  text-align: left;
-}
-
-.preset-apply:hover:not(:disabled) {
-  border-color: var(--accent);
-}
-
-.preset-apply strong {
-  overflow: hidden;
-  color: var(--ink);
-  font-size: 11px;
-  font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.preset-apply small {
-  flex: none;
-  color: var(--faint);
-  font-size: 9px;
-}
-
-.preset-remove {
-  width: 30px;
-  flex: none;
-  padding: 0;
-  font-size: 14px;
-}
-
-.preset-empty {
-  margin: 0;
-  color: var(--faint);
-  font-size: 10px;
-  line-height: 15px;
 }
 
 .actions {

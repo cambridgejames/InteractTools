@@ -31,7 +31,7 @@
 - `control-vote.png` / `control-vote-collecting.png`：投票面板待开始（含预设）与投票中大倒计时。
 - `control-vote-result.png`：应用内投票结果弹窗（票数与并列最高）。
 - `control-dice-rolling.png`：骰子从发射台上升、镜头跟随中。
-- `control-dice-100.png`：100 力度直接投掷，骰子接近画面上沿。
+- `control-dice-direct.png`：随机力度的直接投掷。
 - `control-wheel-rolling.png`：转盘面板内原地旋转中。
 - `control-dice-result.png` / `control-wheel-result.png`：应用内骰子/转盘结果弹窗 + 彩带烟花。
 
@@ -46,7 +46,7 @@
 - 平台层：统一 `PlatformAdapter`，本地模拟 + B站匿名弹幕（WBI 签名），协议 fixture 与真连测试。
 - 工具层：统一 `InteractionTool`，投骰子（命令驱动）、转转盘（主播手动）、弹幕投票（命令驱动）三种形态，历史记录分开。
 - 控制台：通用工具切换器按 manifest 渲染，骰子/转盘面板分离；转盘不经过 CommandBus；转盘/投票各支持最多 12 个命名预设。
-- 物理：六种面数、凸包、cannon-es 固定步长、停稳判定、d4 读底面；支持直接投掷（兜底力度、跳过收集）。
+- 物理：六种面数、凸包、cannon-es 固定步长、停稳判定、d4 读底面；支持直接投掷（随机 0–100 力度、跳过收集）。
 - 呈现：主进程录制帧，骰子在 `DicePanel` 内联 Three.js 回放，转盘在 `WheelPanel` 内 CSS 旋转；停稳后在控制台内弹出 `ResultOverlay` + 彩带烟花，手动关闭。
 - 配置：面板 500ms / 平台 600ms debounce 自动保存；feed 使用 68px 行高虚拟滚动并保持贴底。
 - 配置：zod 校验、原子写、坏配置回落。

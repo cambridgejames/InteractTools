@@ -143,10 +143,9 @@ export async function runSmoke(application: Application): Promise<void> {
   await application.controlWindow.browserWindow.webContents.executeJavaScript(
     "document.querySelectorAll('.tool-tab')[0]?.click()"
   )
-  await application.engine.updateToolConfig('dice', { directRoll: true, fallbackPower: 100 })
   await application.engine.toolAction('dice', { type: 'direct' })
   await delay(900)
-  await application.controlWindow.capture(join(output, 'control-dice-100.png'))
+  await application.controlWindow.capture(join(output, 'control-dice-direct.png'))
   await waitForResult(application)
 
   console.info('[smoke] screenshots:', output)

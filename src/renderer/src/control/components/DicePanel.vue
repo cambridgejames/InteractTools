@@ -5,7 +5,7 @@ import type { DiceToolView } from '@contracts/view'
 import AppIcon from './AppIcon.vue'
 import AppSelect from './AppSelect.vue'
 import CountdownRing from './CountdownRing.vue'
-import ToggleSwitch from './ToggleSwitch.vue'
+import ToolHeader from './ToolHeader.vue'
 import { actions, state } from '../store'
 import { DiceScene } from '../result/dice-scene'
 import { formatPower, methodLabel, phaseLabel } from '../../shared/format'
@@ -76,7 +76,7 @@ const remaining = computed(() => {
 const participants = computed(() => props.view.participants)
 const power = computed(() => props.view.summary?.value ?? null)
 const resultValue = computed(() => props.view.lastResult?.value ?? null)
-const startLabel = computed(() => (props.view.phase === 'result' ? '再投一次' : '开始收集'))
+const startLabel = computed(() => (props.view.phase === 'result' ? '再等一轮' : '等待弹幕投掷'))
 const faceOptions = DICE_FACES.map((faces) => ({ value: String(faces), label: 'D' + String(faces) }))
 const aggregationOptions = [
   { value: 'median', label: '中位数' },
@@ -90,10 +90,6 @@ function isDiceFaces(value: number): value is DiceFaces {
 
 async function direct(): Promise<void> {
   await actions.toolAction('dice', { type: 'direct' })
-}
-
-async function setDirectRoll(value: boolean): Promise<void> {
-  await actions.updateDiceConfig({ directRoll: value })
 }
 
 async function sendHint(power: number): Promise<void> {
@@ -147,16 +143,13 @@ function participantPower(value: number): string {
 
 <template>
   <section class="card dice-card">
-    <header class="card-head">
-      <div class="title">
-        <span class="glyph"><AppIcon name="dice" :size="20" /></span>
-        <div>
-          <h2>投骰子</h2>
-          <p>弹幕设置力度，刚体物理决定结果</p>
-        </div>
-      </div>
-      <span class="phase" :class="'phase-' + view.phase">{{ phaseLabel(view.phase) }}</span>
-    </header>
+    <ToolHeader
+      icon="dice"
+      title="投骰子"
+      description="弹幕设置力度，刚体物理决定结果"
+      :phase-text="phaseLabel(view.phase)"
+      :tone="view.phase === 'result' ? 'done' : collecting || rolling ? 'active' : 'idle'"
+    />
 
     <div class="command-hints">
       <span class="hint-label">测试命令</span>
@@ -198,15 +191,11 @@ function participantPower(value: number): string {
             <AppIcon name="play" :size="15" />
             {{ startLabel }}
           </button>
-          <button v-else class="btn secondary" @click="cancel">
+          <button v-else-if="collecting" class="btn secondary" @click="cancel">
             <AppIcon name="stop" :size="15" />
             取消本轮
           </button>
-          <button
-            v-if="view.config.directRoll && !rolling"
-            class="btn secondary"
-            @click="direct"
-          >
+          <button class="btn secondary" :disabled="rolling" @click="direct">
             直接投掷
           </button>
           <button class="btn ghost" :disabled="locked" @click="preview">
@@ -248,14 +237,6 @@ function participantPower(value: number): string {
               :disabled="locked"
               label="力度聚合方式"
               @update:model-value="onAggregation"
-            />
-          </label>
-          <label class="toggle-field">
-            <span>直接投掷</span>
-            <ToggleSwitch
-              :model-value="view.config.directRoll"
-              label="允许直接投掷"
-              @update:model-value="setDirectRoll"
             />
           </label>
         </div>
@@ -327,68 +308,6 @@ function participantPower(value: number): string {
   border: 1px solid var(--hairline);
   border-radius: var(--r-card);
   background: var(--surface);
-}
-
-.card-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--s-4);
-  padding: var(--s-5);
-  border-bottom: 1px solid var(--hairline);
-}
-
-.title {
-  display: flex;
-  align-items: center;
-  gap: var(--s-3);
-}
-
-.glyph {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--r-icon);
-  background: var(--surface-active);
-  color: var(--accent);
-}
-
-h2 {
-  margin: 0;
-  color: var(--ink);
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.title p {
-  margin: 2px 0 0;
-  color: var(--mute);
-  font-size: 11px;
-}
-
-.phase {
-  padding: 4px 10px;
-  border-radius: var(--r-chip);
-  background: var(--surface-active);
-  color: var(--mute);
-  font-size: 11px;
-  white-space: nowrap;
-}
-
-.phase-collecting {
-  color: var(--accent);
-  background: var(--accent-soft);
-}
-
-.phase-rolling {
-  color: var(--info);
-  background: color-mix(in srgb, var(--info) 12%, transparent);
-}
-
-.phase-result {
-  color: var(--success);
-  background: color-mix(in srgb, var(--success) 12%, transparent);
 }
 
 .command-hints {
@@ -534,7 +453,7 @@ h2 {
 
 .config {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--s-3);
   width: 100%;
 }
@@ -545,10 +464,6 @@ h2 {
   gap: 6px;
   color: var(--mute);
   font-size: 11px;
-}
-
-.toggle-field {
-  justify-content: flex-end;
 }
 
 .config select,

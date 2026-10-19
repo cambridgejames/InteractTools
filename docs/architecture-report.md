@@ -508,7 +508,7 @@ PlatformHost 只保留连接对象，不重复创建。
 - 面板骰盒响应式，最大 760px，4:3；空闲倒计时环 220px。
 - 场景含发射台、地面网格、虚线导轨和 3/6/9/12 高度环；相机随骰子高度上升并后拉，高力度时仍保留地面参照。
 - 面板右侧显示「合力」24px 数值 + 0–100 进度条，说明力度决定抛投强度、点数仍由物理决定。
-- config.directRoll=true 时出现「直接投掷」按钮：跳过收集，用 fallbackPower 直接投，仍写历史。
+- 主操作区始终有「等待弹幕投掷」与「直接投掷」；直接投掷跳过收集，用随机 0–100 力度，仍写历史。directRoll 仅保留为旧配置兼容字段。
 - 播完后 dice.result 给应用内结果弹窗。
 
 ### 9.2 转转盘
@@ -623,6 +623,7 @@ PlatformHost 只保留连接对象，不重复创建。
 - 面板：DicePanel、WheelPanel、VotePanel。每个工具 header 下方有测试命令条；骰子 3 个力度 chip，投票按选项数显示投票 chip，转盘无命令。feed 底部不再放工具命令。
 - 历史：HistoryPanel、WheelHistoryPanel、VoteHistoryPanel。
 - 公共：FeedPanel（68px 行高虚拟滚动）、ToolSwitcher、ToggleSwitch、StatusPill、Toast、AppIcon。
+- 复用组件：ToolHeader（三工具统一标题/相位）、PresetManager（转盘/投票共用预设 UI）、AppSelect（深色下拉）。
 - 弹幕栏模式来自 snapshot.feedMode：full 320px / collapsed 44px / hidden；设置页通过 feed:set-mode 持久化。
 - 设置页「清除所有数据」调用 app:clear-all-data：原生确认后删除 config.json、history、logs，relaunch 应用。
 - 表单下拉统一使用 AppSelect（自定义深色 listbox），不再依赖系统原生 select 弹层。

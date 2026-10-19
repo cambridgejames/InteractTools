@@ -45,7 +45,7 @@ export interface DiceConfig {
   readonly aggregation: Aggregation
   readonly fallbackPower: number
   readonly commandAliases: readonly string[]
-  /** 允许主播跳过收集，直接用兜底力度投掷。 */
+  /** @deprecated 保留字段兼容旧配置；直接投掷现在始终可用，力度随机。 */
   readonly directRoll: boolean
 }
 
@@ -106,5 +106,5 @@ export const DEFAULT_DICE_CONFIG: DiceConfig = {
   aggregation: 'median',
   fallbackPower: 50,
   commandAliases: ['力度', 'power'],
-  directRoll: false
+  directRoll: true
 }

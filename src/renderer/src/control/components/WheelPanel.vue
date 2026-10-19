@@ -4,6 +4,8 @@ import { WHEEL_LABEL_MAX, type WheelPreset } from '@contracts/wheel'
 import type { WheelToolView } from '@contracts/view'
 import AppIcon from './AppIcon.vue'
 import BrandMark from './BrandMark.vue'
+import PresetManager from './PresetManager.vue'
+import ToolHeader from './ToolHeader.vue'
 import { actions, showToast } from '../store'
 import { formatTime } from '../../shared/format'
 
@@ -11,7 +13,6 @@ const props = defineProps<{ view: WheelToolView }>()
 
 const segmentsText = ref(props.view.config.segments.join('\n'))
 const duration = ref(props.view.config.spinDurationSeconds)
-const presetName = ref('')
 let saveTimer: ReturnType<typeof setTimeout> | null = null
 
 watch(
@@ -84,9 +85,8 @@ async function persistSegments(showError: boolean): Promise<boolean> {
   return actions.updateToolConfig('wheel', { segments: next })
 }
 
-async function savePreset(): Promise<void> {
+async function savePreset(name: string): Promise<void> {
   if (!(await persistSegments(true))) return
-  const name = presetName.value.trim()
   if (name.length === 0) {
     showToast('先给预设起个名字', 'error')
     return
@@ -109,14 +109,13 @@ async function savePreset(): Promise<void> {
     ? [...props.view.config.presets, preset]
     : props.view.config.presets.map((item) => (item.id === existing.id ? preset : item))
   const ok = await actions.updateToolConfig('wheel', { presets })
-  if (ok) {
-    presetName.value = ''
-    showToast('预设已保存', 'success')
-  }
+  if (ok) showToast('预设已保存', 'success')
 }
 
-async function applyPreset(preset: WheelPreset): Promise<void> {
+async function applyPreset(id: string): Promise<void> {
   if (spinning.value) return
+  const preset = props.view.config.presets.find((item) => item.id === id)
+  if (preset === undefined) return
   segmentsText.value = preset.segments.join('\n')
   duration.value = preset.spinDurationSeconds
   const ok = await actions.updateToolConfig('wheel', {
@@ -132,6 +131,13 @@ async function removePreset(id: string): Promise<void> {
 }
 
 const spinning = computed(() => props.view.phase === 'spinning')
+const presetRows = computed(() =>
+  props.view.config.presets.map((preset) => ({
+    id: preset.id,
+    name: preset.name,
+    meta: String(preset.segments.length) + ' 格 · ' + String(preset.spinDurationSeconds) + ' 秒'
+  }))
+)
 const phaseText = computed(() => {
   switch (props.view.phase) {
     case 'spinning':
@@ -240,16 +246,13 @@ async function clearHistory(): Promise<void> {
 
 <template>
   <section class="card wheel-card">
-    <header class="card-head">
-      <div class="title">
-        <span class="glyph"><AppIcon name="wheel" :size="20" /></span>
-        <div>
-          <h2>转转盘</h2>
-          <p>主播手动触发，不需要弹幕命令</p>
-        </div>
-      </div>
-      <span class="phase" :class="'phase-' + view.phase">{{ phaseText }}</span>
-    </header>
+    <ToolHeader
+      icon="wheel"
+      title="转转盘"
+      description="主播手动触发，不需要弹幕命令"
+      :phase-text="phaseText"
+      :tone="view.phase === 'result' ? 'done' : spinning ? 'active' : 'idle'"
+    />
 
     <div class="card-body">
       <div class="left">
@@ -310,38 +313,15 @@ async function clearHistory(): Promise<void> {
           <span class="auto-save">自动保存</span>
         </div>
 
-        <div class="presets">
-          <div class="preset-head">
-            <span>预设</span>
-            <span>保存当前配置</span>
-          </div>
-          <div class="preset-save">
-            <input
-              v-model="presetName"
-              maxlength="20"
-              placeholder="例如 真心话"
-              :disabled="spinning"
-              @keyup.enter="savePreset"
-            />
-            <button class="preset-add" :disabled="spinning" @click="savePreset">保存</button>
-          </div>
-          <div v-if="view.config.presets.length > 0" class="preset-list">
-            <div v-for="preset in view.config.presets" :key="preset.id" class="preset-row">
-              <button class="preset-apply" :disabled="spinning" @click="applyPreset(preset)">
-                <strong>{{ preset.name }}</strong>
-                <small>{{ preset.segments.length }} 格 · {{ preset.spinDurationSeconds }} 秒</small>
-              </button>
-              <button
-                class="preset-remove"
-                :aria-label="'删除预设 ' + preset.name"
-                @click="removePreset(preset.id)"
-              >
-                ×
-              </button>
-            </div>
-          </div>
-          <p v-else class="preset-empty">把当前转盘存成预设，下次一键载入。</p>
-        </div>
+        <PresetManager
+          :presets="presetRows"
+          :disabled="spinning"
+          placeholder="例如 真心话"
+          empty-text="把当前转盘存成预设，下次一键载入。"
+          @save="savePreset"
+          @apply="applyPreset"
+          @remove="removePreset"
+        />
 
         <div class="history">
           <div class="history-head">
@@ -366,63 +346,6 @@ async function clearHistory(): Promise<void> {
   border: 1px solid var(--hairline);
   border-radius: var(--r-card);
   background: var(--surface);
-}
-
-.card-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--s-4);
-  padding: var(--s-5);
-  border-bottom: 1px solid var(--hairline);
-}
-
-.title {
-  display: flex;
-  align-items: center;
-  gap: var(--s-3);
-}
-
-.glyph {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--r-icon);
-  background: var(--surface-active);
-  color: var(--accent);
-}
-
-h2 {
-  margin: 0;
-  color: var(--ink);
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.title p {
-  margin: 2px 0 0;
-  color: var(--mute);
-  font-size: 11px;
-}
-
-.phase {
-  padding: 4px 10px;
-  border-radius: var(--r-chip);
-  background: var(--surface-active);
-  color: var(--mute);
-  font-size: 11px;
-  white-space: nowrap;
-}
-
-.phase-spinning {
-  color: var(--accent);
-  background: var(--accent-soft);
-}
-
-.phase-result {
-  color: var(--success);
-  background: color-mix(in srgb, var(--success) 12%, transparent);
 }
 
 .card-body {
@@ -689,120 +612,6 @@ textarea {
   margin-left: auto;
   height: 34px;
   font-size: 12px;
-}
-
-.presets {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-2);
-  padding-top: var(--s-3);
-  border-top: 1px solid var(--hairline);
-}
-
-.preset-head {
-  display: flex;
-  justify-content: space-between;
-  color: var(--mute);
-  font-size: 10px;
-}
-
-.preset-save {
-  display: flex;
-  gap: var(--s-2);
-}
-
-.preset-save input {
-  min-width: 0;
-  flex: 1;
-  height: 32px;
-  padding: 0 var(--s-3);
-  border: 1px solid var(--hairline);
-  border-radius: var(--r-control);
-  background: var(--inset);
-  color: var(--ink);
-  font-size: 11px;
-}
-
-.preset-add,
-.preset-remove {
-  border: 1px solid var(--hairline);
-  border-radius: var(--r-control);
-  background: var(--surface-active);
-  color: var(--body);
-  font-size: 11px;
-}
-
-.preset-add {
-  padding: 0 var(--s-3);
-}
-
-.preset-add:hover:not(:disabled),
-.preset-remove:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.preset-add:disabled,
-.preset-apply:disabled {
-  opacity: 0.5;
-}
-
-.preset-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.preset-row {
-  display: flex;
-  gap: 4px;
-}
-
-.preset-apply {
-  display: flex;
-  flex: 1;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--s-2);
-  min-width: 0;
-  padding: 6px var(--s-3);
-  border: 1px solid var(--hairline);
-  border-radius: var(--r-control);
-  background: var(--inset);
-  text-align: left;
-}
-
-.preset-apply:hover:not(:disabled) {
-  border-color: var(--accent);
-}
-
-.preset-apply strong {
-  overflow: hidden;
-  color: var(--ink);
-  font-size: 11px;
-  font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.preset-apply small {
-  flex: none;
-  color: var(--faint);
-  font-size: 9px;
-}
-
-.preset-remove {
-  width: 30px;
-  flex: none;
-  padding: 0;
-  font-size: 14px;
-}
-
-.preset-empty {
-  margin: 0;
-  color: var(--faint);
-  font-size: 10px;
-  line-height: 15px;
 }
 
 .history {

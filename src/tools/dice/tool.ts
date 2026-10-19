@@ -210,7 +210,6 @@ export class DiceTool implements InteractionTool {
   }
 
   private async rollDirect(): Promise<void> {
-    if (!this.config.directRoll) throw new Error('直接投掷未开启')
     if (this.phase === 'rolling') return
 
     const context = this.requireContext()
@@ -221,12 +220,11 @@ export class DiceTool implements InteractionTool {
     this.countdownEndsAt = null
     context.publishCommandHint(null)
 
-    const summary = fallbackSummary(this.config.fallbackPower, this.config.aggregation)
+    const power = Math.min(100, Math.max(0, Math.round(context.random.next() * 100)))
+    const summary = fallbackSummary(power, this.config.aggregation)
     this.summary = summary
     this.lastResult = null
-    context.announce(
-      '直接投掷：未收集力度，使用兜底力度 ' + formatPower(summary.value) + '。'
-    )
+    context.announce('直接投掷：随机力度 ' + formatPower(power) + '，开始投掷。')
     this.notify()
     await this.roll(summary, true)
   }
