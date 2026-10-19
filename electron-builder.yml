@@ -7,6 +7,7 @@ files:
   - out/**
   - package.json
 asar: true
+artifactName: Interact-Studio-${version}-${arch}.${ext}
 extraResources:
   - from: build/icon.png
     to: icon.png
@@ -14,15 +15,32 @@ win:
   icon: build/icon.png
   target:
     - target: nsis
-      arch: x64
     - target: portable
-      arch: x64
 nsis:
   oneClick: false
   perMachine: false
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
   shortcutName: 互动工坊
-  artifactName: Interact-Studio-${version}-setup.${ext}
+  artifactName: Interact-Studio-${version}-${arch}-setup.${ext}
 portable:
-  artifactName: Interact-Studio-${version}-portable.${ext}
+  artifactName: Interact-Studio-${version}-${arch}-portable.${ext}
+dmg:
+  artifactName: Interact-Studio-${version}-${arch}.${ext}
+appImage:
+  artifactName: Interact-Studio-${version}-${arch}.${ext}
+deb:
+  artifactName: Interact-Studio-${version}-${arch}.${ext}
+mac:
+  icon: build/icon.png
+  category: public.app-category.utilities
+  identity: null
+  target:
+    - target: dmg
+    - target: zip
+linux:
+  icon: build/icon.png
+  category: Utility
+  target:
+    - target: AppImage
+    - target: deb

@@ -76,7 +76,7 @@ const remaining = computed(() => {
 const participants = computed(() => props.view.participants)
 const power = computed(() => props.view.summary?.value ?? null)
 const resultValue = computed(() => props.view.lastResult?.value ?? null)
-const startLabel = computed(() => (props.view.phase === 'result' ? '再等一轮' : '等待弹幕投掷'))
+const startLabel = computed(() => (props.view.phase === 'result' ? '再收集一轮' : '收集力度'))
 const faceOptions = DICE_FACES.map((faces) => ({ value: String(faces), label: 'D' + String(faces) }))
 const aggregationOptions = [
   { value: 'median', label: '中位数' },
@@ -187,7 +187,12 @@ function participantPower(value: number): string {
         </Transition>
 
         <div class="primary-actions">
-          <button v-if="!collecting && !rolling" class="btn primary" @click="start">
+          <button
+            v-if="!collecting && !rolling"
+            class="btn primary"
+            title="观众发送力度，倒计时结束后投掷"
+            @click="start"
+          >
             <AppIcon name="play" :size="15" />
             {{ startLabel }}
           </button>
@@ -195,7 +200,12 @@ function participantPower(value: number): string {
             <AppIcon name="stop" :size="15" />
             取消本轮
           </button>
-          <button class="btn secondary" :disabled="rolling" @click="direct">
+          <button
+            class="btn secondary"
+            :disabled="rolling"
+            title="跳过收集，随机 0–100 力度立即投掷"
+            @click="direct"
+          >
             直接投掷
           </button>
           <button class="btn ghost" :disabled="locked" @click="preview">
@@ -203,6 +213,7 @@ function participantPower(value: number): string {
             预览
           </button>
         </div>
+        <p class="action-note">收集：由弹幕决定力度 · 直接：随机力度立即投掷</p>
 
         <div class="config">
           <label>
@@ -449,6 +460,13 @@ function participantPower(value: number): string {
 .ghost:hover {
   background: var(--surface-hover);
   color: var(--body);
+}
+
+.action-note {
+  margin: 0;
+  color: var(--faint);
+  font-size: 10px;
+  text-align: center;
 }
 
 .config {

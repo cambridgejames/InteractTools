@@ -24,6 +24,7 @@ const meta: Record<Page, { title: string; subtitle: string }> = {
 
 const current = computed(() => meta[page.value])
 const feedMode = computed(() => state.snapshot?.feedMode ?? 'full')
+const isMac = window.api.platform === 'darwin'
 
 onMounted(() => {
   void initStore()
@@ -31,10 +32,15 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="app-shell" :class="'feed-' + feedMode">
-    <Sidebar :page="page" @navigate="page = $event" />
+  <div class="app-shell" :class="['feed-' + feedMode, { mac: isMac }]">
+    <Sidebar class="app-sidebar" :page="page" @navigate="page = $event" />
+    <Topbar
+      class="app-topbar"
+      :title="current.title"
+      :subtitle="current.subtitle"
+      :class="{ mac: isMac, 'feed-global': feedMode !== 'full' }"
+    />
     <div class="app-main">
-      <Topbar :title="current.title" :subtitle="current.subtitle" />
       <main class="app-content">
         <div v-if="state.loading" class="loading">正在连接内核…</div>
         <template v-else>
@@ -73,12 +79,29 @@ onMounted(() => {
 .app-shell {
   display: grid;
   grid-template-columns: var(--sidebar-width) minmax(0, 1fr) var(--feed-width);
-  grid-template-rows: minmax(0, 1fr);
+  grid-template-rows: var(--topbar-height) minmax(0, 1fr);
   height: 100%;
   background: var(--canvas);
 }
 
+.app-sidebar {
+  grid-column: 1;
+  grid-row: 1 / 3;
+}
+
+.app-topbar {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.app-shell.feed-collapsed .app-topbar,
+.app-shell.feed-hidden .app-topbar {
+  grid-column: 2 / -1;
+}
+
 .app-main {
+  grid-column: 2;
+  grid-row: 2;
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -86,6 +109,8 @@ onMounted(() => {
 }
 
 .feed-sidebar {
+  grid-column: 3;
+  grid-row: 1 / 3;
   height: 100%;
   min-height: 0;
   border-left: 1px solid var(--hairline);
@@ -100,6 +125,8 @@ onMounted(() => {
 }
 
 .feed-rail {
+  grid-column: 3;
+  grid-row: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -132,6 +159,12 @@ onMounted(() => {
 @media (max-width: 1180px) {
   .app-shell {
     grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+    grid-template-rows: var(--topbar-height) minmax(0, 1fr);
+  }
+
+  .app-topbar,
+  .app-main {
+    grid-column: 2 / -1;
   }
 
   .feed-sidebar,

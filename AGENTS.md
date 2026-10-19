@@ -32,7 +32,9 @@ npm run test         # Vitest 单测（一次）
 npm run test:watch   # 监听模式
 npm run build        # typecheck + 产物构建
 npm run smoke        # 构建后启动 Electron 冒烟并截图
-npm run package:win  # Windows 安装包
+npm run package:win  # Windows x64/arm64 安装包
+npm run package:mac  # macOS x64/arm64 dmg/zip
+npm run package:linux # Linux x64/arm64 AppImage/deb
 ```
 
 不要用 `npx electron-vite ...` 绕过脚本；脚本里已经固定了环境变量和顺序。

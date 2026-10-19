@@ -22,10 +22,7 @@ export const IPC = {
   windowDisplay: 'window:set-display',
   feedSetMode: 'feed:set-mode',
   openExternal: 'app:open-external',
-  clearAllData: 'app:clear-all-data',
-  windowMinimize: 'window:minimize',
-  windowToggleMaximize: 'window:toggle-maximize',
-  windowClose: 'window:close'
+  clearAllData: 'app:clear-all-data'
 } as const
 
 export interface WindowDisplayOption {
@@ -67,7 +64,5 @@ export interface RendererApi {
   setFeedMode(mode: 'full' | 'collapsed' | 'hidden'): Promise<void>
   openExternal(url: string): Promise<void>
   clearAllData(): Promise<boolean>
-  minimizeWindow(): Promise<void>
-  toggleMaximizeWindow(): Promise<boolean>
-  closeWindow(): Promise<void>
+  readonly platform: 'win32' | 'darwin' | 'linux'
 }

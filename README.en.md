@@ -30,10 +30,12 @@ npm run test
 npm run build
 ~~~
 
-Windows installer:
+Installers (the build scripts produce x64 and arm64):
 
 ~~~bash
-npm run package:win
+npm run package:win    # Windows NSIS + portable
+npm run package:mac    # macOS dmg + zip
+npm run package:linux  # Linux AppImage + deb
 ~~~
 
 ## License

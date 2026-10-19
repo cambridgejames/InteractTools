@@ -35,7 +35,9 @@ npm run dev
 | `npm run test` | Vitest 单测 |
 | `npm run build` | 类型检查 + electron-vite 构建 |
 | `npm run smoke` | 构建后启动 Electron，截图到 `artifacts/smoke` |
-| `npm run package:win` | Windows 安装包，产物在 `release/` |
+| `npm run package:win` | Windows x64 + arm64，产物在 `release/` |
+| `npm run package:mac` | macOS x64 + arm64（dmg / zip） |
+| `npm run package:linux` | Linux x64 + arm64（AppImage / deb） |
 
 ## 开发流程
 
@@ -79,7 +81,7 @@ npm run build
 | 分支/标签 | 用途 |
 | --- | --- |
 | `master` | 稳定分支；自动发布只接受指向它的 tag |
-| `v0.1.0` 这类 tag | 触发 GitHub Actions 构建 Windows 安装包并创建 Release |
+| `v0.1.0` 这类 tag | 触发 GitHub Actions 构建 Windows/macOS/Linux 的 x64 + arm64 安装包并创建 Release |
 
 发布由维护者执行：更新 `package.json` 版本与 CHANGELOG → 合并到主分支 → 打 `v<version>` tag 并推送。
 [release.yml](.github/workflows/release.yml) 会校验 tag 指向主分支、tag 与 package 版本一致，然后打包并发布。

@@ -42,9 +42,7 @@ const api: RendererApi = {
   setFeedMode: (mode) => ipcRenderer.invoke(IPC.feedSetMode, mode),
   openExternal: (url) => ipcRenderer.invoke(IPC.openExternal, url),
   clearAllData: () => ipcRenderer.invoke(IPC.clearAllData),
-  minimizeWindow: () => ipcRenderer.invoke(IPC.windowMinimize),
-  toggleMaximizeWindow: () => ipcRenderer.invoke(IPC.windowToggleMaximize),
-  closeWindow: () => ipcRenderer.invoke(IPC.windowClose)
+  platform: process.platform === 'darwin' ? 'darwin' : process.platform === 'linux' ? 'linux' : 'win32'
 }
 
 contextBridge.exposeInMainWorld('api', api)

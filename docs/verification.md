@@ -13,7 +13,7 @@
 | 单元测试 | `npm run test` | 通过，12 个文件 / 45 个用例（另 1 个真连测试默认跳过） |
 | 构建 | `npm run build` | 通过 |
 | 冒烟 | `npm run smoke` | 通过，生成控制台面板动画与应用内结果弹窗截图 |
-| 打包 | `npm run package:win` | 通过，NSIS + portable |
+| 打包 | `npm run package:win` / `package:mac` / `package:linux` | Windows 本地通过 x64 + arm64；macOS/Linux 由 CI 矩阵构建 |
 | 打包后冒烟 | `release/win-unpacked/互动工坊.exe --smoke` | 通过，进程正常退出 |
 | B站真连 | `LIVE_BILIBILI=1 npx vitest run tests/bilibili-live.test.ts` | 通过，房间 6 / 21144080 可认证；弹幕数随房间活跃度变化，最近一次房间 6 收到 2 条 |
 
@@ -37,8 +37,9 @@
 
 ## 打包产物
 
-- `release/Interact-Studio-0.1.0-setup.exe`
-- `release/Interact-Studio-0.1.0-portable.exe`
+- Windows x64/arm64：`Interact-Studio-0.1.0-{arch}-setup.exe`、`-portable.exe`
+- macOS x64/arm64：`Interact-Studio-0.1.0-{arch}.dmg` / `.zip`
+- Linux x64/arm64：`Interact-Studio-0.1.0-{arch}.AppImage` / `.deb`
 
 ## 覆盖范围
 
@@ -57,7 +58,7 @@
 1. B站真连已通过 WBI 签名验证；未开播/轮播房间连接成功但 0 弹幕属正常，状态栏会显示房间状态。若特定网络仍返回 `-352`，适配器会刷新密钥重试一次。
 2. d10 使用五角双锥，而非标准五角偏方面体。
 3. 结果弹窗已在控制台窗口内，OBS 直接采集控制台即可；尚未在真实 OBS 内实测。
-4. NSIS 安装包已构建，但未走完整安装向导点击验证。
+4. Windows x64/arm64 安装包已构建，但未走完整安装向导点击验证；macOS/Linux 产物由 CI 构建，尚未在对应实机验证。
 
 ## 复现
 

@@ -13,6 +13,8 @@ export class ControlWindow {
     const display = resolveDisplay(displayPreference)
     const bounds = centeredBounds(display)
 
+    const isMac = process.platform === 'darwin'
+
     this.window = new BrowserWindow({
       width: bounds.width,
       height: bounds.height,
@@ -21,7 +23,21 @@ export class ControlWindow {
       minWidth: 1120,
       minHeight: 720,
       show: false,
-      frame: false,
+      // 去掉标题栏本身，但保留系统原生窗口控件。
+      // Windows/Linux 用 titleBarOverlay 画系统最小化/最大化/关闭；macOS 用原生红绿灯。
+      ...(isMac
+        ? {
+            titleBarStyle: 'hiddenInset' as const,
+            trafficLightPosition: { x: 16, y: 18 }
+          }
+        : {
+            titleBarStyle: 'hidden' as const,
+            titleBarOverlay: {
+              color: '#0b0d10',
+              symbolColor: '#f2f4f1',
+              height: 48
+            }
+          }),
       backgroundColor: '#08090b',
       autoHideMenuBar: true,
       title: '互动工坊',
@@ -69,20 +85,6 @@ export class ControlWindow {
 
   show(): void {
     this.window.show()
-  }
-
-  minimize(): void {
-    this.window.minimize()
-  }
-
-  toggleMaximize(): boolean {
-    if (this.window.isMaximized()) this.window.unmaximize()
-    else this.window.maximize()
-    return this.window.isMaximized()
-  }
-
-  close(): void {
-    this.window.close()
   }
 
   /** 把窗口居中到指定屏幕；'cursor' 跟随鼠标，'primary' 主屏，其余是 Display.id。 */

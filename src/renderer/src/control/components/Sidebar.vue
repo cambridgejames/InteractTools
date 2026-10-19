@@ -3,6 +3,8 @@ import AppIcon from './AppIcon.vue'
 import BrandMark from './BrandMark.vue'
 import { actions } from '../store'
 
+const isMac = window.api.platform === 'darwin'
+
 type Page = 'dashboard' | 'tools' | 'platforms' | 'settings'
 
 defineProps<{ page: Page }>()
@@ -17,7 +19,7 @@ const nav: Array<{ id: Page; label: string; icon: 'dashboard' | 'tools' | 'platf
 </script>
 
 <template>
-  <aside class="sidebar">
+  <aside class="sidebar" :class="{ mac: isMac }">
     <div class="brand">
       <div class="brand-mark"><BrandMark :size="24" /></div>
       <div class="brand-text">
@@ -59,11 +61,15 @@ const nav: Array<{ id: Page; label: string; icon: 'dashboard' | 'tools' | 'platf
   border-right: 1px solid var(--hairline);
 }
 
+.sidebar.mac .brand {
+  padding-left: 84px;
+}
+
 .brand {
   display: flex;
   align-items: center;
   gap: var(--s-3);
-  height: 72px;
+  height: var(--topbar-height);
   padding: 0 var(--s-4);
 }
 

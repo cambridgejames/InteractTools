@@ -508,7 +508,7 @@ PlatformHost 只保留连接对象，不重复创建。
 - 面板骰盒响应式，最大 760px，4:3；空闲倒计时环 220px。
 - 场景含发射台、地面网格、虚线导轨和 3/6/9/12 高度环；相机随骰子高度上升并后拉，高力度时仍保留地面参照。
 - 面板右侧显示「合力」24px 数值 + 0–100 进度条，说明力度决定抛投强度、点数仍由物理决定。
-- 主操作区始终有「等待弹幕投掷」与「直接投掷」；直接投掷跳过收集，用随机 0–100 力度，仍写历史。directRoll 仅保留为旧配置兼容字段。
+- 主操作区始终有「收集力度」与「直接投掷」；直接投掷跳过收集，用随机 0–100 力度，仍写历史。directRoll 仅保留为旧配置兼容字段。
 - 播完后 dice.result 给应用内结果弹窗。
 
 ### 9.2 转转盘
@@ -589,7 +589,7 @@ PlatformHost 只保留连接对象，不重复创建。
 ### 11.1 控制台
 
 - 目标 1560×960，按配置的显示器（默认鼠标所在屏）workArea 自动收缩并居中；最小 1120×720。
-- `frame: false`，顶栏 `-webkit-app-region: drag`；右侧自绘最小化/最大化/关闭，按钮区域 `no-drag`。
+- Windows/Linux 使用 `titleBarStyle: 'hidden'` + `titleBarOverlay`，macOS 使用 `hiddenInset`；标题栏消失但系统原生窗口按钮保留。顶栏 `-webkit-app-region: drag`，窗口按钮由系统绘制。
 - 设置页通过 window:displays / window:set-display 选择屏幕；配置持久化到 appConfig.window.display。
 - 弹幕栏模式配置为 appConfig.feed.mode；snapshot.feedMode 驱动 App 栅格。
 - 开发模式窗口图标读取 `build/icon.png`；打包后从 `extraResources/icon.png` 读取，任务栏不再显示 Electron 默认图标。
@@ -683,7 +683,9 @@ userData 默认是 %APPDATA%/interact-tools；--smoke 时切到 artifacts/smoke/
     npm run test
     npm run build
     npm run smoke
-    npm run package:win
+    npm run package:win   # Windows x64/arm64
+    npm run package:mac   # macOS x64/arm64
+    npm run package:linux # Linux x64/arm64
 
 smoke 流程：
 
@@ -697,8 +699,9 @@ smoke 流程：
 
 产物：
 
-- release/Interact-Studio-0.1.0-setup.exe
-- release/Interact-Studio-0.1.0-portable.exe
+- release/Interact-Studio-0.1.0-x64-setup.exe / -arm64-setup.exe
+- release/Interact-Studio-0.1.0-x64-portable.exe / -arm64-portable.exe
+- macOS: x64/arm64 dmg + zip；Linux: x64/arm64 AppImage + deb
 
 ## 16. 扩展点
 

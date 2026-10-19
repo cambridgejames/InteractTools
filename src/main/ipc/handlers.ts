@@ -64,10 +64,6 @@ export function registerIpc(engine: Engine, controlWindow: ControlWindow): void 
     controlWindow.placeOnDisplay(display)
   })
 
-  ipcMain.handle(IPC.windowMinimize, async () => controlWindow.minimize())
-  ipcMain.handle(IPC.windowToggleMaximize, async () => controlWindow.toggleMaximize())
-  ipcMain.handle(IPC.windowClose, async () => controlWindow.close())
-
   ipcMain.handle(IPC.platformConnect, async (_event, rawId: unknown) => {
     const id = platformIdSchema.parse(rawId)
     const result = await engine.connectPlatform(id)

@@ -6,6 +6,7 @@ import { actions, connectedCount, selectPlatform, showToast, state } from '../st
 import { formatTime, initialOf } from '../../shared/format'
 
 const emit = defineEmits<{ collapse: [] }>()
+const isMac = window.api.platform === 'darwin'
 
 const ROW_HEIGHT = 68
 const OVERSCAN = 4
@@ -104,20 +105,21 @@ function platformLabel(item: FeedItem): string {
 </script>
 
 <template>
-  <section class="card feed-card">
+  <section class="card feed-card" :class="{ mac: isMac }">
     <header class="card-head">
       <div>
         <h2>直播间弹幕</h2>
         <p>{{ connectedCount(state.snapshot) }} 个平台在线 · 最近 {{ state.snapshot?.feed.length ?? 0 }} 条</p>
       </div>
-      <div class="head-actions">
-        <button class="mini" @click="fill">填充 8 条</button>
-        <button class="mini" @click="actions.clearFeed()">清空</button>
-        <button class="mini collapse" title="收起弹幕栏" @click="emit('collapse')">
-          <AppIcon name="chevron" :size="14" />
-        </button>
-      </div>
     </header>
+
+    <div class="feed-tools">
+      <button class="mini" @click="fill">填充 8 条</button>
+      <button class="mini" @click="actions.clearFeed()">清空</button>
+      <button class="mini collapse" title="收起弹幕栏" @click="emit('collapse')">
+        <AppIcon name="chevron" :size="14" />
+      </button>
+    </div>
 
     <div ref="list" class="feed-list" @scroll="onScroll">
       <div v-if="(state.snapshot?.feed.length ?? 0) === 0" class="empty">
@@ -171,10 +173,23 @@ function platformLabel(item: FeedItem): string {
 
 .card-head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: var(--s-3);
-  padding: var(--s-4) var(--s-5);
+  min-height: var(--topbar-height);
+  padding: 0 150px 0 var(--s-5);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.feed-card.mac .card-head {
+  padding-right: var(--s-5);
+}
+
+.feed-tools {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 4px var(--s-5);
   border-bottom: 1px solid var(--hairline);
 }
 
@@ -189,11 +204,6 @@ h2 {
   margin: 2px 0 0;
   color: var(--mute);
   font-size: 11px;
-}
-
-.head-actions {
-  display: flex;
-  gap: var(--s-2);
 }
 
 .mini {
