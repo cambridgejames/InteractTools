@@ -91,7 +91,7 @@ jobs:
         run: npm run test
       - name: Package ${{ matrix.script }}
         run: npm run ${{ matrix.script }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact }}-release
           if-no-files-found: error
