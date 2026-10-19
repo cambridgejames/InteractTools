@@ -589,6 +589,7 @@ PlatformHost 只保留连接对象，不重复创建。
 ### 11.1 控制台
 
 - 目标 1560×960，按配置的显示器（默认鼠标所在屏）workArea 自动收缩并居中；最小 1120×720。
+- `frame: false`，顶栏 `-webkit-app-region: drag`；右侧自绘最小化/最大化/关闭，按钮区域 `no-drag`。
 - 设置页通过 window:displays / window:set-display 选择屏幕；配置持久化到 appConfig.window.display。
 - 弹幕栏模式配置为 appConfig.feed.mode；snapshot.feedMode 驱动 App 栅格。
 - 开发模式窗口图标读取 `build/icon.png`；打包后从 `extraResources/icon.png` 读取，任务栏不再显示 Electron 默认图标。

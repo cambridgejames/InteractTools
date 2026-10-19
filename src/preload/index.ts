@@ -41,7 +41,10 @@ const api: RendererApi = {
   setWindowDisplay: (display) => ipcRenderer.invoke(IPC.windowDisplay, display),
   setFeedMode: (mode) => ipcRenderer.invoke(IPC.feedSetMode, mode),
   openExternal: (url) => ipcRenderer.invoke(IPC.openExternal, url),
-  clearAllData: () => ipcRenderer.invoke(IPC.clearAllData)
+  clearAllData: () => ipcRenderer.invoke(IPC.clearAllData),
+  minimizeWindow: () => ipcRenderer.invoke(IPC.windowMinimize),
+  toggleMaximizeWindow: () => ipcRenderer.invoke(IPC.windowToggleMaximize),
+  closeWindow: () => ipcRenderer.invoke(IPC.windowClose)
 }
 
 contextBridge.exposeInMainWorld('api', api)
