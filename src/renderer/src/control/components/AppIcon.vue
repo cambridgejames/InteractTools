@@ -31,6 +31,13 @@ const props = withDefaults(defineProps<{ name: IconName; size?: number; strokeWi
   strokeWidth: 1.7
 })
 
+/** 线框与实心图形的可视边界不同，按光学校正到同一视觉重量。 */
+const opticalScale: Partial<Record<IconName, number>> = {
+  bilibili: 1.35,
+  douyin: 0.8,
+  users: 0.95
+}
+
 const filledIcons = new Set<IconName>(['douyin'])
 
 const paths: Record<IconName, string> = {
@@ -64,8 +71,8 @@ const paths: Record<IconName, string> = {
 
 <template>
   <svg
-    :width="props.size"
-    :height="props.size"
+    :width="props.size * (opticalScale[props.name] ?? 1)"
+    :height="props.size * (opticalScale[props.name] ?? 1)"
     viewBox="0 0 24 24"
     fill="none"
     :stroke-width="props.strokeWidth"
