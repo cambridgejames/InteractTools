@@ -55,7 +55,7 @@ export const mockConfigSchema = z
 
 export type MockConfig = z.infer<typeof mockConfigSchema>
 
-export const SHORTCUT_ACTIONS = ['toggleWindow', 'toggleFeed'] as const
+export const SHORTCUT_ACTIONS = ['toggleWindow', 'toggleFeed', 'clearFeed', 'openSettings'] as const
 export type ShortcutAction = (typeof SHORTCUT_ACTIONS)[number]
 
 export const shortcutBindingSchema = z
@@ -69,7 +69,9 @@ export const shortcutBindingSchema = z
 export const shortcutsConfigSchema = z
   .object({
     toggleWindow: shortcutBindingSchema,
-    toggleFeed: shortcutBindingSchema
+    toggleFeed: shortcutBindingSchema,
+    clearFeed: shortcutBindingSchema,
+    openSettings: shortcutBindingSchema
   })
   .strict()
 
@@ -78,7 +80,9 @@ export type ShortcutsConfig = z.infer<typeof shortcutsConfigSchema>
 
 export const DEFAULT_SHORTCUTS: ShortcutsConfig = {
   toggleWindow: { accelerator: '', global: false },
-  toggleFeed: { accelerator: '', global: false }
+  toggleFeed: { accelerator: '', global: false },
+  clearFeed: { accelerator: '', global: false },
+  openSettings: { accelerator: '', global: false }
 }
 
 export const overlayConfigSchema = z
@@ -171,7 +175,9 @@ export const DEFAULT_APP_CONFIG: AppConfig = {
   },
   shortcuts: {
     toggleWindow: { accelerator: '', global: false },
-    toggleFeed: { accelerator: '', global: false }
+    toggleFeed: { accelerator: '', global: false },
+    clearFeed: { accelerator: '', global: false },
+    openSettings: { accelerator: '', global: false }
   },
   overlay: {
     alwaysOnTop: true

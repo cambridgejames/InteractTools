@@ -635,13 +635,13 @@ PlatformHost 只保留连接对象，不重复创建。
 - tool-panels.ts：工具 id 到面板组件的注册表，Dashboard 用动态 component。
 - 面板：DicePanel、WheelPanel、VotePanel。每个工具 header 下方有测试命令条；骰子 3 个力度 chip，投票按选项数显示投票 chip，转盘无命令。feed 底部不再放工具命令。
 - 历史：HistoryPanel、WheelHistoryPanel、VoteHistoryPanel。
-- 公共：FeedPanel（72px 行高虚拟滚动；进场不占消息行，底部 34px ticker 合并最新 3 位；模拟/礼物标签）、ToolSwitcher、ToggleSwitch、StatusPill、Toast、AppIcon。
+- 公共：FeedPanel（72px 行高虚拟滚动；上翻时新消息显示「N 条新弹幕」pill，点击回到底部；进场不占消息行，底部 34px ticker 合并最新 3 位；模拟/礼物标签）、ToolSwitcher、ToggleSwitch、StatusPill、Toast、AppIcon。
 - 复用组件：ToolHeader（三工具统一标题/相位）、PresetManager（转盘/投票共用预设 UI）、AppSelect（深色下拉）。
 - 弹幕栏模式来自 snapshot.feedMode：full 320px / collapsed 44px / hidden；设置页通过 feed:set-mode 持久化。
 - 设置页「清除所有数据」调用 app:clear-all-data：原生确认后删除 config.json、history、logs，relaunch 应用。
 - 表单下拉统一使用 AppSelect（自定义深色 listbox），不再依赖系统原生 select 弹层。
 - 设置页的 GitHub 仓库/问题反馈按钮通过 app:open-external 交给系统默认浏览器；白名单为项目 GitHub、live.bilibili.com、live.douyin.com，且只允许 HTTPS。
-- 快捷键设置写入 config.shortcuts，默认为空；本地快捷键由 ShortcutManager 监听 before-input-event，全局快捷键使用 Electron globalShortcut；关闭/退出组合不可绑定，默认应用菜单不含退出加速键。
+- 快捷键设置写入 config.shortcuts，默认为空；支持显示/隐藏窗口、显示/隐藏弹幕栏、清空弹幕、打开设置。本地快捷键由 ShortcutManager 监听 before-input-event，全局快捷键使用 Electron globalShortcut；关闭/退出组合不可绑定，默认应用菜单不含退出加速键。
 
 结果弹窗：
 

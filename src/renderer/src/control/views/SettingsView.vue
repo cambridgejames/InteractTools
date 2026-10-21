@@ -59,9 +59,16 @@ const feedOptions = [
   { value: 'collapsed', label: '折叠成窄条' },
   { value: 'hidden', label: '隐藏' }
 ]
-const shortcutRows: Array<{ id: ShortcutAction; label: string; description: string }> = [
-  { id: 'toggleWindow', label: '显示 / 隐藏窗口', description: '直播时快速收起或叫回控制台。' },
-  { id: 'toggleFeed', label: '显示 / 隐藏弹幕栏', description: '在全屏和隐藏之间切换右侧弹幕。' }
+const shortcutRows: Array<{
+  id: ShortcutAction
+  label: string
+  description: string
+  icon: 'eye' | 'platforms' | 'close' | 'settings'
+}> = [
+  { id: 'toggleWindow', label: '显示 / 隐藏窗口', description: '直播时快速收起或叫回控制台。', icon: 'eye' },
+  { id: 'toggleFeed', label: '显示 / 隐藏弹幕栏', description: '在全屏和隐藏之间切换右侧弹幕。', icon: 'platforms' },
+  { id: 'clearFeed', label: '清空弹幕', description: '清空当前消息和进场 ticker，不删除历史记录。', icon: 'close' },
+  { id: 'openSettings', label: '打开设置', description: '叫回窗口并直接切换到设置页。', icon: 'settings' }
 ]
 
 function bindingOf(action: ShortcutAction): ShortcutsConfig[ShortcutAction] {
@@ -80,6 +87,10 @@ async function saveShortcut(action: ShortcutAction, patch: Partial<ShortcutsConf
 
 async function clearShortcut(action: ShortcutAction): Promise<void> {
   await saveShortcut(action, { accelerator: '', global: false })
+}
+
+async function resetShortcuts(): Promise<void> {
+  if (await actions.updateShortcuts(DEFAULT_SHORTCUTS)) showToast('快捷键已清空', 'success')
 }
 
 async function setShortcutGlobal(action: ShortcutAction, value: boolean): Promise<void> {
@@ -366,8 +377,11 @@ async function clearAllData(): Promise<void> {
         <section class="card">
           <div v-for="row in shortcutRows" :key="row.id" class="shortcut-row">
             <div class="shortcut-info">
-              <strong>{{ row.label }}</strong>
-              <span>{{ row.description }}</span>
+              <span class="shortcut-icon"><AppIcon :name="row.icon" :size="15" /></span>
+              <div>
+                <strong>{{ row.label }}</strong>
+                <span>{{ row.description }}</span>
+              </div>
             </div>
             <div class="shortcut-controls">
               <input
@@ -396,11 +410,12 @@ async function clearAllData(): Promise<void> {
               </button>
             </div>
           </div>
-        </section>
 
-        <p class="shortcut-note">
-          全局快捷键在应用隐藏或失焦时仍然生效；关闭/退出组合固定不可绑定，避免直播中误退。
-        </p>
+          <div class="shortcut-footer">
+            <span>全局快捷键在应用隐藏或失焦时仍然生效；关闭/退出组合固定不可绑定。</span>
+            <button class="shortcut-reset" type="button" @click="resetShortcuts">全部清空</button>
+          </div>
+        </section>
       </template>
 
       <template v-else-if="section === 'data'">
@@ -720,8 +735,26 @@ header p {
 .shortcut-info {
   display: flex;
   min-width: 0;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.shortcut-info > div {
+  display: flex;
+  min-width: 0;
   flex-direction: column;
   gap: 2px;
+}
+
+.shortcut-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  border-radius: var(--r-icon);
+  background: var(--surface-active);
+  color: var(--mute);
 }
 
 .shortcut-info strong {
@@ -730,7 +763,7 @@ header p {
   font-weight: 500;
 }
 
-.shortcut-info span {
+.shortcut-info > div > span {
   color: var(--mute);
   font-size: 12px;
 }
@@ -788,12 +821,31 @@ header p {
   opacity: 0.4;
 }
 
-.shortcut-note {
-  margin: 0;
+.shortcut-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding-top: var(--s-3);
   color: var(--faint);
   font-size: 12px;
   line-height: 18px;
-  padding: 0 2px;
+}
+
+.shortcut-reset {
+  flex: none;
+  height: 30px;
+  padding: 0 var(--s-3);
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--body);
+  font-size: 12px;
+}
+
+.shortcut-reset:hover {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 .about ul {
   margin: 0;

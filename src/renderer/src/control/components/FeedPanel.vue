@@ -13,6 +13,7 @@ const OVERSCAN = 4
 
 const list = ref<HTMLElement | null>(null)
 const stick = ref(true)
+const unread = ref(0)
 const scrollTop = ref(0)
 const viewportHeight = ref(0)
 const name = ref('测试观众')
@@ -62,8 +63,13 @@ onUnmounted(() => {
 
 watch(
   () => feed.value.at(-1)?.id,
-  () => {
+  (id) => {
+    if (id === undefined) {
+      unread.value = 0
+      return
+    }
     if (stick.value) void nextTick(scrollToBottom)
+    else unread.value = Math.min(999, unread.value + 1)
   }
 )
 
@@ -74,6 +80,8 @@ function updateViewport(): void {
 function scrollToBottom(): void {
   const element = list.value
   if (element === null) return
+  stick.value = true
+  unread.value = 0
   element.scrollTop = element.scrollHeight
   scrollTop.value = element.scrollTop
 }
@@ -82,7 +90,9 @@ function onScroll(): void {
   const element = list.value
   if (element === null) return
   scrollTop.value = element.scrollTop
-  stick.value = element.scrollHeight - element.scrollTop - element.clientHeight < 48
+  const atBottom = element.scrollHeight - element.scrollTop - element.clientHeight < 48
+  stick.value = atBottom
+  if (atBottom) unread.value = 0
 }
 
 async function send(): Promise<void> {
@@ -94,6 +104,8 @@ async function send(): Promise<void> {
   if (ok) {
     text.value = ''
     stick.value = true
+    unread.value = 0
+    void nextTick(scrollToBottom)
   }
 }
 
@@ -108,6 +120,8 @@ async function fill(): Promise<void> {
   }
   sending.value = false
   stick.value = true
+  unread.value = 0
+  void nextTick(scrollToBottom)
 }
 
 function feedClass(item: FeedItem): string {
@@ -134,7 +148,8 @@ function feedClass(item: FeedItem): string {
       </button>
     </div>
 
-    <div ref="list" class="feed-list" @scroll="onScroll">
+    <div class="feed-viewport">
+      <div ref="list" class="feed-list" @scroll="onScroll">
       <div v-if="chatFeed.length === 0" class="empty">
         <AppIcon name="platforms" :size="28" />
         <strong>{{ recentMemberNames.length > 0 ? '观众正在进入' : '还没有弹幕' }}</strong>
@@ -159,7 +174,13 @@ function feedClass(item: FeedItem): string {
           <p>{{ item.text }}</p>
         </div>
       </article>
-      <div :style="{ height: bottomPad + 'px' }" />
+        <div :style="{ height: bottomPad + 'px' }" />
+      </div>
+
+      <button v-if="!stick && unread > 0" class="new-messages" type="button" @click="scrollToBottom">
+        <AppIcon name="chevron" :size="13" />
+        {{ unread }} 条新弹幕
+      </button>
     </div>
 
     <div v-if="recentMemberNames.length > 0" class="member-ticker" aria-live="polite">
@@ -241,11 +262,40 @@ h2 {
   color: var(--body);
 }
 
-.feed-list {
+.feed-viewport {
+  position: relative;
   flex: 1;
   min-height: 0;
+}
+
+.feed-list {
+  height: 100%;
   overflow: auto;
   padding: var(--s-2) var(--s-3);
+}
+
+.new-messages {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--hairline));
+  border-radius: var(--r-chip);
+  background: var(--surface-active);
+  box-shadow: var(--shadow-pop);
+  color: var(--accent);
+  font-size: 12px;
+  transform: translateX(-50%);
+}
+
+.new-messages:hover {
+  border-color: var(--accent);
+  background: var(--surface-hover);
 }
 
 .feed-item {

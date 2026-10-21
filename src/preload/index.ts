@@ -22,6 +22,14 @@ const api: RendererApi = {
     }
   },
 
+  onNavigate(listener) {
+    const handler = (_event: IpcRendererEvent, page: 'dashboard' | 'tools' | 'settings'): void => listener(page)
+    ipcRenderer.on(IPC.navigate, handler)
+    return () => {
+      ipcRenderer.removeListener(IPC.navigate, handler)
+    }
+  },
+
   connectPlatform: (id) => ipcRenderer.invoke(IPC.platformConnect, id),
   disconnectPlatform: (id) => ipcRenderer.invoke(IPC.platformDisconnect, id),
   updatePlatformConfig: (id, patch) => ipcRenderer.invoke(IPC.platformUpdateConfig, id, patch),

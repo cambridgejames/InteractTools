@@ -90,6 +90,19 @@ export class ShortcutManager {
       return
     }
 
+    if (action === 'clearFeed') {
+      this.engine.clearFeed()
+      return
+    }
+
+    if (action === 'openSettings') {
+      const win = this.window.browserWindow
+      win.show()
+      win.focus()
+      this.window.navigate('settings')
+      return
+    }
+
     const mode = this.engine.snapshot().feedMode
     await this.engine.updateFeedMode(mode === 'hidden' ? 'full' : 'hidden')
   }

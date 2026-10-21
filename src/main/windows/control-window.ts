@@ -97,6 +97,11 @@ export class ControlWindow {
     this.window.show()
   }
 
+  navigate(page: 'dashboard' | 'tools' | 'settings'): void {
+    if (this.window.isDestroyed()) return
+    this.window.webContents.send(IPC.navigate, page)
+  }
+
   /** 把窗口居中到指定屏幕；'cursor' 跟随鼠标，'primary' 主屏，其余是 Display.id。 */
   placeOnDisplay(preference: string): void {
     const bounds = centeredBounds(resolveDisplay(preference))

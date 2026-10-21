@@ -230,6 +230,14 @@ export const actions = {
         toggleFeed: {
           accelerator: shortcuts.toggleFeed.accelerator,
           global: shortcuts.toggleFeed.global
+        },
+        clearFeed: {
+          accelerator: shortcuts.clearFeed.accelerator,
+          global: shortcuts.clearFeed.global
+        },
+        openSettings: {
+          accelerator: shortcuts.openSettings.accelerator,
+          global: shortcuts.openSettings.global
         }
       })
       return true

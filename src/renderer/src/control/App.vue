@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import FeedPanel from './components/FeedPanel.vue'
 import AppIcon from './components/AppIcon.vue'
 import DashboardView from './views/DashboardView.vue'
@@ -24,8 +24,17 @@ const current = computed(() => meta[page.value])
 const feedMode = computed(() => state.snapshot?.feedMode ?? 'full')
 const isMac = window.api.platform === 'darwin'
 
+let unsubscribeNavigate: (() => void) | null = null
+
 onMounted(() => {
   void initStore()
+  unsubscribeNavigate = window.api.onNavigate((target) => {
+    page.value = target
+  })
+})
+
+onUnmounted(() => {
+  unsubscribeNavigate?.()
 })
 </script>
 

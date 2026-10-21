@@ -28,7 +28,8 @@ export const IPC = {
   networkUpdate: 'network:update',
   networkTest: 'network:test',
   toolSetEnabled: 'tool:set-enabled',
-  shortcutsUpdate: 'shortcuts:update'
+  shortcutsUpdate: 'shortcuts:update',
+  navigate: 'app:navigate'
 } as const
 
 export interface WindowDisplayOption {
@@ -50,6 +51,7 @@ export interface RendererApi {
   onEvent(listener: (event: EngineEvent) => void): () => void
   /** 动画 presentation（dice.roll / dismiss）发到控制台面板。 */
   onPresentation(listener: (presentation: Presentation) => void): () => void
+  onNavigate(listener: (page: 'dashboard' | 'tools' | 'settings') => void): () => void
 
   connectPlatform(id: PlatformId): Promise<void>
   disconnectPlatform(id: PlatformId): Promise<void>
