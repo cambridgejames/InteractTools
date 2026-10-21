@@ -10,6 +10,7 @@ const isMac = window.api.platform === 'darwin'
 
 const ROW_HEIGHT = 72
 const OVERSCAN = 4
+const MEMBER_TICKER_TTL_MS = 8_000
 
 const list = ref<HTMLElement | null>(null)
 const stick = ref(true)
@@ -19,7 +20,9 @@ const viewportHeight = ref(0)
 const name = ref('测试观众')
 const text = ref('')
 const sending = ref(false)
+const now = ref(Date.now())
 let resizeObserver: ResizeObserver | null = null
+let memberClock: ReturnType<typeof setInterval> | null = null
 
 const feed = computed(() => state.snapshot?.feed ?? [])
 const chatFeed = computed(() => feed.value)
@@ -28,7 +31,8 @@ const recentMemberNames = computed(() => {
   const members = state.snapshot?.recentMembers ?? []
   for (let index = members.length - 1; index >= 0 && names.length < 3; index -= 1) {
     const member = members[index]
-    if (member === undefined || names.includes(member.userName)) continue
+    if (member === undefined || now.value - member.at > MEMBER_TICKER_TTL_MS) continue
+    if (names.includes(member.userName)) continue
     names.push(member.userName)
   }
   return names.reverse()
@@ -53,12 +57,16 @@ onMounted(() => {
     resizeObserver = new ResizeObserver(updateViewport)
     resizeObserver.observe(list.value)
   }
+  memberClock = setInterval(() => {
+    now.value = Date.now()
+  }, 1_000)
   scrollToBottom()
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', updateViewport)
   resizeObserver?.disconnect()
+  if (memberClock !== null) clearInterval(memberClock)
 })
 
 watch(
