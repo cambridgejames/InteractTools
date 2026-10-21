@@ -21,13 +21,14 @@ const sending = ref(false)
 let resizeObserver: ResizeObserver | null = null
 
 const feed = computed(() => state.snapshot?.feed ?? [])
-const chatFeed = computed(() => feed.value.filter((item) => item.kind !== 'member'))
+const chatFeed = computed(() => feed.value)
 const recentMemberNames = computed(() => {
   const names: string[] = []
-  for (let index = feed.value.length - 1; index >= 0 && names.length < 3; index -= 1) {
-    const item = feed.value[index]
-    if (item?.kind !== 'member' || names.includes(item.userName)) continue
-    names.push(item.userName)
+  const members = state.snapshot?.recentMembers ?? []
+  for (let index = members.length - 1; index >= 0 && names.length < 3; index -= 1) {
+    const member = members[index]
+    if (member === undefined || names.includes(member.userName)) continue
+    names.push(member.userName)
   }
   return names.reverse()
 })

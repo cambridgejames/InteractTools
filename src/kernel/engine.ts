@@ -8,7 +8,7 @@ import type { ChatMessage, PlatformAdapterFactory, PlatformEvent, PlatformId } f
 import { err, ok, type Result } from '@contracts/result'
 import type { Clock, RandomSource } from '@contracts/time'
 import type { InteractionTool, ToolAction } from '@contracts/tool'
-import type { EngineSnapshot, FeedItem, FeedKind } from '@contracts/view'
+import type { EngineSnapshot, FeedItem, FeedKind, MemberNotice } from '@contracts/view'
 import { CommandBus } from './command-bus'
 import { CommandHintBus } from './command-hint-bus'
 import { PlatformHost } from './platform-host'
@@ -30,7 +30,7 @@ export interface EngineOptions {
   readonly onEvent: (event: EngineEvent) => void
 }
 
-const FEED_LIMIT = 200
+const FEED_LIMIT = 1000
 
 /** 组合平台、工具与呈现；自身不 import Electron，也不做磁盘 I/O。 */
 export class Engine {
@@ -40,6 +40,7 @@ export class Engine {
   private hints: CommandHintBus | null = null
   private commandBus: CommandBus | null = null
   private feed: FeedItem[] = []
+  private recentMembers: MemberNotice[] = []
   private feedSeq = 0
   private revision = 0
   private readonly startedAt: number
@@ -102,6 +103,7 @@ export class Engine {
       platforms: this.requirePlatformHost().list(),
       tools: this.requireToolHost().views(),
       feed: [...this.feed],
+      recentMembers: [...this.recentMembers],
       overlay: {
         open: this.options.surface.isOpen(),
         alwaysOnTop: this.requireConfig().overlay.alwaysOnTop
@@ -258,6 +260,7 @@ export class Engine {
 
   clearFeed(): void {
     this.feed = []
+    this.recentMembers = []
     this.publishSnapshot()
   }
 
@@ -285,11 +288,10 @@ export class Engine {
         })
         return
       case 'member':
-        this.appendFeed({
-          kind: 'member',
+        this.rememberMember({
           platform: event.member.platform,
           userName: event.member.userName,
-          text: event.member.kind === 'enter' ? '进入直播间' : '关注了主播'
+          at: this.options.clock.now()
         })
         return
       case 'status':
@@ -309,6 +311,14 @@ export class Engine {
       if (!consumed) return
       this.publishSnapshot()
     })
+  }
+
+  private rememberMember(member: MemberNotice): void {
+    this.recentMembers = [
+      ...this.recentMembers.filter((item) => item.userName !== member.userName),
+      member
+    ].slice(-10)
+    this.options.onEvent({ type: 'members', members: [...this.recentMembers] })
   }
 
   private appendSystem(text: string): void {
@@ -334,13 +344,8 @@ export class Engine {
     this.options.onEvent({ type: 'feed', item })
   }
 
-  /** 进场消息优先淘汰，避免高频进场把真实弹幕历史挤出窗口。 */
   private trimFeed(): void {
-    while (this.feed.length > FEED_LIMIT) {
-      const memberIndex = this.feed.findIndex((entry) => entry.kind === 'member')
-      if (memberIndex >= 0) this.feed.splice(memberIndex, 1)
-      else this.feed.shift()
-    }
+    while (this.feed.length > FEED_LIMIT) this.feed.shift()
   }
 
   private publishSnapshot(): void {

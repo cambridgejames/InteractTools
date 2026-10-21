@@ -22,6 +22,13 @@ export interface FeedItem {
   readonly at: number
 }
 
+/** 进场/关注等成员事件不进入消息历史，只供底部 ticker 使用。 */
+export interface MemberNotice {
+  readonly platform: PlatformId
+  readonly userName: string
+  readonly at: number
+}
+
 export interface OverlayView {
   readonly open: boolean
   readonly alwaysOnTop: boolean
@@ -114,6 +121,7 @@ export interface EngineSnapshot {
   readonly platforms: readonly PlatformView[]
   readonly tools: readonly ToolView[]
   readonly feed: readonly FeedItem[]
+  readonly recentMembers: readonly MemberNotice[]
   readonly overlay: OverlayView
   readonly window: WindowView
   readonly network: NetworkConfig

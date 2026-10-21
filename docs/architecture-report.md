@@ -207,7 +207,7 @@
     startedAt: number
     platforms: PlatformView[]
     tools: ToolView[]
-    feed: FeedItem[]（最多 200 条；进场超限时优先淘汰）
+    feed: FeedItem[]（最多 1000 条；进场不进入 feed）
     overlay: open, alwaysOnTop
 
 ToolView 是 DiceToolView、WheelToolView、VoteToolView 的联合；所有都带 toolId/name/description/icon，因此控制台不依赖具体玩法。
@@ -436,7 +436,7 @@ publishCommandHint 是发布订阅的写端：工具在 collecting 阶段发布�
 
 ### 8.11 Feed 与日志
 
-- Feed：最多 200 条，存在内存；chat/gift/member/system。超限时优先删最旧 member，保留聊天/礼物历史。
+- Feed：最多 1000 条，存在内存；只放 chat/gift/system。进场/关注走独立 recentMembers，不占 feed 名额。
 - 日志：AppLogger 内存 200 条 + console；控制台只保留最近 100 条。
 - 聊天原文不写磁盘。
 
@@ -657,7 +657,7 @@ PlatformHost 只保留连接对象，不重复创建。
 | userData/history/dice.json | 骰子结果 | 文件 50，界面 20 |
 | userData/history/wheel.json | 转盘结果 | 文件 50，界面 20 |
 | userData/history/vote.json | 投票结果 | 文件 50，界面 20 |
-| 内存 feed | 聊天/礼物/进场/系统 | 200（优先淘汰进场） |
+| 内存 feed | 聊天/礼物/系统 | 1000 |
 | 内存日志 | 主进程日志 | 200，UI 100 |
 
 userData 默认是 %APPDATA%/interact-tools；--smoke 时切到 artifacts/smoke/data。

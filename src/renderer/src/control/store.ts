@@ -242,14 +242,7 @@ async function run<T>(task: () => Promise<T>, success?: string): Promise<T | und
 }
 
 function trimFeed(feed: EngineSnapshot['feed']): EngineSnapshot['feed'] {
-  if (feed.length <= 200) return feed
-  const next = [...feed]
-  while (next.length > 200) {
-    const memberIndex = next.findIndex((item) => item.kind === 'member')
-    if (memberIndex >= 0) next.splice(memberIndex, 1)
-    else next.shift()
-  }
-  return next
+  return feed.length <= 1000 ? feed : feed.slice(-1000)
 }
 
 function handleEvent(event: EngineEvent): void {
@@ -264,6 +257,12 @@ function handleEvent(event: EngineEvent): void {
         ...snapshot,
         feed: trimFeed([...snapshot.feed, event.item])
       }
+      return
+    }
+    case 'members': {
+      const snapshot = state.snapshot
+      if (snapshot === null) return
+      state.snapshot = { ...snapshot, recentMembers: event.members }
       return
     }
     case 'log':
