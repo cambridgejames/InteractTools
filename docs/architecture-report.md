@@ -599,6 +599,7 @@ PlatformHost 只保留连接对象，不重复创建。
 
 - 目标 1560×960，按配置的显示器（默认鼠标所在屏）workArea 自动收缩并居中；最小 1120×720。
 - Windows/Linux 使用 `titleBarStyle: 'hidden'` + `titleBarOverlay`，macOS 使用 `hiddenInset`；标题栏消失但系统原生窗口按钮保留。顶栏 `-webkit-app-region: drag`，窗口按钮由系统绘制。
+- 设置页采用左侧子导航（平台连接 / 网络 / 界面与窗口 / 数据 / 关于），内容区最大 760px；平台设置一行一个平台，开关统一在 header 右侧。
 - 设置页通过 window:displays / window:set-display 选择屏幕；配置持久化到 appConfig.window.display。
 - 「互动工具」页卡片内 dice/wheel/vote 独立开关；关闭后 ToolHost 停用并移出活动视图，但保留在 catalog 中可重新打开。该页支持多关键词/CJK 二元组分词、模糊匹配、命中高亮和相关度排序。
 - 设置页网络代理：none（默认）/system/custom；修改后重连 B站，network:test 返回延迟与错误。

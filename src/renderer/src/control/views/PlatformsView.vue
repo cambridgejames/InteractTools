@@ -176,21 +176,6 @@ async function setDouyinEnabled(next: boolean): Promise<void> {
   else await actions.disconnect('douyin')
 }
 
-async function connectDouyin(): Promise<void> {
-  if (douyinRoomId.value.trim().length === 0 || douyinSigner.value.trim().length === 0) {
-    showToast('先填写直播间号和签名服务地址', 'error')
-    return
-  }
-  const ok = await actions.updatePlatformConfig('douyin', {
-    roomId: douyinRoomId.value.trim(),
-    signerUrl: douyinSigner.value.trim(),
-    enabled: true
-  })
-  if (!ok) return
-  douyinEnabled.value = true
-  await actions.connect('douyin')
-}
-
 async function setMockEnabled(next: boolean): Promise<void> {
   mockEnabled.value = next
   const ok = await actions.updatePlatformConfig('mock', { enabled: next })
@@ -208,25 +193,6 @@ async function setBotsEnabled(next: boolean): Promise<void> {
   await actions.updatePlatformConfig('mock', { botsEnabled: next })
 }
 
-async function connectBilibili(): Promise<void> {
-  if (roomId.value.trim().length === 0) {
-    showToast('先填写直播间房间号', 'error')
-    return
-  }
-  const ok = await actions.updatePlatformConfig('bilibili', {
-    roomId: roomId.value.trim(),
-    enabled: true
-  })
-  if (!ok) return
-  biliEnabled.value = true
-  await actions.connect('bilibili')
-}
-
-async function connectMock(): Promise<void> {
-  const ok = await actions.updatePlatformConfig('mock', { enabled: true })
-  if (!ok) return
-  await actions.connect('mock')
-}
 </script>
 
 <template>
@@ -261,24 +227,7 @@ async function connectMock(): Promise<void> {
         </label>
       </div>
 
-      <div class="capabilities">
-        <span>弹幕</span>
-        <span>礼物</span>
-        <span>进场</span>
-      </div>
 
-      <footer>
-        <span class="auto-save">自动保存</span>
-        <div class="right">
-          <button
-            v-if="biliEnabled"
-            class="secondary"
-            @click="connectBilibili"
-          >
-            {{ bilibili?.status.phase === 'connecting' ? '连接中…' : '重新连接' }}
-          </button>
-        </div>
-      </footer>
     </section>
 
     <section class="card">
@@ -319,21 +268,7 @@ async function connectMock(): Promise<void> {
         抖音 webcast 需要短期签名 URL；本应用不内置签名算法，请配置自建或本地签名服务。
       </p>
 
-      <div class="capabilities">
-        <span>弹幕</span>
-        <span>礼物</span>
-        <span>进场</span>
-        <span>只读</span>
-      </div>
 
-      <footer>
-        <span class="auto-save">自动保存</span>
-        <div class="right">
-          <button v-if="douyinEnabled" class="secondary" @click="connectDouyin">
-            {{ douyin?.status.phase === 'connecting' ? '连接中…' : '重新连接' }}
-          </button>
-        </div>
-      </footer>
     </section>
 
     <section class="card">
@@ -391,24 +326,7 @@ async function connectMock(): Promise<void> {
         </div>
       </div>
 
-      <div class="capabilities">
-        <span>弹幕</span>
-        <span>礼物</span>
-        <span>手动注入</span>
-      </div>
 
-      <footer>
-        <span class="auto-save">自动保存</span>
-        <div class="right">
-          <button
-            v-if="mockEnabled"
-            class="secondary"
-            @click="connectMock"
-          >
-            {{ mock?.status.phase === 'connecting' ? '连接中…' : '重新连接' }}
-          </button>
-        </div>
-      </footer>
     </section>
   </div>
 </template>
@@ -417,6 +335,7 @@ async function connectMock(): Promise<void> {
 .platforms {
   display: flex;
   flex-direction: column;
+  width: 100%;
   max-width: var(--content-max);
   margin: 0 auto;
   border: 1px solid var(--hairline);
@@ -590,6 +509,11 @@ h2 {
   flex: 0 0 112px;
 }
 
+.field input:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
 .field input {
   width: 100%;
   height: 36px;
@@ -629,75 +553,6 @@ h2 {
 
 .check input {
   accent-color: var(--accent);
-}
-
-.capabilities {
-  display: flex;
-  gap: 6px;
-}
-
-.capabilities span {
-  padding: 2px 6px;
-  border: 1px solid var(--hairline);
-  border-radius: 6px;
-  color: var(--faint);
-  font-size: 10px;
-}
-
-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--s-3);
-  margin-top: auto;
-  padding-top: var(--s-4);
-  border-top: 1px solid var(--hairline);
-}
-
-.auto-save {
-  color: var(--faint);
-  font-size: 10px;
-}
-
-.right {
-  display: flex;
-  gap: var(--s-2);
-}
-
-.primary,
-.secondary,
-.danger {
-  height: 32px;
-  padding: 0 var(--s-3);
-  border-radius: var(--r-control);
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.primary {
-  border: 1px solid var(--accent);
-  background: var(--accent);
-  color: var(--accent-ink);
-}
-
-.secondary {
-  border: 1px solid var(--hairline-strong);
-  background: transparent;
-  color: var(--body);
-}
-
-.secondary:hover {
-  background: var(--surface-hover);
-}
-
-.danger {
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--danger);
-}
-
-.danger:hover {
-  background: color-mix(in srgb, var(--danger) 10%, transparent);
 }
 
 </style>

@@ -154,6 +154,7 @@ async function clearAllData(): Promise<void> {
 <template>
   <div class="settings-shell">
     <nav class="settings-nav" aria-label="设置分类">
+      <p class="settings-nav-title">偏好设置</p>
       <button
         v-for="item in sections"
         :key="item.id"
@@ -168,13 +169,20 @@ async function clearAllData(): Promise<void> {
     </nav>
 
     <div class="settings-content">
-      <PlatformsView v-if="section === 'platforms'" />
-
-      <section v-else-if="section === 'network'" class="card">
-        <header>
-          <h2>网络代理</h2>
-          <p>部分网络环境需要代理才能连接 B站或抖音；修改后会重连平台。</p>
+      <template v-if="section === 'platforms'">
+        <header class="section-head">
+          <h2>平台连接</h2>
+          <p>连接弹幕来源。所有平台只读；平台名称不会出现在实时弹幕和未激活状态里。</p>
         </header>
+        <PlatformsView />
+      </template>
+
+      <template v-else-if="section === 'network'">
+        <header class="section-head">
+          <h2>网络</h2>
+          <p>代理只影响平台连接；默认不使用代理。</p>
+        </header>
+        <section class="card">
 
         <label class="field">
           <span>代理方式</span>
@@ -210,9 +218,14 @@ async function clearAllData(): Promise<void> {
           {{ testResult.message }}
         </p>
         <p v-else class="network-note">测试会请求 B站房间接口，耗时通常不超过 8 秒。</p>
-      </section>
+        </section>
+      </template>
 
       <template v-else-if="section === 'interface'">
+        <header class="section-head">
+          <h2>界面与窗口</h2>
+          <p>控制台显示在哪、弹幕栏怎么排、结果怎么展示。</p>
+        </header>
         <section class="card">
           <header>
             <h2>窗口位置</h2>
@@ -267,11 +280,12 @@ async function clearAllData(): Promise<void> {
         </section>
       </template>
 
-      <section v-else-if="section === 'data'" class="card">
-        <header>
+      <template v-else-if="section === 'data'">
+        <header class="section-head">
           <h2>数据</h2>
           <p>配置、历史与日志都保存在本机用户目录。</p>
         </header>
+        <section class="card">
         <div class="data-actions">
           <button class="secondary" @click="actions.openDataFolder()">
             <AppIcon name="folder" :size="15" />
@@ -280,13 +294,15 @@ async function clearAllData(): Promise<void> {
           <button class="danger" @click="clearAllData">清除所有数据…</button>
         </div>
         <p class="data-note">清除会删除配置、工具历史和日志，并重新启动应用。</p>
-      </section>
+        </section>
+      </template>
 
-      <section v-else class="card about">
-        <header>
+      <template v-else>
+        <header class="section-head">
           <h2>关于</h2>
           <p>互动工坊 v0.1.0</p>
         </header>
+        <section class="card about">
         <ul>
           <li>本地优先：B站匿名弹幕、抖音只读弹幕 + 本地模拟，不依赖自建服务端。</li>
           <li>物理结果由 cannon-es 刚体模拟产生，结果动画只回放录制数据。</li>
@@ -299,7 +315,8 @@ async function clearAllData(): Promise<void> {
           </button>
           <button class="link" @click="openExternal(GITHUB_ISSUES_URL)">问题反馈</button>
         </div>
-      </section>
+        </section>
+      </template>
     </div>
   </div>
 </template>
@@ -310,7 +327,7 @@ async function clearAllData(): Promise<void> {
   grid-template-columns: 176px minmax(0, 1fr);
   align-items: start;
   gap: var(--s-5);
-  max-width: 1080px;
+  max-width: 1000px;
   margin: 0 auto;
 }
 
@@ -326,7 +343,17 @@ async function clearAllData(): Promise<void> {
   background: var(--canvas-elevated);
 }
 
+.settings-nav-title {
+  margin: 4px var(--s-3) var(--s-2);
+  color: var(--faint);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
 .nav-item {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--s-2);
@@ -350,6 +377,16 @@ async function clearAllData(): Promise<void> {
   color: var(--ink);
 }
 
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: -7px;
+  width: 2px;
+  height: 16px;
+  border-radius: var(--r-chip);
+  background: var(--accent);
+}
+
 .nav-item.active :deep(svg) {
   color: var(--accent);
 }
@@ -358,7 +395,32 @@ async function clearAllData(): Promise<void> {
   display: flex;
   flex-direction: column;
   gap: var(--s-5);
+  width: 100%;
+  max-width: 760px;
   min-width: 0;
+}
+
+.section-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 2px;
+}
+
+.section-head h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 32px;
+  letter-spacing: -0.4px;
+}
+
+.section-head p {
+  margin: 0;
+  color: var(--mute);
+  font-size: 12px;
+  line-height: 18px;
 }
 
 .card {
