@@ -88,7 +88,7 @@ const panel = computed(() => (active.value === null ? null : TOOL_PANELS[active.
 }
 
 .empty-card span {
-  font-size: 12px;
+  font-size: 13px;
 }
 
 </style>

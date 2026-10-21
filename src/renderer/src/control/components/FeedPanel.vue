@@ -198,7 +198,7 @@ h2 {
 .card-head p {
   margin: 2px 0 0;
   color: var(--mute);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .mini {
@@ -207,7 +207,7 @@ h2 {
   border-radius: 6px;
   background: transparent;
   color: var(--mute);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .mini:hover {
@@ -260,7 +260,7 @@ h2 {
   border-radius: 50%;
   background: var(--surface-active);
   color: var(--body);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .content {
@@ -278,7 +278,7 @@ h2 {
 .meta strong {
   overflow: hidden;
   color: var(--body);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -290,20 +290,20 @@ h2 {
   border-radius: 4px;
   background: var(--surface-active);
   color: var(--faint);
-  font-size: 9px;
+  font-size: 12px;
   line-height: 14px;
 }
 
 .time {
   margin-left: auto;
   color: var(--faint);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 p {
   margin: 2px 0 0;
   color: var(--body);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 18px;
   word-break: break-word;
 }
@@ -324,13 +324,13 @@ p {
 
 .empty strong {
   color: var(--body);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
 }
 
 .empty span {
   max-width: 220px;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 17px;
 }
 
@@ -356,7 +356,7 @@ p {
   border-radius: var(--r-control);
   background: var(--inset);
   color: var(--body);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .text-input {
@@ -368,7 +368,7 @@ p {
   border-radius: var(--r-control);
   background: var(--inset);
   color: var(--ink);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .send {

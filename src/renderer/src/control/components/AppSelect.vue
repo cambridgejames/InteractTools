@@ -114,7 +114,7 @@ onUnmounted(() => document.removeEventListener('pointerdown', onPointerDown))
   border-radius: var(--r-control);
   background: var(--inset);
   color: var(--ink);
-  font-size: 12px;
+  font-size: 13px;
   text-align: left;
 }
 
@@ -172,7 +172,7 @@ onUnmounted(() => document.removeEventListener('pointerdown', onPointerDown))
   border-radius: 6px;
   background: transparent;
   color: var(--body);
-  font-size: 12px;
+  font-size: 13px;
   text-align: left;
 }
 

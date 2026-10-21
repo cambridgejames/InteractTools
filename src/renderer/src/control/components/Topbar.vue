@@ -112,7 +112,7 @@ h1 {
 p {
   margin: 2px 0 0;
   color: var(--mute);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .live {
@@ -121,7 +121,7 @@ p {
   gap: 6px;
   color: var(--accent);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 1px;
 }
@@ -155,7 +155,7 @@ p {
   border-radius: var(--r-control);
   background: transparent;
   color: var(--body);
-  font-size: 12px;
+  font-size: 13px;
   transition: background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
 }
 

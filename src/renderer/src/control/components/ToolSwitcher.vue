@@ -106,13 +106,13 @@ function modeOf(tool: ToolView): string {
 }
 
 .tab-text strong {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
 }
 
 .tab-text em {
   color: var(--faint);
-  font-size: 9px;
+  font-size: 12px;
   font-style: normal;
   letter-spacing: 0.4px;
 }

@@ -75,7 +75,7 @@ h2 {
 .card-head p {
   margin: 2px 0 0;
   color: var(--mute);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .mini {
@@ -84,7 +84,7 @@ h2 {
   border-radius: 6px;
   background: transparent;
   color: var(--mute);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .mini:hover {
@@ -104,12 +104,12 @@ h2 {
 
 .empty strong {
   color: var(--body);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
 }
 
 .empty span {
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .table {
@@ -120,7 +120,7 @@ h2 {
 th {
   padding: 8px var(--s-5);
   color: var(--mute);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.8px;
   text-align: left;
@@ -131,7 +131,7 @@ td {
   padding: 10px var(--s-5);
   border-top: 1px solid var(--hairline);
   color: var(--body);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 tr:hover td {
@@ -140,7 +140,7 @@ tr:hover td {
 
 .time {
   color: var(--mute);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .right {
@@ -162,7 +162,7 @@ tr:hover td {
   border-radius: 50%;
   background: var(--warning);
   color: var(--canvas);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 </style>

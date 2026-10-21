@@ -13,8 +13,8 @@ body {
   background: var(--canvas);
   color: var(--body);
   font-family: var(--font-ui);
-  font-size: 13px;
-  line-height: 20px;
+  font-size: 14px;
+  line-height: 21px;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -68,8 +68,8 @@ select:focus-visible {
 }
 
 .caption {
-  font-size: 11px;
-  line-height: 16px;
+  font-size: 12px;
+  line-height: 18px;
   font-weight: 500;
   letter-spacing: 0.8px;
   text-transform: uppercase;

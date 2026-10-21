@@ -178,7 +178,7 @@ function nameParts(item: { tool: ToolCatalogItem; pinyinMatch: boolean }): Retur
   background: transparent;
   box-shadow: none;
   color: var(--ink);
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .search input::-webkit-search-cancel-button,
@@ -210,7 +210,7 @@ function nameParts(item: { tool: ToolCatalogItem; pinyinMatch: boolean }): Retur
 .search-count {
   color: var(--faint);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .tool-card {
@@ -260,7 +260,7 @@ function nameParts(item: { tool: ToolCatalogItem; pinyinMatch: boolean }): Retur
   border-radius: var(--r-chip);
   background: var(--accent-soft);
   color: var(--accent);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -284,7 +284,7 @@ h2 {
 p {
   margin: 0;
   color: var(--mute);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 18px;
 }
 
@@ -300,7 +300,7 @@ p {
   border-radius: 6px;
   color: var(--faint);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 footer {
@@ -314,7 +314,7 @@ footer {
 
 .meta {
   color: var(--faint);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .open {
@@ -324,7 +324,7 @@ footer {
   border-radius: 8px;
   background: transparent;
   color: var(--body);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .open:hover:not(:disabled) {
@@ -362,7 +362,7 @@ mark {
 }
 
 .empty span {
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .muted-card {

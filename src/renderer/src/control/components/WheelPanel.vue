@@ -221,7 +221,7 @@ function labelStyle(index: number): Record<string, string> {
   const chars = Array.from(label).length
   // 两行容量近似：字宽 × 字号 × 2 ≈ width × 2；短词封顶，长词缩字号。
   const fit = (width * 2) / Math.max(1, chars)
-  const fontSize = Math.max(9, Math.min(maxLabelFont(count), fit))
+  const fontSize = Math.max(12, Math.min(maxLabelFont(count), fit))
 
   return {
     left: 'calc(50% + ' + Math.cos(radians) * radius + 'px)',
@@ -433,7 +433,7 @@ async function clearHistory(): Promise<void> {
   gap: var(--s-3);
   color: var(--mute);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .actions {
@@ -449,7 +449,7 @@ async function clearHistory(): Promise<void> {
   height: 36px;
   padding: 0 var(--s-4);
   border-radius: var(--r-control);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   transition: background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out),
     transform var(--dur-fast) var(--ease-out), opacity var(--dur-fast) var(--ease-out);
@@ -499,7 +499,7 @@ async function clearHistory(): Promise<void> {
   max-width: 260px;
   margin: 0;
   color: var(--mute);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 17px;
   text-align: center;
 }
@@ -523,7 +523,7 @@ async function clearHistory(): Promise<void> {
 
 .last-result span {
   color: var(--mute);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .last-result strong {
@@ -540,7 +540,7 @@ async function clearHistory(): Promise<void> {
 
 .last-result em {
   color: var(--faint);
-  font-size: 11px;
+  font-size: 12px;
   font-style: normal;
 }
 
@@ -549,7 +549,7 @@ async function clearHistory(): Promise<void> {
   flex-direction: column;
   gap: 6px;
   color: var(--mute);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 textarea {
@@ -561,7 +561,7 @@ textarea {
   background: var(--inset);
   color: var(--ink);
   font-family: var(--font-ui);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 20px;
   resize: vertical;
 }
@@ -570,7 +570,7 @@ textarea {
   margin-left: auto;
   align-self: flex-end;
   color: var(--faint);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .inline-fields {
@@ -584,7 +584,7 @@ textarea {
   flex-direction: column;
   gap: 6px;
   color: var(--mute);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .unit {
@@ -601,7 +601,7 @@ textarea {
   background: var(--inset);
   color: var(--ink);
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .unit em {
@@ -609,14 +609,14 @@ textarea {
   right: 10px;
   top: 8px;
   color: var(--faint);
-  font-size: 11px;
+  font-size: 12px;
   font-style: normal;
 }
 
 .save {
   margin-left: auto;
   height: 34px;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .history {
@@ -630,7 +630,7 @@ textarea {
   display: flex;
   justify-content: space-between;
   color: var(--mute);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .history-head button {
@@ -638,7 +638,7 @@ textarea {
   border: 0;
   background: transparent;
   color: var(--faint);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .history-head button:hover {
@@ -659,18 +659,18 @@ textarea {
   justify-content: space-between;
   gap: var(--s-3);
   color: var(--body);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .history time {
   color: var(--faint);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .history-empty {
   margin: 0;
   color: var(--faint);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 @media (max-width: 1400px) {

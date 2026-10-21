@@ -153,8 +153,7 @@ async function clearAllData(): Promise<void> {
 
 <template>
   <div class="settings-shell">
-    <nav class="settings-nav" aria-label="设置分类">
-      <p class="settings-nav-title">偏好设置</p>
+    <nav class="settings-tabs" aria-label="设置分类">
       <button
         v-for="item in sections"
         :key="item.id"
@@ -323,33 +322,25 @@ async function clearAllData(): Promise<void> {
 
 <style scoped>
 .settings-shell {
-  display: grid;
-  grid-template-columns: 176px minmax(0, 1fr);
-  align-items: start;
+  display: flex;
+  flex-direction: column;
   gap: var(--s-5);
-  max-width: 1000px;
+  width: 100%;
+  max-width: var(--content-max);
   margin: 0 auto;
 }
 
-.settings-nav {
-  position: sticky;
-  top: 0;
+.settings-tabs {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 2px;
-  padding: 6px;
+  width: fit-content;
+  max-width: 100%;
+  padding: 4px;
   border: 1px solid var(--hairline);
   border-radius: var(--r-card);
   background: var(--canvas-elevated);
-}
-
-.settings-nav-title {
-  margin: 4px var(--s-3) var(--s-2);
-  color: var(--faint);
-  font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.8px;
-  text-transform: uppercase;
+  overflow-x: auto;
 }
 
 .nav-item {
@@ -357,14 +348,15 @@ async function clearAllData(): Promise<void> {
   display: flex;
   align-items: center;
   gap: var(--s-2);
-  height: 36px;
+  height: 34px;
   padding: 0 var(--s-3);
   border: 0;
   border-radius: var(--r-control);
   background: transparent;
   color: var(--mute);
-  font-size: 12px;
+  font-size: 13px;
   text-align: left;
+  white-space: nowrap;
 }
 
 .nav-item:hover {
@@ -374,17 +366,8 @@ async function clearAllData(): Promise<void> {
 
 .nav-item.active {
   background: var(--surface-active);
+  box-shadow: inset 0 -2px 0 var(--accent);
   color: var(--ink);
-}
-
-.nav-item.active::before {
-  content: '';
-  position: absolute;
-  left: -7px;
-  width: 2px;
-  height: 16px;
-  border-radius: var(--r-chip);
-  background: var(--accent);
 }
 
 .nav-item.active :deep(svg) {
@@ -396,7 +379,7 @@ async function clearAllData(): Promise<void> {
   flex-direction: column;
   gap: var(--s-5);
   width: 100%;
-  max-width: 760px;
+  max-width: none;
   min-width: 0;
 }
 
@@ -419,8 +402,8 @@ async function clearAllData(): Promise<void> {
 .section-head p {
   margin: 0;
   color: var(--mute);
-  font-size: 12px;
-  line-height: 18px;
+  font-size: 14px;
+  line-height: 21px;
 }
 
 .card {
@@ -443,7 +426,7 @@ header h2 {
 header p {
   margin: 2px 0 0;
   color: var(--mute);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .field {
@@ -451,7 +434,7 @@ header p {
   flex-direction: column;
   gap: 6px;
   color: var(--mute);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .text-input {
@@ -462,7 +445,7 @@ header p {
   border-radius: var(--r-control);
   background: var(--inset);
   color: var(--ink);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .text-input:focus {
@@ -479,7 +462,7 @@ header p {
 .network-result {
   color: var(--danger);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .network-result.ok {
@@ -490,7 +473,7 @@ header p {
 .network-note {
   margin: 0;
   color: var(--mute);
-  font-size: 10px;
+  font-size: 12px;
   overflow-wrap: anywhere;
 }
 
@@ -515,7 +498,7 @@ header p {
   border-radius: var(--r-control);
   background: transparent;
   color: var(--body);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .secondary:hover {
@@ -530,7 +513,7 @@ header p {
   border-radius: var(--r-control);
   background: transparent;
   color: var(--danger);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .danger:hover {
@@ -540,7 +523,7 @@ header p {
 .data-note {
   margin: 0;
   color: var(--faint);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .links {
@@ -558,7 +541,7 @@ header p {
   border-radius: var(--r-control);
   background: var(--inset);
   color: var(--body);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .link:hover {
@@ -583,32 +566,26 @@ header p {
 
 .row strong {
   color: var(--body);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
 }
 
 .row span {
   color: var(--faint);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .about ul {
   margin: 0;
   padding-left: 18px;
   color: var(--mute);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 19px;
 }
 
 @media (max-width: 900px) {
-  .settings-shell {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .settings-nav {
-    position: static;
-    flex-direction: row;
-    flex-wrap: wrap;
+  .settings-tabs {
+    width: 100%;
   }
 }
 </style>

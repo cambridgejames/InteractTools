@@ -86,7 +86,7 @@ function submit(): void {
   display: flex;
   justify-content: space-between;
   color: var(--mute);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .preset-save {
@@ -103,7 +103,7 @@ function submit(): void {
   border-radius: var(--r-control);
   background: var(--inset);
   color: var(--ink);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .preset-add,
@@ -112,7 +112,7 @@ function submit(): void {
   border-radius: var(--r-control);
   background: var(--surface-active);
   color: var(--body);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .preset-add {
@@ -163,7 +163,7 @@ function submit(): void {
 .preset-apply strong {
   overflow: hidden;
   color: var(--ink);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -172,7 +172,7 @@ function submit(): void {
 .preset-apply small {
   flex: none;
   color: var(--faint);
-  font-size: 9px;
+  font-size: 12px;
 }
 
 .preset-remove {
@@ -185,7 +185,7 @@ function submit(): void {
 .preset-empty {
   margin: 0;
   color: var(--faint);
-  font-size: 10px;
+  font-size: 12px;
   line-height: 15px;
 }
 </style>

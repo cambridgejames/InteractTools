@@ -31,12 +31,12 @@ export async function runSmoke(application: Application): Promise<void> {
   )
   await delay(250)
   await application.controlWindow.browserWindow.webContents.executeJavaScript(
-    "document.querySelectorAll('.settings-nav .nav-item')[0]?.click()"
+    "document.querySelectorAll('.settings-tabs .nav-item')[0]?.click()"
   )
   await delay(250)
   await application.controlWindow.capture(join(output, 'control-platforms.png'))
   await application.controlWindow.browserWindow.webContents.executeJavaScript(
-    "document.querySelectorAll('.settings-nav .nav-item')[1]?.click()"
+    "document.querySelectorAll('.settings-tabs .nav-item')[1]?.click()"
   )
   await delay(250)
   await application.controlWindow.capture(join(output, 'control-settings-network.png'))
@@ -50,12 +50,12 @@ export async function runSmoke(application: Application): Promise<void> {
   )
   await delay(150)
   await application.controlWindow.browserWindow.webContents.executeJavaScript(
-    "document.querySelectorAll('.settings-nav .nav-item')[2]?.click()"
+    "document.querySelectorAll('.settings-tabs .nav-item')[2]?.click()"
   )
   await delay(250)
   await application.controlWindow.capture(join(output, 'control-settings.png'))
   await application.controlWindow.browserWindow.webContents.executeJavaScript(
-    "document.querySelectorAll('.settings-nav .nav-item')[4]?.click()"
+    "document.querySelectorAll('.settings-tabs .nav-item')[4]?.click()"
   )
   await delay(250)
   await application.controlWindow.capture(join(output, 'control-settings-about.png'))

@@ -23,7 +23,7 @@ const text = computed(() => props.label ?? platformPhaseLabel(props.phase))
   height: 24px;
   padding: 0 10px;
   border-radius: var(--r-chip);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
   background: color-mix(in srgb, currentColor 10%, transparent);

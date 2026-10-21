@@ -330,7 +330,7 @@ function participantPower(value: number): string {
 
 .hint-label {
   color: var(--mute);
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.8px;
 }
 
@@ -342,7 +342,7 @@ function participantPower(value: number): string {
   background: transparent;
   color: var(--body);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .hint-chip:hover:not(:disabled) {
@@ -358,7 +358,7 @@ function participantPower(value: number): string {
 .hint-note {
   margin-left: auto;
   color: var(--faint);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .card-body {
@@ -416,7 +416,7 @@ function participantPower(value: number): string {
   height: 36px;
   padding: 0 var(--s-4);
   border-radius: var(--r-control);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   transition: background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out),
     transform var(--dur-fast) var(--ease-out), opacity var(--dur-fast) var(--ease-out);
@@ -465,7 +465,7 @@ function participantPower(value: number): string {
 .action-note {
   margin: 0;
   color: var(--faint);
-  font-size: 10px;
+  font-size: 12px;
   text-align: center;
 }
 
@@ -481,7 +481,7 @@ function participantPower(value: number): string {
   flex-direction: column;
   gap: 6px;
   color: var(--mute);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .config select,
@@ -493,7 +493,7 @@ function participantPower(value: number): string {
   border-radius: var(--r-control);
   background: var(--inset);
   color: var(--ink);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .config select:disabled,
@@ -515,7 +515,7 @@ function participantPower(value: number): string {
   position: absolute;
   right: 10px;
   color: var(--faint);
-  font-size: 11px;
+  font-size: 12px;
   font-style: normal;
 }
 
@@ -543,7 +543,7 @@ function participantPower(value: number): string {
 .stat span {
   display: block;
   color: var(--mute);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .stat strong {
@@ -559,7 +559,7 @@ function participantPower(value: number): string {
 .stat em {
   margin-left: 2px;
   color: var(--faint);
-  font-size: 11px;
+  font-size: 12px;
   font-style: normal;
 }
 
@@ -582,7 +582,7 @@ function participantPower(value: number): string {
 
 .power-head span {
   color: var(--mute);
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.8px;
 }
 
@@ -597,7 +597,7 @@ function participantPower(value: number): string {
 
 .power-head em {
   color: var(--faint);
-  font-size: 10px;
+  font-size: 12px;
   font-style: normal;
 }
 
@@ -619,14 +619,14 @@ function participantPower(value: number): string {
 .power-meter p {
   margin: 0;
   color: var(--mute);
-  font-size: 10px;
+  font-size: 12px;
   line-height: 15px;
 }
 
 .hint {
   margin: 0;
   color: var(--mute);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 18px;
 }
 
@@ -636,7 +636,7 @@ function participantPower(value: number): string {
   background: var(--inset);
   color: var(--accent);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .participants {
@@ -651,7 +651,7 @@ function participantPower(value: number): string {
   align-items: center;
   justify-content: space-between;
   color: var(--mute);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .section-head .mono {
@@ -666,12 +666,12 @@ function participantPower(value: number): string {
   border: 1px dashed var(--hairline-strong);
   border-radius: var(--r-control);
   color: var(--body);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .empty small {
   color: var(--mute);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .participant-list {
@@ -707,7 +707,7 @@ function participantPower(value: number): string {
   border-radius: 50%;
   background: var(--surface-active);
   color: var(--body);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .person {
@@ -721,7 +721,7 @@ function participantPower(value: number): string {
 .name {
   overflow: hidden;
   color: var(--body);
-  font-size: 12px;
+  font-size: 13px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -746,7 +746,7 @@ function participantPower(value: number): string {
 .power {
   min-width: 32px;
   color: var(--ink);
-  font-size: 13px;
+  font-size: 14px;
   text-align: right;
 }
 

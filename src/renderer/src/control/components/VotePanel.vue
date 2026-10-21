@@ -356,7 +356,7 @@ async function sendHint(index: number): Promise<void> {
 
 .hint-label {
   color: var(--mute);
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.8px;
 }
 
@@ -368,7 +368,7 @@ async function sendHint(index: number): Promise<void> {
   background: transparent;
   color: var(--body);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .hint-chip:hover:not(:disabled) {
@@ -384,14 +384,14 @@ async function sendHint(index: number): Promise<void> {
 .hint-note {
   margin-left: auto;
   color: var(--faint);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .auto-save {
   margin-left: auto;
   align-self: center;
   color: var(--faint);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .body {
@@ -437,7 +437,7 @@ async function sendHint(index: number): Promise<void> {
 
 .countdown-line span {
   color: var(--mute);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .countdown-track {
@@ -488,7 +488,7 @@ async function sendHint(index: number): Promise<void> {
 .option-name {
   overflow: hidden;
   color: var(--body);
-  font-size: 12px;
+  font-size: 13px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -501,7 +501,7 @@ async function sendHint(index: number): Promise<void> {
 .option-count {
   color: var(--mute);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .option-bar {
@@ -527,7 +527,7 @@ async function sendHint(index: number): Promise<void> {
   padding-top: var(--s-3);
   border-top: 1px solid var(--hairline);
   color: var(--mute);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .winner-text {
@@ -545,7 +545,7 @@ async function sendHint(index: number): Promise<void> {
   flex-direction: column;
   gap: 6px;
   color: var(--mute);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .field.compact {
@@ -561,7 +561,7 @@ async function sendHint(index: number): Promise<void> {
   background: var(--inset);
   color: var(--ink);
   font-family: inherit;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .field input {
@@ -600,13 +600,13 @@ async function sendHint(index: number): Promise<void> {
 
 .revote-row strong {
   color: var(--body);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
 }
 
 .revote-row span {
   color: var(--faint);
-  font-size: 10px;
+  font-size: 12px;
   line-height: 15px;
 }
 
@@ -629,7 +629,7 @@ async function sendHint(index: number): Promise<void> {
   top: 10px;
   right: 10px;
   color: var(--faint);
-  font-size: 11px;
+  font-size: 12px;
   font-style: normal;
 }
 
@@ -649,7 +649,7 @@ async function sendHint(index: number): Promise<void> {
   border-radius: var(--r-control);
   background: transparent;
   color: var(--body);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .btn:disabled {

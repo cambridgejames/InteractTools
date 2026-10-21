@@ -67,7 +67,7 @@ h2 {
 .title p {
   margin: 2px 0 0;
   color: var(--mute);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .phase {
@@ -75,7 +75,7 @@ h2 {
   border-radius: var(--r-chip);
   background: var(--surface-active);
   color: var(--mute);
-  font-size: 11px;
+  font-size: 12px;
   white-space: nowrap;
 }
 

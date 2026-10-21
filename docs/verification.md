@@ -24,7 +24,7 @@
 
 - `control.png`：控制台，含平台状态、骰子面板、事件流、历史记录。
 - `control-wheel.png`：转盘扇形标签、中心指针和命名预设列表。
-- `control-platforms.png`：设置页「平台连接」子页，B站、抖音、本地模拟三行与统一位置开关。
+- `control-platforms.png`：设置页「平台连接」子页，B站、抖音、本地模拟三张独立卡片与统一位置开关。
 - `control-tools.png`：互动工具页三张工具卡片、卡片内开关与搜索框。
 - `control-tool-search.png`：互动工具页搜索拼音“touzi”，命中卡片、拼音高亮与相关度排序。
 - `control-settings.png`：设置「界面与窗口」子页，窗口位置、弹幕栏模式和结果展示。

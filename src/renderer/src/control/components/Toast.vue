@@ -24,7 +24,7 @@ import { state } from '../store'
   background: var(--surface-active);
   box-shadow: var(--shadow-pop);
   color: var(--body);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .tone-success {

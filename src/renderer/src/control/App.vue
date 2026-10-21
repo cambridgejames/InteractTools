@@ -142,14 +142,14 @@ onMounted(() => {
 
 .feed-rail span {
   writing-mode: vertical-rl;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 2px;
 }
 
 .feed-rail strong {
   color: var(--faint);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -187,6 +187,6 @@ onMounted(() => {
   place-items: center;
   height: 60vh;
   color: var(--mute);
-  font-size: 12px;
+  font-size: 13px;
 }
 </style>

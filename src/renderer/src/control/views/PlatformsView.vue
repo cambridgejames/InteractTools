@@ -333,15 +333,13 @@ async function setBotsEnabled(next: boolean): Promise<void> {
 
 <style scoped>
 .platforms {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: var(--s-4);
   width: 100%;
   max-width: var(--content-max);
   margin: 0 auto;
-  border: 1px solid var(--hairline);
-  border-radius: var(--r-card);
-  background: var(--surface);
-  overflow: hidden;
 }
 
 .card {
@@ -349,13 +347,11 @@ async function setBotsEnabled(next: boolean): Promise<void> {
   flex-direction: column;
   gap: var(--s-4);
   padding: var(--s-5);
-  border-bottom: 1px solid var(--hairline);
-  background: transparent;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-card);
+  background: var(--surface);
 }
 
-.card:last-child {
-  border-bottom: 0;
-}
 
 .card-controls {
   display: flex;
@@ -404,13 +400,13 @@ h2 {
 .platform-title p {
   margin: 2px 0 0;
   color: var(--mute);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .signer-note {
   margin: 0;
   color: var(--faint);
-  font-size: 10px;
+  font-size: 12px;
   line-height: 16px;
 }
 
@@ -421,7 +417,7 @@ h2 {
   border-radius: 4px;
   background: var(--surface-active);
   color: var(--mute);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 17px;
 }
 
@@ -455,7 +451,7 @@ h2 {
 
 .douyin-form {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   align-items: start;
 }
 
@@ -480,13 +476,13 @@ h2 {
 
 .switch-row strong {
   color: var(--body);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
 }
 
 .switch-row span {
   color: var(--mute);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .switch-stack {
@@ -502,7 +498,7 @@ h2 {
   gap: 6px;
   flex: 1;
   color: var(--mute);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .field.compact {
@@ -522,7 +518,7 @@ h2 {
   border-radius: var(--r-control);
   background: var(--inset);
   color: var(--ink);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .unit {
@@ -538,7 +534,7 @@ h2 {
   right: 10px;
   top: 10px;
   color: var(--faint);
-  font-size: 11px;
+  font-size: 12px;
   font-style: normal;
 }
 
@@ -547,7 +543,7 @@ h2 {
   align-items: center;
   gap: var(--s-2);
   color: var(--body);
-  font-size: 12px;
+  font-size: 13px;
   white-space: nowrap;
 }
 
@@ -555,4 +551,17 @@ h2 {
   accent-color: var(--accent);
 }
 
+.card:last-child {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 1100px) {
+  .platforms {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .card:last-child {
+    grid-column: auto;
+  }
+}
 </style>

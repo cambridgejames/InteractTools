@@ -96,7 +96,7 @@ const nav: Array<{ id: Page; label: string; icon: 'dashboard' | 'tools' | 'setti
 
 .brand-text span {
   color: var(--mute);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .nav {
@@ -158,7 +158,7 @@ const nav: Array<{ id: Page; label: string; icon: 'dashboard' | 'tools' | 'setti
   border: 0;
   background: transparent;
   color: var(--mute);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .data-link:hover {
@@ -167,6 +167,6 @@ const nav: Array<{ id: Page; label: string; icon: 'dashboard' | 'tools' | 'setti
 
 .version {
   color: var(--faint);
-  font-size: 11px;
+  font-size: 12px;
 }
 </style>
