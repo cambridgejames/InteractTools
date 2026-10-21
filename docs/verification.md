@@ -63,7 +63,7 @@
 2. d10 使用五角双锥，而非标准五角偏方面体。
 3. 结果弹窗已在控制台窗口内，OBS 直接采集控制台即可；尚未在真实 OBS 内实测。
 4. Windows x64/arm64 安装包已构建，但未走完整安装向导点击验证；macOS/Linux 产物由 CI 构建，尚未在对应实机验证。
-5. 抖音本地签名、WSS 握手和真实弹幕消息已用房间 `https://live.douyin.com/275741202812` 验证通过（2026-10-22 03:33 左右，测试收到 `kind === 'chat'` 的弹幕）。可用命令：`LIVE_DOUYIN_ROOM=275741202812 npx vitest run tests/douyin-live.test.ts`；房间下播后该测试会超时，需换成正在直播的房间。抖音改算法后替换 `assets/sign.js` 并发布版本。
+5. 抖音本地签名和 WSS 握手已用真实房间验证；测试曾在 03:33 收到 `kind === 'chat'` 帧，但没有记录当时的文本，不能作为内容证据。测试现已要求非空 `text` 并打印 `DOUYIN_CHAT 用户名: 内容`，需用正在直播且有人发言的房间重跑。命令：`LIVE_DOUYIN_ROOM=<活跃房间号> npx vitest run tests/douyin-live.test.ts`。抖音改算法后替换 `assets/sign.js` 并发布版本。
 
 ## 复现
 

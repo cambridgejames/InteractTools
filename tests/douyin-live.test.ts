@@ -33,7 +33,9 @@ describe.skipIf(room === undefined)('Douyin local signer integration', () => {
           if (frame.needAck && frame.internalExt.length > 0) {
             socket.send(encodeDouyinAck(frame.internalExt))
           }
-          if (frame.messages.some((message) => message.kind === 'chat')) {
+          const chat = frame.messages.find((message) => message.kind === 'chat')
+          if (chat !== undefined && chat.kind === 'chat' && chat.text.trim().length > 0) {
+            console.log('DOUYIN_CHAT ' + chat.userName + ': ' + chat.text)
             settled = true
             clearTimeout(timeout)
             socket.close()
