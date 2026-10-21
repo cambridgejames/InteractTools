@@ -55,6 +55,32 @@ export const mockConfigSchema = z
 
 export type MockConfig = z.infer<typeof mockConfigSchema>
 
+export const SHORTCUT_ACTIONS = ['toggleWindow', 'toggleFeed'] as const
+export type ShortcutAction = (typeof SHORTCUT_ACTIONS)[number]
+
+export const shortcutBindingSchema = z
+  .object({
+    /** 空字符串表示不绑定，默认全部为空。 */
+    accelerator: z.string().trim().max(64),
+    global: z.boolean()
+  })
+  .strict()
+
+export const shortcutsConfigSchema = z
+  .object({
+    toggleWindow: shortcutBindingSchema,
+    toggleFeed: shortcutBindingSchema
+  })
+  .strict()
+
+export type ShortcutBinding = z.infer<typeof shortcutBindingSchema>
+export type ShortcutsConfig = z.infer<typeof shortcutsConfigSchema>
+
+export const DEFAULT_SHORTCUTS: ShortcutsConfig = {
+  toggleWindow: { accelerator: '', global: false },
+  toggleFeed: { accelerator: '', global: false }
+}
+
 export const overlayConfigSchema = z
   .object({
     alwaysOnTop: z.boolean()
@@ -94,6 +120,7 @@ export const appConfigSchema = z
       vote: voteConfigSchema
     }),
     network: networkConfigSchema.default(DEFAULT_NETWORK_CONFIG),
+    shortcuts: shortcutsConfigSchema.default(DEFAULT_SHORTCUTS),
     overlay: overlayConfigSchema,
     window: windowConfigSchema,
     feed: feedConfigSchema
@@ -141,6 +168,10 @@ export const DEFAULT_APP_CONFIG: AppConfig = {
   },
   network: {
     ...DEFAULT_NETWORK_CONFIG
+  },
+  shortcuts: {
+    toggleWindow: { accelerator: '', global: false },
+    toggleFeed: { accelerator: '', global: false }
   },
   overlay: {
     alwaysOnTop: true

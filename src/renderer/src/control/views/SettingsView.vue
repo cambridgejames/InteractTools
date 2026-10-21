@@ -1,27 +1,29 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import type { FeedMode } from '@contracts/config'
+import { DEFAULT_SHORTCUTS, type FeedMode, type ShortcutAction, type ShortcutsConfig } from '@contracts/config'
 import type { NetworkTestResult, ProxyMode } from '@contracts/network'
 import type { WindowDisplayOption } from '@contracts/ipc'
 import AppIcon from '../components/AppIcon.vue'
 import AppSelect from '../components/AppSelect.vue'
 import PlatformsView from './PlatformsView.vue'
+import ToggleSwitch from '../components/ToggleSwitch.vue'
 import { actions, showToast, state } from '../store'
 
 const GITHUB_URL = 'https://github.com/cambridgejames/InteractTools'
 const GITHUB_ISSUES_URL = GITHUB_URL + '/issues'
 
-type SettingsSection = 'platforms' | 'network' | 'interface' | 'data' | 'about'
+type SettingsSection = 'platforms' | 'network' | 'interface' | 'shortcuts' | 'data' | 'about'
 
 const section = ref<SettingsSection>('platforms')
 const sections: Array<{
   id: SettingsSection
   label: string
-  icon: 'platforms' | 'globe' | 'settings' | 'folder' | 'users'
+  icon: 'platforms' | 'globe' | 'settings' | 'keyboard' | 'folder' | 'users'
 }> = [
   { id: 'platforms', label: '平台连接', icon: 'platforms' },
   { id: 'network', label: '网络', icon: 'globe' },
   { id: 'interface', label: '界面与窗口', icon: 'settings' },
+  { id: 'shortcuts', label: '快捷键', icon: 'keyboard' },
   { id: 'data', label: '数据', icon: 'folder' },
   { id: 'about', label: '关于', icon: 'users' }
 ]
@@ -57,6 +59,82 @@ const feedOptions = [
   { value: 'collapsed', label: '折叠成窄条' },
   { value: 'hidden', label: '隐藏' }
 ]
+const shortcutRows: Array<{ id: ShortcutAction; label: string; description: string }> = [
+  { id: 'toggleWindow', label: '显示 / 隐藏窗口', description: '直播时快速收起或叫回控制台。' },
+  { id: 'toggleFeed', label: '显示 / 隐藏弹幕栏', description: '在全屏和隐藏之间切换右侧弹幕。' }
+]
+
+function bindingOf(action: ShortcutAction): ShortcutsConfig[ShortcutAction] {
+  return state.snapshot?.shortcuts?.[action] ?? DEFAULT_SHORTCUTS[action]
+}
+
+async function saveShortcut(action: ShortcutAction, patch: Partial<ShortcutsConfig[ShortcutAction]>): Promise<void> {
+  const shortcuts = state.snapshot?.shortcuts
+  if (shortcuts === undefined) return
+  const next: ShortcutsConfig = {
+    ...shortcuts,
+    [action]: { ...shortcuts[action], ...patch }
+  }
+  if (await actions.updateShortcuts(next)) showToast('快捷键已更新', 'success')
+}
+
+async function clearShortcut(action: ShortcutAction): Promise<void> {
+  await saveShortcut(action, { accelerator: '', global: false })
+}
+
+async function setShortcutGlobal(action: ShortcutAction, value: boolean): Promise<void> {
+  await saveShortcut(action, { global: value })
+}
+
+function keyName(event: KeyboardEvent): string | null {
+  const code = event.code
+  if (/^Key[A-Z]$/.test(code)) return code.slice(3)
+  if (/^Digit[0-9]$/.test(code)) return code.slice(5)
+  if (/^F(?:[1-9]|1[0-9]|2[0-4])$/.test(code)) return code
+  const special: Record<string, string> = {
+    ' ': 'Space',
+    ArrowUp: 'Up',
+    ArrowDown: 'Down',
+    ArrowLeft: 'Left',
+    ArrowRight: 'Right',
+    Escape: 'Escape',
+    Enter: 'Return',
+    Backspace: 'Backspace',
+    Delete: 'Delete',
+    Tab: 'Tab',
+    Home: 'Home',
+    End: 'End',
+    PageUp: 'PageUp',
+    PageDown: 'PageDown'
+  }
+  return special[event.key] ?? null
+}
+
+async function recordShortcut(event: KeyboardEvent, action: ShortcutAction): Promise<void> {
+  event.preventDefault()
+  if (event.key === 'Escape' || event.key === 'Backspace' || event.key === 'Delete') {
+    await clearShortcut(action)
+    return
+  }
+
+  const key = keyName(event)
+  if (key === null) return
+  const modifiers: string[] = []
+  if (event.ctrlKey || event.metaKey) modifiers.push('CommandOrControl')
+  if (event.altKey) modifiers.push('Alt')
+  if (event.shiftKey) modifiers.push('Shift')
+  if (modifiers.length === 0) {
+    showToast('快捷键至少需要一个 Ctrl、Alt 或 Shift 修饰键', 'error')
+    return
+  }
+
+  const accelerator = [...modifiers, key].join('+')
+  if (/^(?:CommandOrControl|Control|Command|Alt)\+(?:W|Q|F4)$/i.test(accelerator)) {
+    showToast('关闭/退出组合不能绑定', 'error')
+    return
+  }
+  await saveShortcut(action, { accelerator })
+}
 
 onMounted(async () => {
   selectedDisplay.value = state.snapshot?.window.display ?? 'cursor'
@@ -277,29 +355,52 @@ async function clearAllData(): Promise<void> {
             预览结果动画
           </button>
         </section>
+      </template>
+
+      <template v-else-if="section === 'shortcuts'">
+        <header class="section-head">
+          <h2>快捷键</h2>
+          <p>默认全部为空。点击按键框后按下组合键；Escape 或 Backspace 清除。</p>
+        </header>
 
         <section class="card">
-          <header>
-            <h2>快捷键</h2>
-            <p>直播时误触退出快捷键会中断互动；应用已拦截常见的关闭组合。</p>
-          </header>
-
-          <div class="row">
-            <div>
-              <strong>关闭 / 退出</strong>
-              <span>Ctrl+W、Cmd+W、Ctrl+Q、Cmd+Q、Alt+F4 已拦截，请使用标题栏关闭按钮。</span>
+          <div v-for="row in shortcutRows" :key="row.id" class="shortcut-row">
+            <div class="shortcut-info">
+              <strong>{{ row.label }}</strong>
+              <span>{{ row.description }}</span>
             </div>
-            <span class="shortcut-state">已拦截</span>
-          </div>
-
-          <div class="row">
-            <div>
-              <strong>全局快捷键</strong>
-              <span>应用当前不注册系统级全局快捷键，避免与直播工具冲突。</span>
+            <div class="shortcut-controls">
+              <input
+                class="shortcut-input"
+                :value="bindingOf(row.id).accelerator || '未设置'"
+                readonly
+                aria-label="快捷键"
+                @keydown.prevent="recordShortcut($event, row.id)"
+              />
+              <label class="shortcut-global">
+                <span>全局</span>
+                <ToggleSwitch
+                  :model-value="bindingOf(row.id).global"
+                  :disabled="bindingOf(row.id).accelerator.length === 0"
+                  label="全局生效"
+                  @update:model-value="setShortcutGlobal(row.id, $event)"
+                />
+              </label>
+              <button
+                class="shortcut-clear"
+                type="button"
+                :disabled="bindingOf(row.id).accelerator.length === 0"
+                @click="clearShortcut(row.id)"
+              >
+                清除
+              </button>
             </div>
-            <span class="shortcut-state muted">未启用</span>
           </div>
         </section>
+
+        <p class="shortcut-note">
+          全局快捷键在应用隐藏或失焦时仍然生效；关闭/退出组合固定不可绑定，避免直播中误退。
+        </p>
       </template>
 
       <template v-else-if="section === 'data'">
@@ -598,20 +699,102 @@ header p {
   font-size: 12px;
 }
 
-.row .shortcut-state {
-  flex: none;
-  padding: 2px 7px;
-  border: 1px solid color-mix(in srgb, var(--success) 35%, var(--hairline));
-  border-radius: var(--r-chip);
-  color: var(--success);
+.shortcut-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding: var(--s-3) 0;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.shortcut-row:first-child {
+  padding-top: 0;
+}
+
+.shortcut-row:last-of-type {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.shortcut-info {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.shortcut-info strong {
+  color: var(--body);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.shortcut-info span {
+  color: var(--mute);
   font-size: 12px;
 }
 
-.row .shortcut-state.muted {
-  border-color: var(--hairline);
-  color: var(--mute);
+.shortcut-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex: none;
 }
 
+.shortcut-input {
+  width: 168px;
+  height: 34px;
+  padding: 0 var(--s-2);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-control);
+  background: var(--inset);
+  color: var(--body);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.shortcut-input:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.shortcut-global {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--mute);
+  font-size: 12px;
+}
+
+.shortcut-clear {
+  height: 30px;
+  padding: 0 var(--s-2);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--mute);
+  font-size: 12px;
+}
+
+.shortcut-clear:hover:not(:disabled) {
+  border-color: var(--hairline-strong);
+  color: var(--body);
+}
+
+.shortcut-clear:disabled {
+  opacity: 0.4;
+}
+
+.shortcut-note {
+  margin: 0;
+  color: var(--faint);
+  font-size: 12px;
+  line-height: 18px;
+  padding: 0 2px;
+}
 .about ul {
   margin: 0;
   padding-left: 18px;
@@ -623,6 +806,16 @@ header p {
 @media (max-width: 900px) {
   .settings-tabs {
     width: 100%;
+  }
+
+  .shortcut-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .shortcut-controls {
+    width: 100%;
+    flex-wrap: wrap;
   }
 }
 </style>

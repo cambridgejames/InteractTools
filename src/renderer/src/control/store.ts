@@ -1,5 +1,6 @@
 import { reactive } from 'vue'
 import type { DiceConfig } from '@contracts/dice'
+import type { ShortcutsConfig } from '@contracts/config'
 import type { ToolAction } from '@contracts/tool'
 import type { EngineEvent } from '@contracts/engine'
 import type { LogEntry } from '@contracts/log'
@@ -216,6 +217,16 @@ export const actions = {
 
   async setFeedMode(mode: 'full' | 'collapsed' | 'hidden'): Promise<void> {
     await run(() => window.api.setFeedMode(mode))
+  },
+
+  async updateShortcuts(shortcuts: ShortcutsConfig): Promise<boolean> {
+    try {
+      await window.api.updateShortcuts(shortcuts)
+      return true
+    } catch (error) {
+      showToast(errorMessage(error), 'error')
+      return false
+    }
   }
 }
 
@@ -230,6 +241,17 @@ async function run<T>(task: () => Promise<T>, success?: string): Promise<T | und
   }
 }
 
+function trimFeed(feed: EngineSnapshot['feed']): EngineSnapshot['feed'] {
+  if (feed.length <= 200) return feed
+  const next = [...feed]
+  while (next.length > 200) {
+    const memberIndex = next.findIndex((item) => item.kind === 'member')
+    if (memberIndex >= 0) next.splice(memberIndex, 1)
+    else next.shift()
+  }
+  return next
+}
+
 function handleEvent(event: EngineEvent): void {
   switch (event.type) {
     case 'snapshot':
@@ -240,7 +262,7 @@ function handleEvent(event: EngineEvent): void {
       if (snapshot === null) return
       state.snapshot = {
         ...snapshot,
-        feed: [...snapshot.feed, event.item].slice(-120)
+        feed: trimFeed([...snapshot.feed, event.item])
       }
       return
     }

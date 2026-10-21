@@ -17,6 +17,7 @@ import { NodeTimerFactory } from './services/timers'
 import { SystemClock } from './services/clock'
 import { registerIpc } from './ipc/handlers'
 import { NetworkProxy } from './services/network-proxy'
+import { ShortcutManager } from './services/shortcut-manager'
 
 export interface Application {
   readonly engine: Engine
@@ -60,8 +61,14 @@ export async function createApplication(): Promise<Application> {
     onEvent: (event) => controlWindow.send(event)
   })
 
-  registerIpc(engine, controlWindow, network)
   await engine.start()
+  const shortcutManager = new ShortcutManager(controlWindow, engine)
+  try {
+    await shortcutManager.apply((await store.load()).shortcuts)
+  } catch (error) {
+    logger.warn('shortcuts', '快捷键注册失败，已保留为空', String(error))
+  }
+  registerIpc(engine, controlWindow, network, shortcutManager)
   await controlWindow.load()
 
   return {
@@ -69,6 +76,7 @@ export async function createApplication(): Promise<Application> {
     controlWindow,
     logger,
     async dispose() {
+      shortcutManager.dispose()
       await engine.shutdown()
     }
   }

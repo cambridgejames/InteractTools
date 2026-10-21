@@ -30,7 +30,7 @@ export interface EngineOptions {
   readonly onEvent: (event: EngineEvent) => void
 }
 
-const FEED_LIMIT = 120
+const FEED_LIMIT = 200
 
 /** 组合平台、工具与呈现；自身不 import Electron，也不做磁盘 I/O。 */
 export class Engine {
@@ -110,6 +110,7 @@ export class Engine {
         display: this.requireConfig().window.display
       },
       network: this.requireConfig().network,
+      shortcuts: this.requireConfig().shortcuts,
       feedMode: this.requireConfig().feed.mode
     }
   }
@@ -133,6 +134,14 @@ export class Engine {
       ...config,
       feed: { mode }
     })
+    this.config = next
+    await this.options.store.save(next)
+    this.publishSnapshot()
+  }
+
+  async updateShortcuts(shortcuts: AppConfig['shortcuts']): Promise<void> {
+    const current = this.requireConfig()
+    const next = appConfigSchema.parse({ ...current, shortcuts })
     this.config = next
     await this.options.store.save(next)
     this.publishSnapshot()
@@ -321,8 +330,17 @@ export class Engine {
       at: this.options.clock.now()
     }
     this.feed.push(item)
-    if (this.feed.length > FEED_LIMIT) this.feed.shift()
+    this.trimFeed()
     this.options.onEvent({ type: 'feed', item })
+  }
+
+  /** 进场消息优先淘汰，避免高频进场把真实弹幕历史挤出窗口。 */
+  private trimFeed(): void {
+    while (this.feed.length > FEED_LIMIT) {
+      const memberIndex = this.feed.findIndex((entry) => entry.kind === 'member')
+      if (memberIndex >= 0) this.feed.splice(memberIndex, 1)
+      else this.feed.shift()
+    }
   }
 
   private publishSnapshot(): void {

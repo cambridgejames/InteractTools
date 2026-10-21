@@ -4,11 +4,12 @@ import { join } from 'node:path'
 import { z } from 'zod'
 import { IPC } from '@contracts/ipc'
 import { networkConfigSchema } from '@contracts/network'
-import { TOOL_IDS } from '@contracts/config'
+import { shortcutsConfigSchema, TOOL_IDS } from '@contracts/config'
 import type { Engine } from '@kernel/engine'
 import type { ControlWindow } from '../windows/control-window'
 import type { NetworkProxy } from '../services/network-proxy'
 import { externalUrlSchema } from './external-url'
+import type { ShortcutManager } from '../services/shortcut-manager'
 
 const platformIdSchema = z.enum(['bilibili', 'douyin', 'mock'])
 const toolIdSchema = z.enum(TOOL_IDS)
@@ -25,7 +26,8 @@ const mockChatSchema = z.object({
 export function registerIpc(
   engine: Engine,
   controlWindow: ControlWindow,
-  network: NetworkProxy
+  network: NetworkProxy,
+  shortcuts: ShortcutManager
 ): void {
   ipcMain.handle(IPC.snapshot, async () => engine.snapshot())
 
@@ -51,6 +53,12 @@ export function registerIpc(
 
   ipcMain.handle(IPC.openExternal, async (_event, rawUrl: unknown) => {
     await shell.openExternal(externalUrlSchema.parse(rawUrl))
+  })
+
+  ipcMain.handle(IPC.shortcutsUpdate, async (_event, rawShortcuts: unknown) => {
+    const parsed = shortcutsConfigSchema.parse(rawShortcuts)
+    await shortcuts.apply(parsed)
+    await engine.updateShortcuts(parsed)
   })
 
   ipcMain.handle(IPC.clearAllData, async () => {

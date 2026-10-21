@@ -3,7 +3,7 @@ import type { PlatformDescriptor, PlatformId, PlatformStatus } from './platform'
 import type { WheelConfig, WheelPhase, WheelResult, WheelStopEasing } from './wheel'
 import type { VoteConfig, VoteResult } from './vote'
 import type { NetworkConfig } from './network'
-import type { ToolEnablement } from './config'
+import type { ShortcutsConfig, ToolEnablement } from './config'
 
 export interface PlatformView {
   readonly descriptor: PlatformDescriptor
@@ -117,6 +117,7 @@ export interface EngineSnapshot {
   readonly overlay: OverlayView
   readonly window: WindowView
   readonly network: NetworkConfig
+  readonly shortcuts: ShortcutsConfig
   readonly feedMode: 'full' | 'collapsed' | 'hidden'
 }
 

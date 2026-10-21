@@ -55,7 +55,12 @@ export async function runSmoke(application: Application): Promise<void> {
   await delay(250)
   await application.controlWindow.capture(join(output, 'control-settings.png'))
   await application.controlWindow.browserWindow.webContents.executeJavaScript(
-    "document.querySelectorAll('.settings-tabs .nav-item')[4]?.click()"
+    "document.querySelectorAll('.settings-tabs .nav-item')[3]?.click()"
+  )
+  await delay(250)
+  await application.controlWindow.capture(join(output, 'control-settings-shortcuts.png'))
+  await application.controlWindow.browserWindow.webContents.executeJavaScript(
+    "document.querySelectorAll('.settings-tabs .nav-item')[5]?.click()"
   )
   await delay(250)
   await application.controlWindow.capture(join(output, 'control-settings-about.png'))
