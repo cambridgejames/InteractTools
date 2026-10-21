@@ -63,7 +63,7 @@
 2. d10 使用五角双锥，而非标准五角偏方面体。
 3. 结果弹窗已在控制台窗口内，OBS 直接采集控制台即可；尚未在真实 OBS 内实测。
 4. Windows x64/arm64 安装包已构建，但未走完整安装向导点击验证；macOS/Linux 产物由 CI 构建，尚未在对应实机验证。
-5. 抖音只读适配器已用真实直播间开 WSS 验证签名；可选测试：`LIVE_DOUYIN_ROOM=857508194378 npx vitest run tests/douyin-live.test.ts`。抖音改算法后需要替换 `assets/sign.js` 并发布版本。
+5. 抖音签名链路已用真实直播间验证 WSS 握手；实际弹幕帧要用「正在直播」的房间验证。可选命令：`LIVE_DOUYIN_ROOM=<正在直播的抖音房间号> npx vitest run tests/douyin-live.test.ts`。房间下播时 WSS 可能能开但没有可解码消息。抖音改算法后需要替换 `assets/sign.js` 并发布版本。
 
 ## 复现
 
