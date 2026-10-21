@@ -4,11 +4,13 @@ import { join } from 'node:path'
 import { z } from 'zod'
 import { IPC } from '@contracts/ipc'
 import { networkConfigSchema } from '@contracts/network'
+import { TOOL_IDS } from '@contracts/config'
 import type { Engine } from '@kernel/engine'
 import type { ControlWindow } from '../windows/control-window'
 import type { NetworkProxy } from '../services/network-proxy'
 
 const platformIdSchema = z.enum(['bilibili', 'mock'])
+const toolIdSchema = z.enum(TOOL_IDS)
 const feedModeSchema = z.enum(['full', 'collapsed', 'hidden'])
 const githubUrlSchema = z
   .string()
@@ -41,6 +43,10 @@ export function registerIpc(
   })
 
   ipcMain.handle(IPC.networkTest, async () => network.test())
+
+  ipcMain.handle(IPC.toolSetEnabled, async (_event, rawId: unknown, rawEnabled: unknown) => {
+    await engine.setToolEnabled(toolIdSchema.parse(rawId), z.boolean().parse(rawEnabled))
+  })
 
   ipcMain.handle(IPC.windowDisplays, async () => controlWindow.displayOptions())
 

@@ -27,6 +27,9 @@ const MAX_SECONDS = 13
 const MIN_SETTLE_SECONDS = 1
 const NUDGE_SECONDS = 3
 const STABLE_STEPS_REQUIRED = 12
+const STILL_WINDOW_STEPS = 120
+const STILL_DISTANCE = 0.02
+const STILL_ANGLE = 0.15
 
 /**
  * 用 cannon-es 跑一次真实刚体投掷。
@@ -43,6 +46,7 @@ export function simulateDice(input: DiceSimulationInput): DiceSimulationResult {
   world.addBody(body)
 
   const frames: DiceFrame[] = []
+  const poses: Array<{ position: Vec3; quaternion: Body['quaternion'] }> = []
   let stableSteps = 0
   let settleStep = -1
   let nudgeCount = 0
@@ -51,6 +55,7 @@ export function simulateDice(input: DiceSimulationInput): DiceSimulationResult {
 
   for (let step = 0; step < maxSteps; step += 1) {
     world.step(FIXED_STEP)
+    poses.push({ position: body.position.clone(), quaternion: body.quaternion.clone() })
 
     if (step % RECORD_EVERY === 0) frames.push(snapshot(body))
 
@@ -75,7 +80,10 @@ export function simulateDice(input: DiceSimulationInput): DiceSimulationResult {
       nextNudgeAt = seconds + 2.2
     }
 
-    if (isStable(body, geometry)) {
+    // d10 等没有大平面的骰子可能一直停在棱/顶点上，旧的“必须有面朝上”
+    // 判定会让它无限等到超时。超过 1 秒整体位移和姿态都几乎不变，
+    // 就按停稳处理，点数取最近面。
+    if (isStable(body, geometry) || isStill(body, poses, step)) {
       stableSteps += 1
       if (stableSteps >= STABLE_STEPS_REQUIRED) {
         settleStep = step
@@ -185,6 +193,22 @@ function createDiceBody(
   body.linearDamping = 0.05
   body.angularDamping = 0.08 - power * 0.0002
   return body
+}
+
+function isStill(
+  body: Body,
+  poses: readonly { position: Vec3; quaternion: Body['quaternion'] }[],
+  step: number
+): boolean {
+  const previous = poses[step - STILL_WINDOW_STEPS]
+  if (previous === undefined) return false
+  if (body.position.distanceTo(previous.position) > STILL_DISTANCE) return false
+
+  const a = body.quaternion
+  const b = previous.quaternion
+  const dot = Math.abs(a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w)
+  const angle = 2 * Math.acos(Math.min(1, dot))
+  return angle < STILL_ANGLE
 }
 
 function isStable(body: Body, geometry: DiceGeometry): boolean {

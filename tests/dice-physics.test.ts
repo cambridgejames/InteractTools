@@ -41,6 +41,16 @@ describe('dice simulation', () => {
     }
   })
 
+  it('settles a d10 by displacement without a flat face', () => {
+    for (const power of [20, 55, 100]) {
+      for (const seed of [3, 11]) {
+        const result = simulateDice({ faces: 10, power, seed })
+        expect(result.settled, 'd10 power ' + String(power) + ' seed ' + String(seed)).toBe(true)
+        expect(result.settleSeconds).toBeLessThan(7)
+      }
+    }
+  })
+
   it('reads the bottom face of a d4', () => {
     const result = simulateDice({ faces: 4, power: 55, seed: 7 })
     expect(result.value).toBeGreaterThanOrEqual(1)

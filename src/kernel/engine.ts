@@ -1,4 +1,4 @@
-import { appConfigSchema, type AppConfig } from '@contracts/config'
+import { appConfigSchema, type AppConfig, type BuiltinToolId } from '@contracts/config'
 import type { EngineEvent } from '@contracts/engine'
 import { PlatformError } from '@contracts/errors'
 import type { ToolHistory } from '@contracts/history'
@@ -80,7 +80,7 @@ export class Engine {
 
     this.commandBus = new CommandBus(() => this.requireToolHost().tools(), this.options.logger)
 
-    await this.requireToolHost().activate(config)
+    await this.requireToolHost().activate(config, config.enabledTools)
     this.appendSystem('互动工坊已就绪，等待弹幕。')
     this.publishSnapshot()
 
@@ -97,6 +97,7 @@ export class Engine {
     return {
       revision: this.revision,
       startedAt: this.startedAt,
+      enabledTools: this.requireConfig().enabledTools,
       platforms: this.requirePlatformHost().list(),
       tools: this.requireToolHost().views(),
       feed: [...this.feed],
@@ -149,6 +150,18 @@ export class Engine {
     if (this.requirePlatformHost().status('bilibili').phase !== 'disconnected') {
       await this.requirePlatformHost().reconnect('bilibili')
     }
+    this.publishSnapshot()
+  }
+
+  async setToolEnabled(id: BuiltinToolId, enabled: boolean): Promise<void> {
+    const current = this.requireConfig()
+    const next = appConfigSchema.parse({
+      ...current,
+      enabledTools: { ...current.enabledTools, [id]: enabled }
+    })
+    this.config = next
+    await this.options.store.save(next)
+    await this.requireToolHost().updateEnabled(next, next.enabledTools)
     this.publishSnapshot()
   }
 

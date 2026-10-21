@@ -28,6 +28,7 @@ const api: RendererApi = {
 
   toolAction: (toolId, action) => ipcRenderer.invoke(IPC.toolAction, toolId, action),
   updateToolConfig: (toolId, patch) => ipcRenderer.invoke(IPC.toolUpdateConfig, toolId, patch),
+  setToolEnabled: (toolId, enabled) => ipcRenderer.invoke(IPC.toolSetEnabled, toolId, enabled),
 
   simulateChat: (input) => ipcRenderer.invoke(IPC.mockChat, input),
   clearFeed: () => ipcRenderer.invoke(IPC.clearFeed),

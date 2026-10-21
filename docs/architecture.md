@@ -167,6 +167,8 @@ export interface InteractionTool {
 
 工具不 import 其他工具；需要共享时把通用能力放进 contracts 或 kernel。工具不直接操作窗口，只调用 `present()`。
 
+`ToolHost` 按 `enabledTools` 过滤：关闭的工具不激活、不接收 CommandBus 消息、不出现在快照；设置页切换时调用 `updateEnabled`，会对该工具执行 `deactivate` 并清理它的定时器/命令提示。重新打开会重新激活并加载原配置与历史。
+
 ### 4.4 呈现
 
 ```ts
@@ -308,7 +310,7 @@ idle ──start──▶ collecting ──timeout──▶ rolling ──frames
 - 刚体：cannon-es `ConvexPolyhedron`，质量 1；地面 `Plane`；摩擦和弹性随力度在 0.42→0.34 / 0.24→0.40 之间变化，中高力度更容易二次弹跳和横向滚动。
 - 初始条件：位置、朝向、角速度由 seed 派生；力度 0–100 映射到向上初速度和初始自旋，自旋轴相对面法线偏 24–54°，**不参与选面**。骰子从中央发射台弹射，面板相机随高度上升后拉。d6 渲染使用圆角倒角，物理凸包不变。
 - 固定步长 `1 / 120` 秒，最多 13 秒；每两步记录一帧（60Hz）。
-- 静止判定：线速度 < 0.08、角速度 < 0.12，连续 12 步，且存在法线接近竖直的面。
+- 静止判定：线速度 < 0.08、角速度 < 0.12，连续 12 步，且存在法线接近竖直的面；另外，超过 1 秒位置位移 < 0.02、姿态变化 < 0.15rad 时也判停（专门覆盖 d10 等没有大平面的骰子）。
 - 读数：d4 取贴地面（法线 y 最小），其余取朝上面（法线 y 最大）。
 - 未停稳：低速卡在棱上时最多轻推 3 次；仍失败则取最近面，`settled: false` 写进结果，UI 明确标注。
 
@@ -321,6 +323,7 @@ idle ──start──▶ collecting ──timeout──▶ rolling ──frames
 ```json
 {
   "schemaVersion": 1,
+  "enabledTools": { "dice": true, "wheel": true, "vote": true },
   "platforms": {
     "bilibili": { "enabled": false, "roomId": "" },
     "mock": {
@@ -353,7 +356,7 @@ idle ──start──▶ collecting ──timeout──▶ rolling ──frames
       "presets": []
     }
   },
-  "network": { "proxyMode": "system", "proxyUrl": "" },
+  "network": { "proxyMode": "none", "proxyUrl": "" },
   "overlay": { "alwaysOnTop": true },
   "window": { "display": "cursor" },
   "feed": { "mode": "full" }

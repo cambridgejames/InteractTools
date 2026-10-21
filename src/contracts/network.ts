@@ -13,7 +13,7 @@ export const networkConfigSchema = z
 export type NetworkConfig = z.infer<typeof networkConfigSchema>
 
 export const DEFAULT_NETWORK_CONFIG: NetworkConfig = {
-  proxyMode: 'system',
+  proxyMode: 'none',
   proxyUrl: ''
 }
 

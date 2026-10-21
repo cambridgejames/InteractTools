@@ -4,6 +4,7 @@ import type { Presentation } from './presentation'
 import type { ToolAction } from './tool'
 import type { EngineSnapshot } from './view'
 import type { NetworkConfig, NetworkTestResult } from './network'
+import type { BuiltinToolId } from './config'
 
 export const IPC = {
   snapshot: 'engine:snapshot',
@@ -25,7 +26,8 @@ export const IPC = {
   openExternal: 'app:open-external',
   clearAllData: 'app:clear-all-data',
   networkUpdate: 'network:update',
-  networkTest: 'network:test'
+  networkTest: 'network:test',
+  toolSetEnabled: 'tool:set-enabled'
 } as const
 
 export interface WindowDisplayOption {
@@ -54,6 +56,7 @@ export interface RendererApi {
 
   toolAction(toolId: string, action: ToolAction): Promise<void>
   updateToolConfig(toolId: string, patch: Readonly<Record<string, unknown>>): Promise<void>
+  setToolEnabled(toolId: BuiltinToolId, enabled: boolean): Promise<void>
 
   simulateChat(input: InjectedChat): Promise<void>
   clearFeed(): Promise<void>

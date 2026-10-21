@@ -498,7 +498,7 @@ PlatformHost 只保留连接对象，不重复创建。
 - d6 渲染层用 RoundedBoxGeometry 做小倒角；物理仍是原凸包，避免改变读数与碰撞。
 - 六种面数：d4/d6/d8/d10/d12/d20。
 - 凸包几何；d10 使用五角双锥。
-- 停稳判定：面朝上程度、稳定步数；连续 12 步低速后判定停稳。
+- 停稳判定：面朝上程度、稳定步数；连续 12 步低速，或 1 秒内位移 < 0.02 / 姿态变化 < 0.15rad 后判定停稳（覆盖 d10 无大平面）。
 - 中高力度提高台面弹性和滚动；低速停在棱上时最多轻推 3 次。
 - 记录 60Hz 帧，主进程出结果，渲染层只回放。
 
@@ -592,7 +592,8 @@ PlatformHost 只保留连接对象，不重复创建。
 - 目标 1560×960，按配置的显示器（默认鼠标所在屏）workArea 自动收缩并居中；最小 1120×720。
 - Windows/Linux 使用 `titleBarStyle: 'hidden'` + `titleBarOverlay`，macOS 使用 `hiddenInset`；标题栏消失但系统原生窗口按钮保留。顶栏 `-webkit-app-region: drag`，窗口按钮由系统绘制。
 - 设置页通过 window:displays / window:set-display 选择屏幕；配置持久化到 appConfig.window.display。
-- 设置页网络代理：none/system/custom；修改后重连 B站，network:test 返回延迟与错误。
+- 设置页游戏工具：dice/wheel/vote 独立开关；关闭后 ToolHost 停用并移出快照，空状态提示回设置打开。
+- 设置页网络代理：none（默认）/system/custom；修改后重连 B站，network:test 返回延迟与错误。
 - 弹幕栏模式配置为 appConfig.feed.mode；snapshot.feedMode 驱动 App 栅格。
 - 开发模式窗口图标读取 `build/icon.png`；打包后从 `extraResources/icon.png` 读取，任务栏不再显示 Electron 默认图标。
 - contextIsolation true，nodeIntegration false。
@@ -674,7 +675,7 @@ userData 默认是 %APPDATA%/interact-tools；--smoke 时切到 artifacts/smoke/
 
 测试：
 
-- 12 个测试文件，47 个用例通过，1 个 B站真连用例默认跳过。
+- 12 个测试文件，49 个用例通过，1 个 B站真连用例默认跳过。
 - 覆盖骰子 domain、几何、物理、工具、轮盘工具、投票 domain/工具、命令提示总线、MockAdapter、B站协议、WBI。
 - 真连测试：LIVE_BILIBILI=1 npx vitest run tests/bilibili-live.test.ts；最近房间 6 收到 6 条。
 

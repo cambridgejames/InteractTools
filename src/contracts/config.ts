@@ -4,6 +4,25 @@ import { DEFAULT_WHEEL_CONFIG, wheelConfigSchema } from './wheel'
 import { DEFAULT_VOTE_CONFIG, voteConfigSchema } from './vote'
 import { DEFAULT_NETWORK_CONFIG, networkConfigSchema } from './network'
 
+export const TOOL_IDS = ['dice', 'wheel', 'vote'] as const
+export type BuiltinToolId = (typeof TOOL_IDS)[number]
+
+export const toolEnablementSchema = z
+  .object({
+    dice: z.boolean(),
+    wheel: z.boolean(),
+    vote: z.boolean()
+  })
+  .strict()
+
+export type ToolEnablement = z.infer<typeof toolEnablementSchema>
+
+export const DEFAULT_TOOL_ENABLEMENT: ToolEnablement = {
+  dice: true,
+  wheel: true,
+  vote: true
+}
+
 export const bilibiliConfigSchema = z
   .object({
     enabled: z.boolean(),
@@ -51,6 +70,7 @@ export type OverlayConfig = z.infer<typeof overlayConfigSchema>
 export const appConfigSchema = z
   .object({
     schemaVersion: z.literal(1),
+    enabledTools: toolEnablementSchema.default(DEFAULT_TOOL_ENABLEMENT),
     platforms: z.object({
       bilibili: bilibiliConfigSchema,
       mock: mockConfigSchema
@@ -71,6 +91,7 @@ export type AppConfig = z.infer<typeof appConfigSchema>
 
 export const DEFAULT_APP_CONFIG: AppConfig = {
   schemaVersion: 1,
+  enabledTools: { ...DEFAULT_TOOL_ENABLEMENT },
   platforms: {
     bilibili: { enabled: false, roomId: '' },
     mock: {

@@ -3,6 +3,7 @@ import type { PlatformDescriptor, PlatformStatus } from './platform'
 import type { WheelConfig, WheelPhase, WheelResult, WheelStopEasing } from './wheel'
 import type { VoteConfig, VoteResult } from './vote'
 import type { NetworkConfig } from './network'
+import type { ToolEnablement } from './config'
 
 export interface PlatformView {
   readonly descriptor: PlatformDescriptor
@@ -98,6 +99,7 @@ export interface WindowView {
 export interface EngineSnapshot {
   readonly revision: number
   readonly startedAt: number
+  readonly enabledTools: ToolEnablement
   readonly platforms: readonly PlatformView[]
   readonly tools: readonly ToolView[]
   readonly feed: readonly FeedItem[]

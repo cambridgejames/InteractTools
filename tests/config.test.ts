@@ -19,11 +19,18 @@ describe('app layout config', () => {
     expect(parsed.success).toBe(false)
   })
 
-  it('defaults network proxy to the system proxy', () => {
+  it('defaults network proxy to direct connection', () => {
     const { network: _network, ...legacy } = DEFAULT_APP_CONFIG
     const parsed = appConfigSchema.safeParse(legacy)
     expect(parsed.success).toBe(true)
-    if (parsed.success) expect(parsed.data.network.proxyMode).toBe('system')
+    if (parsed.success) expect(parsed.data.network.proxyMode).toBe('none')
+  })
+
+  it('defaults all game tools to enabled', () => {
+    const { network: _network, enabledTools: _enabledTools, ...legacy } = DEFAULT_APP_CONFIG
+    const parsed = appConfigSchema.safeParse(legacy)
+    expect(parsed.success).toBe(true)
+    if (parsed.success) expect(parsed.data.enabledTools).toEqual({ dice: true, wheel: true, vote: true })
   })
 
   it('rejects an unknown proxy mode', () => {

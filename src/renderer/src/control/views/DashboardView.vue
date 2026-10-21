@@ -29,8 +29,14 @@ const panel = computed(() => (active.value === null ? null : TOOL_PANELS[active.
     <div class="main-col">
       <component :is="panel" v-if="panel && active" :view="active" />
       <section v-else class="empty-card">
-        <strong>这个工具还没有控制面板</strong>
-        <span>在 renderer/src/control/tool-panels.ts 注册组件，框架和结果窗不用改。</span>
+        <strong>{{ tools.length === 0 ? '所有游戏工具都已关闭' : '这个工具还没有控制面板' }}</strong>
+        <span>
+          {{
+            tools.length === 0
+              ? '到「设置 → 游戏工具」重新打开；弹幕和平台连接不受影响。'
+              : '在 renderer/src/control/tool-panels.ts 注册组件，框架和结果窗不用改。'
+          }}
+        </span>
       </section>
     </div>
 

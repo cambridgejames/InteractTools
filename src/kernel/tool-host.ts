@@ -29,32 +29,24 @@ export class ToolHost {
 
   constructor(private readonly options: ToolHostOptions) {}
 
-  async activate(config: AppConfig): Promise<void> {
+  async activate(config: AppConfig, enabled: Readonly<Record<string, boolean>>): Promise<void> {
+    for (const tool of this.options.tools) {
+      if (enabled[tool.manifest.id] === false) continue
+      await this.activateTool(tool, config)
+    }
+  }
+
+  /** 设置页开关：停用中的工具不再接收命令，也不会出现在快照里。 */
+  async updateEnabled(
+    config: AppConfig,
+    enabled: Readonly<Record<string, boolean>>
+  ): Promise<void> {
+    for (const id of [...this.order]) {
+      if (enabled[id] !== true) await this.deactivateTool(id)
+    }
     for (const tool of this.options.tools) {
       const id = tool.manifest.id
-      if (this.active.has(id)) throw new Error('工具 id 重复：' + id)
-
-      const timer = this.options.timerFactory.create('tool:' + id)
-      const context = {
-        clock: this.options.clock,
-        timer,
-        random: this.options.random,
-        logger: this.options.logger,
-        history: this.options.historyFactory(id),
-        present: (presentation: Presentation) => this.options.surface.present(presentation),
-        notifyChange: this.options.notifyChange,
-        announce: this.options.announce,
-        publishCommandHint: (samples: readonly string[] | null) => {
-          if (samples === null) this.options.hints.clear(id)
-          else this.options.hints.publish({ toolId: id, samples })
-        }
-      }
-
-      const toolConfig = readToolConfig(config, id)
-      await tool.activate(context, toolConfig)
-      this.active.set(id, tool)
-      this.scopes.set(id, timer)
-      this.order.push(id)
+      if (enabled[id] === true && !this.active.has(id)) await this.activateTool(tool, config)
     }
   }
 
@@ -86,18 +78,48 @@ export class ToolHost {
   }
 
   async deactivateAll(): Promise<void> {
-    for (const id of this.order) {
-      const tool = this.active.get(id)
-      try {
-        await tool?.deactivate()
-      } catch (error) {
-        this.options.logger.error('tool-host', '停用工具失败：' + id, String(error))
+    for (const id of [...this.order]) await this.deactivateTool(id)
+  }
+
+  private async activateTool(tool: InteractionTool, config: AppConfig): Promise<void> {
+    const id = tool.manifest.id
+    if (this.active.has(id)) throw new Error('工具 id 重复：' + id)
+
+    const timer = this.options.timerFactory.create('tool:' + id)
+    const context = {
+      clock: this.options.clock,
+      timer,
+      random: this.options.random,
+      logger: this.options.logger,
+      history: this.options.historyFactory(id),
+      present: (presentation: Presentation) => this.options.surface.present(presentation),
+      notifyChange: this.options.notifyChange,
+      announce: this.options.announce,
+      publishCommandHint: (samples: readonly string[] | null) => {
+        if (samples === null) this.options.hints.clear(id)
+        else this.options.hints.publish({ toolId: id, samples })
       }
-      this.scopes.get(id)?.clearAll()
     }
-    this.active.clear()
-    this.scopes.clear()
-    this.order.length = 0
+
+    await tool.activate(context, readToolConfig(config, id))
+    this.active.set(id, tool)
+    this.scopes.set(id, timer)
+    this.order.push(id)
+  }
+
+  private async deactivateTool(id: string): Promise<void> {
+    const tool = this.active.get(id)
+    try {
+      await tool?.deactivate()
+    } catch (error) {
+      this.options.logger.error('tool-host', '停用工具失败：' + id, String(error))
+    }
+    this.scopes.get(id)?.clearAll()
+    this.active.delete(id)
+    this.scopes.delete(id)
+    const index = this.order.indexOf(id)
+    if (index >= 0) this.order.splice(index, 1)
+    this.options.hints.clear(id)
   }
 }
 
