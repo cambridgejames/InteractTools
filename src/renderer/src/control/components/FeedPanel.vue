@@ -8,7 +8,7 @@ import { formatTime, initialOf } from '../../shared/format'
 const emit = defineEmits<{ collapse: [] }>()
 const isMac = window.api.platform === 'darwin'
 
-const ROW_HEIGHT = 68
+const ROW_HEIGHT = 72
 const OVERSCAN = 4
 
 const list = ref<HTMLElement | null>(null)
@@ -18,16 +18,27 @@ const viewportHeight = ref(0)
 const name = ref('测试观众')
 const text = ref('')
 const sending = ref(false)
+let resizeObserver: ResizeObserver | null = null
 
 const feed = computed(() => state.snapshot?.feed ?? [])
+const chatFeed = computed(() => feed.value.filter((item) => item.kind !== 'member'))
+const recentMemberNames = computed(() => {
+  const names: string[] = []
+  for (let index = feed.value.length - 1; index >= 0 && names.length < 3; index -= 1) {
+    const item = feed.value[index]
+    if (item?.kind !== 'member' || names.includes(item.userName)) continue
+    names.push(item.userName)
+  }
+  return names.reverse()
+})
 const startIndex = computed(() =>
   Math.max(0, Math.floor(scrollTop.value / ROW_HEIGHT) - OVERSCAN)
 )
 const visibleCount = computed(() => Math.ceil(viewportHeight.value / ROW_HEIGHT) + OVERSCAN * 2)
-const visibleFeed = computed(() => feed.value.slice(startIndex.value, startIndex.value + visibleCount.value))
+const visibleFeed = computed(() => chatFeed.value.slice(startIndex.value, startIndex.value + visibleCount.value))
 const topPad = computed(() => startIndex.value * ROW_HEIGHT)
 const bottomPad = computed(() =>
-  Math.max(0, (feed.value.length - startIndex.value - visibleFeed.value.length) * ROW_HEIGHT)
+  Math.max(0, (chatFeed.value.length - startIndex.value - visibleFeed.value.length) * ROW_HEIGHT)
 )
 
 const sampleNames = ['小满', '阿七', '团子', '空格', '汽水', '晚风', '白露', '十一']
@@ -36,11 +47,16 @@ const sampleLines = ['主播好', '这骰子有点东西', '来了来了', '666'
 onMounted(() => {
   updateViewport()
   window.addEventListener('resize', updateViewport)
+  if (list.value !== null) {
+    resizeObserver = new ResizeObserver(updateViewport)
+    resizeObserver.observe(list.value)
+  }
   scrollToBottom()
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', updateViewport)
+  resizeObserver?.disconnect()
 })
 
 watch(
@@ -118,10 +134,10 @@ function feedClass(item: FeedItem): string {
     </div>
 
     <div ref="list" class="feed-list" @scroll="onScroll">
-      <div v-if="(state.snapshot?.feed.length ?? 0) === 0" class="empty">
+      <div v-if="chatFeed.length === 0" class="empty">
         <AppIcon name="platforms" :size="28" />
-        <strong>还没有弹幕</strong>
-        <span>连接平台后，消息会实时出现在这里。</span>
+        <strong>{{ recentMemberNames.length > 0 ? '观众正在进入' : '还没有弹幕' }}</strong>
+        <span>连接平台后，弹幕会实时出现在这里。</span>
       </div>
 
       <div :style="{ height: topPad + 'px' }" />
@@ -135,12 +151,21 @@ function feedClass(item: FeedItem): string {
         <div class="content">
           <div class="meta">
             <strong>{{ item.userName }}</strong>
+            <span v-if="item.platform === 'mock'" class="sim-tag">模拟</span>
+            <span v-if="item.kind === 'gift'" class="type-tag">礼物</span>
             <time class="mono">{{ formatTime(item.at) }}</time>
           </div>
           <p>{{ item.text }}</p>
         </div>
       </article>
       <div :style="{ height: bottomPad + 'px' }" />
+    </div>
+
+    <div v-if="recentMemberNames.length > 0" class="member-ticker" aria-live="polite">
+      <span class="member-label">进场</span>
+      <span class="member-text">
+        欢迎 <strong>{{ recentMemberNames.join('、') }}</strong> 进入直播间
+      </span>
     </div>
 
     <form class="composer" @submit.prevent="send">
@@ -225,10 +250,10 @@ h2 {
 .feed-item {
   display: flex;
   gap: var(--s-2);
-  height: 68px;
+  height: 72px;
   overflow: hidden;
   padding: 8px var(--s-2);
-  border-radius: 8px;
+  border-radius: var(--r-control);
 }
 
 .feed-item .content p {
@@ -248,7 +273,7 @@ h2 {
 }
 
 .feed-item.kind-gift {
-  border-left: 2px solid var(--bilibili);
+  background: color-mix(in srgb, var(--warning) 4%, transparent);
 }
 
 .avatar {
@@ -278,20 +303,32 @@ h2 {
 .meta strong {
   overflow: hidden;
   color: var(--body);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.tag {
+.sim-tag,
+.type-tag {
   flex: 0 0 auto;
-  padding: 0 4px;
+  padding: 0 5px;
+  border: 1px solid var(--hairline);
   border-radius: 4px;
-  background: var(--surface-active);
-  color: var(--faint);
   font-size: 12px;
-  line-height: 14px;
+  line-height: 16px;
+}
+
+.sim-tag {
+  border-color: color-mix(in srgb, var(--info) 40%, var(--hairline));
+  background: color-mix(in srgb, var(--info) 10%, transparent);
+  color: var(--info);
+}
+
+.type-tag {
+  border-color: color-mix(in srgb, var(--warning) 40%, var(--hairline));
+  background: color-mix(in srgb, var(--warning) 10%, transparent);
+  color: var(--warning);
 }
 
 .time {
@@ -303,13 +340,43 @@ h2 {
 p {
   margin: 2px 0 0;
   color: var(--body);
-  font-size: 13px;
-  line-height: 18px;
+  font-size: 14px;
+  line-height: 20px;
   word-break: break-word;
 }
 
-.kind-gift .tag {
-  color: var(--bilibili);
+.member-ticker {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 34px;
+  padding: 0 var(--s-4);
+  border-top: 1px solid var(--hairline);
+  background: var(--surface);
+  color: var(--mute);
+  font-size: 12px;
+}
+
+.member-label {
+  flex: 0 0 auto;
+  padding: 1px 6px;
+  border-radius: var(--r-chip);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.member-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.member-text strong {
+  color: var(--body);
+  font-weight: 500;
 }
 
 .empty {

@@ -607,7 +607,7 @@ PlatformHost 只保留连接对象，不重复创建。
 - 开发模式窗口图标读取 `build/icon.png`；打包后从 `extraResources/icon.png` 读取，任务栏不再显示 Electron 默认图标。
 - contextIsolation true，nodeIntegration false。
 - 不加载远程页面；开发模式只加载 ELECTRON_RENDERER_URL。
-- 三栏布局：左导航 216px、中内容、右 feed 320px；小于 1180px 隐藏 feed。
+- 三栏布局：左导航 216px、中内容、右 feed 320px；小于 1180px 隐藏 feed。平台设置页的 B站/抖音卡片提供「进入直播间」快捷链接。
 
 ### 11.2 应用内结果弹窗
 
@@ -635,7 +635,7 @@ PlatformHost 只保留连接对象，不重复创建。
 - tool-panels.ts：工具 id 到面板组件的注册表，Dashboard 用动态 component。
 - 面板：DicePanel、WheelPanel、VotePanel。每个工具 header 下方有测试命令条；骰子 3 个力度 chip，投票按选项数显示投票 chip，转盘无命令。feed 底部不再放工具命令。
 - 历史：HistoryPanel、WheelHistoryPanel、VoteHistoryPanel。
-- 公共：FeedPanel（68px 行高虚拟滚动）、ToolSwitcher、ToggleSwitch、StatusPill、Toast、AppIcon。
+- 公共：FeedPanel（72px 行高虚拟滚动；进场不占消息行，底部 34px ticker 合并最新 3 位；模拟/礼物标签）、ToolSwitcher、ToggleSwitch、StatusPill、Toast、AppIcon。
 - 复用组件：ToolHeader（三工具统一标题/相位）、PresetManager（转盘/投票共用预设 UI）、AppSelect（深色下拉）。
 - 弹幕栏模式来自 snapshot.feedMode：full 320px / collapsed 44px / hidden；设置页通过 feed:set-mode 持久化。
 - 设置页「清除所有数据」调用 app:clear-all-data：原生确认后删除 config.json、history、logs，relaunch 应用。

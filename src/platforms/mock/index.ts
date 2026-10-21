@@ -105,7 +105,7 @@ export class MockAdapter implements PlatformAdapter {
             userName: name,
             text: CHAT_LINES[Math.floor(Math.random() * CHAT_LINES.length)] ?? '666'
           })
-        } else {
+        } else if (roll < 0.95) {
           this.context.emit({
             type: 'gift',
             gift: {
@@ -116,6 +116,19 @@ export class MockAdapter implements PlatformAdapter {
               userName: name,
               giftName: '小心心',
               count: 1,
+              receivedAt: this.context.clock.now()
+            }
+          })
+        } else {
+          this.context.emit({
+            type: 'member',
+            member: {
+              id: 'member-' + ++this.seq,
+              platform: 'mock',
+              roomId: 'local',
+              userId: 'mock-' + name,
+              userName: name,
+              kind: 'enter',
               receivedAt: this.context.clock.now()
             }
           })

@@ -190,6 +190,30 @@ async function setBotsEnabled(next: boolean): Promise<void> {
   await actions.updatePlatformConfig('mock', { botsEnabled: next })
 }
 
+function liveUrl(raw: string, host: 'bilibili' | 'douyin'): string {
+  const value = raw.trim()
+  if (/^https?:\/\//i.test(value)) return value
+  if (value.startsWith('live.douyin.com/') || value.startsWith('live.bilibili.com/')) {
+    return 'https://' + value
+  }
+  return host === 'bilibili'
+    ? 'https://live.bilibili.com/' + value.replace(/^\/+/, '')
+    : 'https://live.douyin.com/' + value.replace(/^\/+/, '')
+}
+
+async function openRoom(host: 'bilibili' | 'douyin'): Promise<void> {
+  const raw = host === 'bilibili' ? roomId.value : douyinRoomId.value
+  if (raw.trim().length === 0) {
+    showToast(host === 'bilibili' ? '先填写 B站房间号' : '先填写抖音直播间号', 'error')
+    return
+  }
+  try {
+    await window.api.openExternal(liveUrl(raw, host))
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : '打开直播间失败', 'error')
+  }
+}
+
 </script>
 
 <template>
@@ -232,7 +256,18 @@ async function setBotsEnabled(next: boolean): Promise<void> {
         </label>
       </div>
 
-      <p class="platform-note">填写房间号后打开开关；关闭只断开连接，不清空房间号。</p>
+      <div class="platform-footer">
+        <p class="platform-note">填写房间号后打开开关；关闭只断开连接，不清空房间号。</p>
+        <button
+          class="room-link"
+          type="button"
+          :disabled="roomId.trim().length === 0"
+          @click="openRoom('bilibili')"
+        >
+          <AppIcon name="external" :size="12" />
+          进入直播间
+        </button>
+      </div>
     </section>
 
     <section class="card">
@@ -265,11 +300,20 @@ async function setBotsEnabled(next: boolean): Promise<void> {
         </label>
       </div>
 
-      <p class="platform-note">
-        本地匿名签名，无需额外配置；抖音调整签名算法时随应用版本更新。
-      </p>
-
-
+      <div class="platform-footer">
+        <p class="platform-note">
+          本地匿名签名，无需额外配置；抖音调整签名算法时随应用版本更新。
+        </p>
+        <button
+          class="room-link"
+          type="button"
+          :disabled="douyinRoomId.trim().length === 0"
+          @click="openRoom('douyin')"
+        >
+          <AppIcon name="external" :size="12" />
+          进入直播间
+        </button>
+      </div>
     </section>
 
     <section class="card">
@@ -446,6 +490,41 @@ h2 {
   margin: 2px 0 0;
   color: var(--mute);
   font-size: 12px;
+}
+
+.platform-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+}
+
+.platform-footer .platform-note {
+  min-width: 0;
+}
+
+.room-link {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 var(--s-3);
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--body);
+  font-size: 12px;
+}
+
+.room-link:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.room-link:disabled {
+  cursor: default;
+  opacity: 0.4;
 }
 
 .platform-note {
