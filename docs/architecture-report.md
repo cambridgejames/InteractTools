@@ -684,7 +684,7 @@ userData 默认是 %APPDATA%/interact-tools；--smoke 时切到 artifacts/smoke/
 
 测试：
 
-- 16 个测试文件（14 个通过、2 个默认跳过），60 个用例通过，2 个真连/集成用例默认跳过。
+- 17 个测试文件（15 个通过、2 个默认跳过），62 个用例通过，2 个真连/集成用例默认跳过。
 - 覆盖骰子 domain、几何、物理、工具、轮盘工具、投票 domain/工具、命令提示总线、MockAdapter、B站协议、WBI。
 - 真连测试：LIVE_BILIBILI=1 npx vitest run tests/bilibili-live.test.ts；最近房间 6 收到 6 条。
 

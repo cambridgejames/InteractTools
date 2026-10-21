@@ -8,16 +8,11 @@ import { TOOL_IDS } from '@contracts/config'
 import type { Engine } from '@kernel/engine'
 import type { ControlWindow } from '../windows/control-window'
 import type { NetworkProxy } from '../services/network-proxy'
+import { externalUrlSchema } from './external-url'
 
 const platformIdSchema = z.enum(['bilibili', 'douyin', 'mock'])
 const toolIdSchema = z.enum(TOOL_IDS)
 const feedModeSchema = z.enum(['full', 'collapsed', 'hidden'])
-const githubUrlSchema = z
-  .string()
-  .url()
-  .refine((value) => value.startsWith('https://github.com/cambridgejames/'), {
-    message: '只允许打开项目 GitHub 链接'
-  })
 const patchSchema = z.record(z.string(), z.unknown())
 const toolActionSchema = z.object({
   type: z.string().min(1).max(40),
@@ -55,7 +50,7 @@ export function registerIpc(
   })
 
   ipcMain.handle(IPC.openExternal, async (_event, rawUrl: unknown) => {
-    await shell.openExternal(githubUrlSchema.parse(rawUrl))
+    await shell.openExternal(externalUrlSchema.parse(rawUrl))
   })
 
   ipcMain.handle(IPC.clearAllData, async () => {

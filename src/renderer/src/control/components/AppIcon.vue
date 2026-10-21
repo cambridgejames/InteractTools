@@ -31,6 +31,8 @@ const props = withDefaults(defineProps<{ name: IconName; size?: number; strokeWi
   strokeWidth: 1.7
 })
 
+const filledIcons = new Set<IconName>(['douyin'])
+
 const paths: Record<IconName, string> = {
   dashboard: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z',
   dice: 'M4 7l8-4 8 4v10l-8 4-8-4zM4 7l8 4 8-4M12 11v10',
@@ -51,7 +53,7 @@ const paths: Record<IconName, string> = {
   warning: 'M12 3l9 16H3zM12 9v4M12 16h.01',
   chevron: 'M6 9l6 6 6-6',
   bilibili: 'M5 8h14v9H5zM8 5l2 3M16 5l-2 3M9 12v2M15 12v2',
-  douyin: 'M9 18V5l10-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM19 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z',
+  douyin: 'M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z',
   gift: 'M4 10h16v10H4zM2 6h20v4H2zM12 6v14M8 6a2 2 0 1 1 4 0M16 6a2 2 0 1 0-4 0',
   users: 'M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2 20c0-3 2.7-5 6-5s6 2 6 5M17 11a3 3 0 1 0 0-6M16 15c3 0 5 2 5 5',
   external: 'M14 4h6v6M20 4l-9 9M18 14v5H5V6h5',
@@ -72,6 +74,10 @@ const paths: Record<IconName, string> = {
     stroke-linejoin="round"
     aria-hidden="true"
   >
-    <path :d="paths[props.name]" />
+    <path
+      :d="paths[props.name]"
+      :fill="filledIcons.has(props.name) ? 'currentColor' : 'none'"
+      :stroke="filledIcons.has(props.name) ? 'none' : 'currentColor'"
+    />
   </svg>
 </template>
