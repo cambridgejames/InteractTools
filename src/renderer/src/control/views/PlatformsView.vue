@@ -8,17 +8,23 @@ import { showToast } from '../store'
 
 const mock = computed(() => selectPlatform(state.snapshot, 'mock'))
 const bilibili = computed(() => selectPlatform(state.snapshot, 'bilibili'))
+const douyin = computed(() => selectPlatform(state.snapshot, 'douyin'))
 
 const roomId = ref('')
+const douyinRoomId = ref('')
+const douyinSigner = ref('http://127.0.0.1:18080')
 const biliEnabled = ref(false)
+const douyinEnabled = ref(false)
 const mockEnabled = ref(false)
 const botsEnabled = ref(true)
 const botsInterval = ref(3)
 let biliTimer: ReturnType<typeof setTimeout> | null = null
+let douyinTimer: ReturnType<typeof setTimeout> | null = null
 let mockTimer: ReturnType<typeof setTimeout> | null = null
 
 onUnmounted(() => {
   if (biliTimer !== null) clearTimeout(biliTimer)
+  if (douyinTimer !== null) clearTimeout(douyinTimer)
   if (mockTimer !== null) clearTimeout(mockTimer)
 })
 
@@ -28,6 +34,17 @@ watch(
     if (config === undefined) return
     if (typeof config.roomId === 'string') roomId.value = config.roomId
     if (typeof config.enabled === 'boolean') biliEnabled.value = config.enabled
+  },
+  { immediate: true }
+)
+
+watch(
+  () => douyin.value?.config,
+  (config) => {
+    if (config === undefined) return
+    if (typeof config.roomId === 'string') douyinRoomId.value = config.roomId
+    if (typeof config.signerUrl === 'string') douyinSigner.value = config.signerUrl
+    if (typeof config.enabled === 'boolean') douyinEnabled.value = config.enabled
   },
   { immediate: true }
 )
@@ -44,6 +61,7 @@ watch(
 )
 
 watch(roomId, () => scheduleBiliSave())
+watch([douyinRoomId, douyinSigner], () => scheduleDouyinSave())
 watch(botsInterval, () => scheduleMockSave())
 
 function scheduleBiliSave(): void {
@@ -70,6 +88,31 @@ async function persistBilibili(): Promise<void> {
   const enabled = biliEnabled.value
   if (nextRoom === String(config.roomId ?? '') && enabled === Boolean(config.enabled)) return
   await actions.updatePlatformConfig('bilibili', { roomId: nextRoom, enabled })
+}
+
+function scheduleDouyinSave(): void {
+  if (douyinTimer !== null) clearTimeout(douyinTimer)
+  douyinTimer = setTimeout(() => {
+    douyinTimer = null
+    void persistDouyin()
+  }, 600)
+}
+
+async function persistDouyin(): Promise<void> {
+  const config = douyin.value?.config
+  if (config === undefined) return
+  const room = douyinRoomId.value.trim()
+  const signerUrl = douyinSigner.value.trim()
+  if (room === String(config.roomId ?? '') &&
+      signerUrl === String(config.signerUrl ?? '') &&
+      douyinEnabled.value === Boolean(config.enabled)) {
+    return
+  }
+  await actions.updatePlatformConfig('douyin', {
+    roomId: room,
+    signerUrl,
+    enabled: douyinEnabled.value
+  })
 }
 
 async function persistMock(): Promise<void> {
@@ -101,6 +144,43 @@ async function setBiliEnabled(next: boolean): Promise<void> {
 
   if (next) await actions.connect('bilibili')
   else await actions.disconnect('bilibili')
+}
+
+async function setDouyinEnabled(next: boolean): Promise<void> {
+  if (next && (douyinRoomId.value.trim().length === 0 || douyinSigner.value.trim().length === 0)) {
+    douyinEnabled.value = false
+    showToast('先填写直播间号和签名服务地址', 'error')
+    return
+  }
+
+  douyinEnabled.value = next
+  const ok = await actions.updatePlatformConfig('douyin', {
+    roomId: douyinRoomId.value.trim(),
+    signerUrl: douyinSigner.value.trim(),
+    enabled: next
+  })
+  if (!ok) {
+    douyinEnabled.value = !next
+    return
+  }
+
+  if (next) await actions.connect('douyin')
+  else await actions.disconnect('douyin')
+}
+
+async function connectDouyin(): Promise<void> {
+  if (douyinRoomId.value.trim().length === 0 || douyinSigner.value.trim().length === 0) {
+    showToast('先填写直播间号和签名服务地址', 'error')
+    return
+  }
+  const ok = await actions.updatePlatformConfig('douyin', {
+    roomId: douyinRoomId.value.trim(),
+    signerUrl: douyinSigner.value.trim(),
+    enabled: true
+  })
+  if (!ok) return
+  douyinEnabled.value = true
+  await actions.connect('douyin')
 }
 
 async function setMockEnabled(next: boolean): Promise<void> {
@@ -192,6 +272,65 @@ async function connectMock(): Promise<void> {
             @click="connectBilibili"
           >
             {{ bilibili?.status.phase === 'connecting' ? '连接中…' : '重新连接' }}
+          </button>
+        </div>
+      </footer>
+    </section>
+
+    <section class="card">
+      <header>
+        <div class="platform-title">
+          <span class="icon douyin"><AppIcon name="douyin" :size="20" /></span>
+          <div>
+            <h2>抖音</h2>
+            <p>匿名只读弹幕 · 不登录、不发送内容</p>
+          </div>
+        </div>
+        <StatusPill v-if="douyin" :phase="douyin.status.phase" />
+      </header>
+
+      <p v-if="douyin?.status.detail" class="detail" :class="douyin.status.phase">
+        {{ douyin.status.detail }}
+      </p>
+
+      <div class="form douyin-form">
+        <label class="field">
+          <span>直播间号或链接</span>
+          <input v-model="douyinRoomId" placeholder="例如 123456789 或 live.douyin.com/..." maxlength="256" />
+        </label>
+        <label class="field">
+          <span>签名服务地址</span>
+          <input v-model="douyinSigner" placeholder="http://127.0.0.1:18080" maxlength="512" spellcheck="false" />
+        </label>
+        <div class="switch-row">
+          <div>
+            <strong>启用抖音弹幕源</strong>
+            <span>只读接收弹幕、礼物和进场</span>
+          </div>
+          <ToggleSwitch
+            v-model="douyinEnabled"
+            label="启用抖音弹幕源"
+            @update:modelValue="setDouyinEnabled"
+          />
+        </div>
+      </div>
+
+      <p class="signer-note">
+        抖音 webcast 需要短期签名 URL；本应用不内置签名算法，请配置自建或本地签名服务。
+      </p>
+
+      <div class="capabilities">
+        <span>弹幕</span>
+        <span>礼物</span>
+        <span>进场</span>
+        <span>只读</span>
+      </div>
+
+      <footer>
+        <span class="auto-save">自动保存</span>
+        <div class="right">
+          <button v-if="douyinEnabled" class="secondary" @click="connectDouyin">
+            {{ douyin?.status.phase === 'connecting' ? '连接中…' : '重新连接' }}
           </button>
         </div>
       </footer>
@@ -315,6 +454,10 @@ header {
   color: var(--bilibili);
 }
 
+.icon.douyin {
+  color: var(--ink);
+}
+
 h2 {
   margin: 0;
   color: var(--ink);
@@ -326,6 +469,13 @@ h2 {
   margin: 2px 0 0;
   color: var(--mute);
   font-size: 11px;
+}
+
+.signer-note {
+  margin: 0;
+  color: var(--faint);
+  font-size: 10px;
+  line-height: 16px;
 }
 
 .detail {
@@ -355,6 +505,17 @@ h2 {
   display: flex;
   align-items: flex-end;
   gap: var(--s-4);
+}
+
+.douyin-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+}
+
+.douyin-form .switch-row {
+  grid-column: 1 / -1;
+  margin-top: var(--s-2);
 }
 
 .switch-row {

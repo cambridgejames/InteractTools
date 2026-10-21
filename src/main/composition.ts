@@ -6,6 +6,7 @@ import { VoteTool } from '@tools/vote/tool'
 import { Engine } from '@kernel/engine'
 import { MathRandom } from '@kernel/random'
 import { bilibiliAdapterFactory } from '@platforms/bilibili'
+import { douyinAdapterFactory } from '@platforms/douyin'
 import { mockAdapterFactory } from '@platforms/mock'
 import { ControlWindow } from './windows/control-window'
 import { ResultSurface } from './surface/result-surface'
@@ -54,7 +55,7 @@ export async function createApplication(): Promise<Application> {
     timerFactory: new NodeTimerFactory(),
     historyFactory: (toolId) => new JsonHistoryStore(join(userData, 'history', toolId + '.json'), logger),
     surface,
-    platformFactories: [mockAdapterFactory, bilibiliAdapterFactory],
+    platformFactories: [mockAdapterFactory, bilibiliAdapterFactory, douyinAdapterFactory],
     tools: [new DiceTool(), new WheelTool(), new VoteTool()],
     onEvent: (event) => controlWindow.send(event)
   })

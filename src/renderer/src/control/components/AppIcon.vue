@@ -19,6 +19,7 @@ type IconName =
   | 'warning'
   | 'chevron'
   | 'bilibili'
+  | 'douyin'
   | 'gift'
   | 'users'
   | 'external'
@@ -49,6 +50,7 @@ const paths: Record<IconName, string> = {
   warning: 'M12 3l9 16H3zM12 9v4M12 16h.01',
   chevron: 'M6 9l6 6 6-6',
   bilibili: 'M5 8h14v9H5zM8 5l2 3M16 5l-2 3M9 12v2M15 12v2',
+  douyin: 'M9 18V5l10-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM19 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z',
   gift: 'M4 10h16v10H4zM2 6h20v4H2zM12 6v14M8 6a2 2 0 1 1 4 0M16 6a2 2 0 1 0-4 0',
   users: 'M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2 20c0-3 2.7-5 6-5s6 2 6 5M17 11a3 3 0 1 0 0-6M16 15c3 0 5 2 5 5',
   external: 'M14 4h6v6M20 4l-9 9M18 14v5H5V6h5',

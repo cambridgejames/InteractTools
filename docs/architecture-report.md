@@ -578,7 +578,15 @@ PlatformHost 只保留连接对象，不重复创建。
 - 不改变主播推流状态；单路连接对平台负载可忽略。
 - 高频/批量连接可能被平台限流的是自己的 IP。
 
-### 10.2 本地模拟
+### 10.2 抖音
+
+- 只读：弹幕、礼物、进场；没有发送用户内容的接口。
+- 连接：`POST /sign` 向用户配置的本地/自建签名服务换取短期 `wssUrl`、headers、heartbeat；项目不内置签名绕过算法。
+- WSS：PushFrame -> gzip -> Response -> Message；按 method 解析 WebcastChatMessage / WebcastGiftMessage / WebcastMemberMessage。
+- 重连时重新请求签名；WSS 也走 NetworkProxy。
+- 心跳只维持连接，不发送弹幕/礼物/关注。
+
+### 10.3 本地模拟
 
 - 无网络。
 - 可自动观众：默认间隔 3 秒，70% 力度、20% 聊天、10% 礼物。
@@ -675,7 +683,7 @@ userData 默认是 %APPDATA%/interact-tools；--smoke 时切到 artifacts/smoke/
 
 测试：
 
-- 13 个测试文件，57 个用例通过，1 个 B站真连用例默认跳过。
+- 14 个测试文件，59 个用例通过，1 个 B站真连用例默认跳过。
 - 覆盖骰子 domain、几何、物理、工具、轮盘工具、投票 domain/工具、命令提示总线、MockAdapter、B站协议、WBI。
 - 真连测试：LIVE_BILIBILI=1 npx vitest run tests/bilibili-live.test.ts；最近房间 6 收到 6 条。
 

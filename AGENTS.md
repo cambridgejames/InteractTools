@@ -6,7 +6,7 @@
 
 互动工坊：面向直播间的弹幕互动工具集。Electron 桌面端，多平台接入，互动玩法以工具插件的形式扩展。第一个工具是「投骰子」：观众用弹幕设置力度，倒计时结束后聚合力度，用真实刚体物理掷骰；骰子在控制面板内滚动，停稳后用应用内结果弹窗展示。
 
-当前阶段：可运行原型。通用工具控制台（工具切换器）、本地模拟、B站匿名适配器（WBI 签名，真连已验证）、骰子、转转盘与弹幕投票三个工具、真实物理、面板内动画、应用内结果弹窗 + 彩带烟花与冒烟截图已落地；安装包实机安装与 OBS 捕获仍待验证。
+当前阶段：可运行原型。通用工具控制台（工具切换器）、本地模拟、B站匿名适配器（WBI 签名，真连已验证）、抖音只读适配器（需外部签名服务）、骰子、转转盘与弹幕投票三个工具、真实物理、面板内动画、应用内结果弹窗 + 彩带烟花与冒烟截图已落地；安装包实机安装与 OBS 捕获仍待验证。
 
 ## 2. 技术栈
 
@@ -16,7 +16,7 @@
 | UI | Vue 3 `<script setup>` + TypeScript |
 | 3D | Three.js（只允许出现在 control/result 与 DicePanel 内联舞台） |
 | 物理 | cannon-es（只允许出现在主进程与物理模块） |
-| 平台 | ws + Node fetch（B站）、本地 mock |
+| 平台 | ws + Node fetch（B站）、ws + protobufjs（抖音，外部签名服务）、本地 mock |
 | 校验 | zod |
 | 测试 | Vitest |
 
@@ -45,7 +45,7 @@ npm run package:linux # Linux x64/arm64 AppImage/deb
 src/
   contracts/                 公共契约：类型、zod schema、IPC 定义
   kernel/                    平台无关内核：Engine、Host、CommandBus、端口
-  platforms/                 平台适配器：bilibili、mock
+  platforms/                 平台适配器：bilibili、douyin、mock
   tools/                     互动工具：dice（命令驱动）、wheel（主播手动）、vote（弹幕投票）
   main/                      Electron 主进程：组合根、窗口、Surface、存储、IPC
   preload/                   contextBridge 窄接口
@@ -122,7 +122,7 @@ recordPower(vote: PowerVote): void
 
 - 不在仓库提交 cookie、token、SESSDATA、房间凭据。
 - 只接官方公开能力或匿名弹幕；不做破解登录、不伪造观众、不刷量。
-- B站第一版只读弹幕，不发送消息。
+- 所有平台只读弹幕/礼物/进场；不发送弹幕、礼物、关注或任何用户内容。
 - 渲染进程禁用 Node 集成，开启 `contextIsolation`；不加载远程页面。
 - 日志与历史记录不保存完整 cookie；用户数据只落在 `app.getPath('userData')`。
 

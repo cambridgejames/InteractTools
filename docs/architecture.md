@@ -8,7 +8,7 @@
 
 设计约束：
 
-- 多平台并存：B站与本地模拟可以同时连接，消息带平台标识。
+- 多平台并存：B站、抖音与本地模拟可以同时连接，消息带平台标识；三者都只读，不提供发送用户内容的能力。
 - 工具可扩展：新增玩法不修改内核。
 - 物理可信：结果由刚体模拟产生，不是随机抽面。
 - 离线可用：不依赖自建服务端；B站不可用时本地模拟仍能完整跑通。
@@ -40,7 +40,7 @@
 | --- | --- | --- |
 | `contracts/**` | zod、自身 | 任何 `src` 内部模块 |
 | `kernel/**` | contracts | electron、ws、three、cannon-es、node:fs、DOM |
-| `platforms/**` | contracts、ws、undici、https-proxy-agent、zod、Node 标准库 | kernel、tools、electron |
+| `platforms/**` | contracts、ws、undici、https-proxy-agent、protobufjs、zod、Node 标准库 | kernel、tools、electron |
 | `tools/*/domain/**` | contracts | 物理、平台、Electron、Vue |
 | `tools/*/physics/**` | contracts、cannon-es、本工具 domain | Electron、ws、Vue |
 | `main/**` | 全部 | 无（组合根） |

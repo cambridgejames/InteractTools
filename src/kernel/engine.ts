@@ -254,9 +254,10 @@ export class Engine {
 
   private async autoConnect(): Promise<void> {
     const config = this.requireConfig()
-    for (const id of ['mock', 'bilibili'] as const) {
+    for (const id of ['mock', 'bilibili', 'douyin'] as const) {
       if (!config.platforms[id].enabled) continue
       if (id === 'bilibili' && config.platforms.bilibili.roomId.length === 0) continue
+      if (id === 'douyin' && config.platforms.douyin.roomId.length === 0) continue
       await this.connectPlatform(id)
     }
   }

@@ -4,9 +4,9 @@ import type { Logger } from './log'
 import type { CommandHintSource } from './command-hint'
 import type { NetworkProxyInfo } from './network'
 
-export type PlatformId = 'bilibili' | 'mock'
+export type PlatformId = 'bilibili' | 'douyin' | 'mock'
 
-export type PlatformCapability = 'chat.read' | 'gift.read' | 'member.read' | 'chat.send'
+export type PlatformCapability = 'chat.read' | 'gift.read' | 'member.read'
 
 export interface PlatformDescriptor {
   readonly id: PlatformId

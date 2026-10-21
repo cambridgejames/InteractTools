@@ -108,6 +108,7 @@ function checkRule(from, to) {
         to.name === 'zod' ||
         to.name === 'undici' ||
         to.name === 'https-proxy-agent' ||
+        to.name === 'protobufjs' ||
         to.name.startsWith('node:'))
     ) {
       return null

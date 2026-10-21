@@ -9,7 +9,7 @@ import type { Engine } from '@kernel/engine'
 import type { ControlWindow } from '../windows/control-window'
 import type { NetworkProxy } from '../services/network-proxy'
 
-const platformIdSchema = z.enum(['bilibili', 'mock'])
+const platformIdSchema = z.enum(['bilibili', 'douyin', 'mock'])
 const toolIdSchema = z.enum(TOOL_IDS)
 const feedModeSchema = z.enum(['full', 'collapsed', 'hidden'])
 const githubUrlSchema = z

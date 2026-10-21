@@ -99,6 +99,7 @@ function feedClass(item: FeedItem): string {
 
 function platformLabel(item: FeedItem): string {
   if (item.platform === 'bilibili') return 'B站'
+  if (item.platform === 'douyin') return '抖音'
   if (item.platform === 'mock') return '模拟'
   return '系统'
 }

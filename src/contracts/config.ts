@@ -32,6 +32,16 @@ export const bilibiliConfigSchema = z
 
 export type BilibiliConfig = z.infer<typeof bilibiliConfigSchema>
 
+export const douyinConfigSchema = z
+  .object({
+    enabled: z.boolean(),
+    roomId: z.string().trim().max(256),
+    signerUrl: z.string().trim().max(512)
+  })
+  .strict()
+
+export type DouyinConfig = z.infer<typeof douyinConfigSchema>
+
 export const mockConfigSchema = z
   .object({
     enabled: z.boolean(),
@@ -73,6 +83,7 @@ export const appConfigSchema = z
     enabledTools: toolEnablementSchema.default(DEFAULT_TOOL_ENABLEMENT),
     platforms: z.object({
       bilibili: bilibiliConfigSchema,
+      douyin: douyinConfigSchema,
       mock: mockConfigSchema
     }),
     tools: z.object({
@@ -94,6 +105,7 @@ export const DEFAULT_APP_CONFIG: AppConfig = {
   enabledTools: { ...DEFAULT_TOOL_ENABLEMENT },
   platforms: {
     bilibili: { enabled: false, roomId: '' },
+    douyin: { enabled: false, roomId: '', signerUrl: 'http://127.0.0.1:18080' },
     mock: {
       enabled: true,
       botsEnabled: true,

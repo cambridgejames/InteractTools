@@ -1,5 +1,5 @@
 import type { Aggregation, DiceConfig, DiceFaces, DiceResult, PowerSummary } from './dice'
-import type { PlatformDescriptor, PlatformStatus } from './platform'
+import type { PlatformDescriptor, PlatformId, PlatformStatus } from './platform'
 import type { WheelConfig, WheelPhase, WheelResult, WheelStopEasing } from './wheel'
 import type { VoteConfig, VoteResult } from './vote'
 import type { NetworkConfig } from './network'
@@ -16,7 +16,7 @@ export type FeedKind = 'chat' | 'gift' | 'member' | 'system'
 export interface FeedItem {
   readonly id: string
   readonly kind: FeedKind
-  readonly platform: 'bilibili' | 'mock' | 'system'
+  readonly platform: PlatformId | 'system'
   readonly userName: string
   readonly text: string
   readonly at: number

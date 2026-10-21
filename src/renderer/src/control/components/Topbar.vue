@@ -9,6 +9,7 @@ defineProps<{ title: string; subtitle: string }>()
 const connected = computed(() => connectedCount(state.snapshot))
 const mock = computed(() => state.snapshot?.platforms.find((item) => item.descriptor.id === 'mock'))
 const bilibili = computed(() => state.snapshot?.platforms.find((item) => item.descriptor.id === 'bilibili'))
+const douyin = computed(() => state.snapshot?.platforms.find((item) => item.descriptor.id === 'douyin'))
 </script>
 
 <template>
@@ -35,6 +36,11 @@ const bilibili = computed(() => state.snapshot?.platforms.find((item) => item.de
           v-if="bilibili"
           :phase="bilibili.status.phase"
           :label="'B站 · ' + platformPhaseLabel(bilibili.status.phase)"
+        />
+        <StatusPill
+          v-if="douyin"
+          :phase="douyin.status.phase"
+          :label="'抖音 · ' + platformPhaseLabel(douyin.status.phase)"
         />
       </div>
       <button class="preview" @click="actions.previewActiveTool()">
