@@ -221,7 +221,17 @@ export const actions = {
 
   async updateShortcuts(shortcuts: ShortcutsConfig): Promise<boolean> {
     try {
-      await window.api.updateShortcuts(shortcuts)
+      // snapshot 是 Vue reactive Proxy，跨 IPC 前必须转成普通对象。
+      await window.api.updateShortcuts({
+        toggleWindow: {
+          accelerator: shortcuts.toggleWindow.accelerator,
+          global: shortcuts.toggleWindow.global
+        },
+        toggleFeed: {
+          accelerator: shortcuts.toggleFeed.accelerator,
+          global: shortcuts.toggleFeed.global
+        }
+      })
       return true
     } catch (error) {
       showToast(errorMessage(error), 'error')
