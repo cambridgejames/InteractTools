@@ -9,7 +9,7 @@ const controller = new AbortController()
 afterEach(() => controller.abort())
 
 describe.skipIf(room === undefined)('Douyin local signer integration', () => {
-  it('obtains a signed WSS URL and receives a decoded message', async () => {
+  it('obtains a signed WSS URL and receives a decoded chat message', async () => {
     const signer = new LocalDouyinSigner(null)
     const signed = await signer.sign(room ?? '', controller.signal)
     expect(signed.wssUrl).toContain('signature=')
@@ -33,7 +33,7 @@ describe.skipIf(room === undefined)('Douyin local signer integration', () => {
           if (frame.needAck && frame.internalExt.length > 0) {
             socket.send(encodeDouyinAck(frame.internalExt))
           }
-          if (frame.messages.length > 0) {
+          if (frame.messages.some((message) => message.kind === 'chat')) {
             settled = true
             clearTimeout(timeout)
             socket.close()
