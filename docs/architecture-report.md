@@ -581,9 +581,9 @@ PlatformHost 只保留连接对象，不重复创建。
 ### 10.2 抖音
 
 - 只读：弹幕、礼物、进场；没有发送用户内容的接口。
-- 连接：`POST /sign` 向用户配置的本地/自建签名服务换取短期 `wssUrl`、headers、heartbeat；项目不内置签名绕过算法。
+- 连接：本地匿名 cookie 链（ttwid / __ac_nonce）→ 直播间 HTML 解析真实 roomId → vm 执行随包 `sign.js` 生成 WSS signature；不连接外部签名服务。
 - WSS：PushFrame -> gzip -> Response -> Message；按 method 解析 WebcastChatMessage / WebcastGiftMessage / WebcastMemberMessage。
-- 重连时重新请求签名；WSS 也走 NetworkProxy。
+- 重连时重新取 cookie、roomId 和签名；WSS 走 NetworkProxy。签名算法更新时替换 `assets/sign.js` 并发布新版本。
 - 心跳只维持连接，不发送弹幕/礼物/关注。
 
 ### 10.3 本地模拟
@@ -684,7 +684,7 @@ userData 默认是 %APPDATA%/interact-tools；--smoke 时切到 artifacts/smoke/
 
 测试：
 
-- 14 个测试文件，60 个用例通过，1 个 B站真连用例默认跳过。
+- 16 个测试文件（14 个通过、2 个默认跳过），60 个用例通过，2 个真连/集成用例默认跳过。
 - 覆盖骰子 domain、几何、物理、工具、轮盘工具、投票 domain/工具、命令提示总线、MockAdapter、B站协议、WBI。
 - 真连测试：LIVE_BILIBILI=1 npx vitest run tests/bilibili-live.test.ts；最近房间 6 收到 6 条。
 

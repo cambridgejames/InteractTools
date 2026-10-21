@@ -12,7 +12,6 @@ const douyin = computed(() => selectPlatform(state.snapshot, 'douyin'))
 
 const roomId = ref('')
 const douyinRoomId = ref('')
-const douyinSigner = ref('http://127.0.0.1:18080')
 const biliEnabled = ref(false)
 const douyinEnabled = ref(false)
 const mockEnabled = ref(false)
@@ -47,7 +46,6 @@ watch(
   (config) => {
     if (config === undefined) return
     if (typeof config.roomId === 'string') douyinRoomId.value = config.roomId
-    if (typeof config.signerUrl === 'string') douyinSigner.value = config.signerUrl
     if (typeof config.enabled === 'boolean') douyinEnabled.value = config.enabled
   },
   { immediate: true }
@@ -66,7 +64,7 @@ watch(
 )
 
 watch(roomId, () => scheduleBiliSave())
-watch([douyinRoomId, douyinSigner], () => scheduleDouyinSave())
+watch(douyinRoomId, () => scheduleDouyinSave())
 watch([botsInterval, userCount], () => scheduleMockSave())
 
 function scheduleBiliSave(): void {
@@ -107,15 +105,12 @@ async function persistDouyin(): Promise<void> {
   const config = douyin.value?.config
   if (config === undefined) return
   const room = douyinRoomId.value.trim()
-  const signerUrl = douyinSigner.value.trim()
   if (room === String(config.roomId ?? '') &&
-      signerUrl === String(config.signerUrl ?? '') &&
       douyinEnabled.value === Boolean(config.enabled)) {
     return
   }
   await actions.updatePlatformConfig('douyin', {
     roomId: room,
-    signerUrl,
     enabled: douyinEnabled.value
   })
 }
@@ -158,16 +153,15 @@ async function setBiliEnabled(next: boolean): Promise<void> {
 }
 
 async function setDouyinEnabled(next: boolean): Promise<void> {
-  if (next && (douyinRoomId.value.trim().length === 0 || douyinSigner.value.trim().length === 0)) {
+  if (next && douyinRoomId.value.trim().length === 0) {
     douyinEnabled.value = false
-    showToast('先填写直播间号和签名服务地址', 'error')
+    showToast('先填写抖音直播间号', 'error')
     return
   }
 
   douyinEnabled.value = next
   const ok = await actions.updatePlatformConfig('douyin', {
     roomId: douyinRoomId.value.trim(),
-    signerUrl: douyinSigner.value.trim(),
     enabled: next
   })
   if (!ok) {
@@ -264,19 +258,15 @@ async function setBotsEnabled(next: boolean): Promise<void> {
         {{ douyin.status.detail }}
       </p>
 
-      <div class="form douyin-form">
+      <div class="form">
         <label class="field">
           <span>直播间号或链接</span>
           <input v-model="douyinRoomId" placeholder="例如 123456789 或 live.douyin.com/..." maxlength="256" />
         </label>
-        <label class="field">
-          <span>签名服务地址</span>
-          <input v-model="douyinSigner" placeholder="http://127.0.0.1:18080" maxlength="512" spellcheck="false" />
-        </label>
       </div>
 
-      <p class="signer-note">
-        抖音 webcast 需要短期签名 URL；本应用不内置签名算法，请配置自建或本地签名服务。
+      <p class="platform-note">
+        本地匿名签名，无需额外配置；抖音调整签名算法时随应用版本更新。
       </p>
 
 
@@ -458,8 +448,7 @@ h2 {
   font-size: 12px;
 }
 
-.platform-note,
-.signer-note {
+.platform-note {
   margin: 0;
   color: var(--faint);
   font-size: 12px;
@@ -503,17 +492,6 @@ h2 {
 .mock-limits {
   display: flex;
   gap: var(--s-4);
-}
-
-.douyin-form {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  align-items: start;
-}
-
-.douyin-form .switch-row {
-  grid-column: 1 / -1;
-  margin-top: var(--s-2);
 }
 
 .switch-row {

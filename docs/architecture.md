@@ -329,7 +329,7 @@ idle ──start──▶ collecting ──timeout──▶ rolling ──frames
   "enabledTools": { "dice": true, "wheel": true, "vote": true },
   "platforms": {
     "bilibili": { "enabled": false, "roomId": "" },
-    "douyin": { "enabled": false, "roomId": "", "signerUrl": "http://127.0.0.1:18080" },
+    "douyin": { "enabled": false, "roomId": "" },
     "mock": {
       "enabled": true,
       "botsEnabled": true,

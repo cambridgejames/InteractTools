@@ -10,7 +10,7 @@
 | --- | --- | --- |
 | 类型 | `npm run typecheck` | 通过 |
 | 静态检查 | `npm run lint` | 通过（ESLint + 依赖边界 + 设计 token） |
-| 单元测试 | `npm run test` | 通过，14 个文件 / 60 个用例（另 1 个真连测试默认跳过） |
+| 单元测试 | `npm run test` | 通过，14 个文件 / 60 个用例；2 个真连/集成测试默认跳过 |
 | 构建 | `npm run build` | 通过 |
 | 冒烟 | `npm run smoke` | 通过，生成控制台面板动画与应用内结果弹窗截图 |
 | 打包 | `npm run package:win` / `package:mac` / `package:linux` | Windows 本地通过 x64 + arm64；macOS/Linux 由 CI 矩阵构建 |
@@ -48,7 +48,7 @@
 ## 覆盖范围
 
 - 基础设施：AGENTS.md、DESIGN.md、docs、ADR、4 个 agent skill、CI。
-- 平台层：统一 `PlatformAdapter`，本地模拟 + B站匿名弹幕（WBI 签名）+ 抖音只读（外部签名服务、protobuf fixture）。
+- 平台层：统一 `PlatformAdapter`，本地模拟 + B站匿名弹幕（WBI 签名）+ 抖音只读（本地签名、protobuf fixture、真实 WSS 可选测试）。
 - 工具层：统一 `InteractionTool`，投骰子（命令驱动）、转转盘（主播手动）、弹幕投票（命令驱动）三种形态，历史记录分开。
 - 控制台：通用工具切换器按 manifest 渲染，骰子/转盘面板分离；转盘不经过 CommandBus；转盘/投票各支持最多 12 个命名预设。
 - 物理：六种面数、凸包、cannon-es 固定步长、停稳判定、d4 读底面；支持直接投掷（随机 0–100 力度、跳过收集）。
@@ -63,7 +63,7 @@
 2. d10 使用五角双锥，而非标准五角偏方面体。
 3. 结果弹窗已在控制台窗口内，OBS 直接采集控制台即可；尚未在真实 OBS 内实测。
 4. Windows x64/arm64 安装包已构建，但未走完整安装向导点击验证；macOS/Linux 产物由 CI 构建，尚未在对应实机验证。
-5. 抖音只读适配器未接入真实签名服务，未做真实直播间验证；需要用户提供符合 `/sign` 契约的签名服务。
+5. 抖音只读适配器已用真实直播间开 WSS 验证签名；可选测试：`LIVE_DOUYIN_ROOM=857508194378 npx vitest run tests/douyin-live.test.ts`。抖音改算法后需要替换 `assets/sign.js` 并发布版本。
 
 ## 复现
 

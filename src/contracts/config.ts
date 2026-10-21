@@ -36,7 +36,8 @@ export const douyinConfigSchema = z
   .object({
     enabled: z.boolean(),
     roomId: z.string().trim().max(256),
-    signerUrl: z.string().trim().max(512)
+    /** 旧版配置遗留字段；本地签名后不再读取，只为兼容已保存配置。 */
+    signerUrl: z.string().trim().max(512).optional()
   })
   .strict()
 
@@ -106,7 +107,7 @@ export const DEFAULT_APP_CONFIG: AppConfig = {
   enabledTools: { ...DEFAULT_TOOL_ENABLEMENT },
   platforms: {
     bilibili: { enabled: false, roomId: '' },
-    douyin: { enabled: false, roomId: '', signerUrl: 'http://127.0.0.1:18080' },
+    douyin: { enabled: false, roomId: '' },
     mock: {
       enabled: true,
       botsEnabled: true,

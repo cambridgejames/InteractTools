@@ -8,7 +8,7 @@ import type {
   PlatformStatus
 } from '@contracts/platform'
 import { decodeDouyinFrame, encodeDouyinAck, normalizeDouyinRoom, type DouyinMessage } from './protocol'
-import { HttpDouyinSigner, type DouyinSignResult } from './signer'
+import { LocalDouyinSigner, type DouyinSignResult } from './signer'
 import { douyinAdapterFactory } from './index'
 
 const RECONNECT_DELAY_MS = 5_000
@@ -16,9 +16,9 @@ const RECONNECT_DELAY_MS = 5_000
 /**
  * 抖音只读弹幕适配器。
  *
- * 连接分两步：用户配置的签名服务换取短期 WSS URL，然后只接收
+ * 连接分两步：本地匿名 cookie + 签名脚本换取短期 WSS URL，然后只接收
  * webcast 推送并解析弹幕/礼物/进场。适配器没有发送用户内容的方法，
- * 心跳只用于维持平台连接。
+ * 心跳只用于维持平台连接；签名算法更新时随应用版本替换 assets/sign.js。
  */
 export class DouyinAdapter implements PlatformAdapter {
   readonly descriptor = douyinAdapterFactory.descriptor
@@ -30,30 +30,31 @@ export class DouyinAdapter implements PlatformAdapter {
   private disposed = true
   private attempt = 0
   private roomId = ''
-  private signerUrl = ''
+  private sourceRoomId = ''
   private signal: AbortSignal | null = null
+  private readonly signer: LocalDouyinSigner
 
-  constructor(private readonly context: PlatformContext) {}
+  constructor(private readonly context: PlatformContext) {
+    this.signer = new LocalDouyinSigner(context.network.proxyUrl)
+  }
 
   async connect(config: unknown, signal: AbortSignal): Promise<void> {
     const parsed = douyinConfigSchema.parse(config)
     const roomId = normalizeDouyinRoom(parsed.roomId)
     if (roomId.length === 0) throw new PlatformError('config', '请先填写抖音直播间号或链接')
-    if (parsed.signerUrl.trim().length === 0) {
-      throw new PlatformError('config', '请先配置抖音签名服务地址')
-    }
     if (signal.aborted) throw new PlatformError('network', '连接已取消')
 
     this.disposed = false
     this.signal = signal
+    this.sourceRoomId = roomId
     this.roomId = roomId
-    this.signerUrl = parsed.signerUrl
     this.attempt = 0
     signal.addEventListener('abort', () => void this.disconnect(), { once: true })
     this.setStatus({ phase: 'connecting' })
 
     try {
-      const signed = await new HttpDouyinSigner(this.signerUrl, this.context.network.proxyUrl).sign(roomId, signal)
+      const signed = await this.signer.sign(roomId, signal)
+      this.roomId = signed.roomId
       await this.openSocket(signed, signal)
       this.setStatus({
         phase: 'connected',
@@ -210,7 +211,8 @@ export class DouyinAdapter implements PlatformAdapter {
   private async reconnect(): Promise<void> {
     if (this.disposed || this.signal === null) return
     try {
-      const signed = await new HttpDouyinSigner(this.signerUrl, this.context.network.proxyUrl).sign(this.roomId, this.signal)
+      const signed = await this.signer.sign(this.sourceRoomId, this.signal)
+      this.roomId = signed.roomId
       await this.openSocket(signed, this.signal)
       this.attempt = 0
       this.setStatus({

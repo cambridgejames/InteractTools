@@ -5,7 +5,14 @@ import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
   {
-    ignores: ['out/**', 'release/**', 'dist/**', 'node_modules/**', 'artifacts/**']
+    ignores: [
+      'out/**',
+      'release/**',
+      'dist/**',
+      'node_modules/**',
+      'artifacts/**',
+      'src/platforms/douyin/assets/**'
+    ]
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

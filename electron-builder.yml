@@ -11,6 +11,10 @@ artifactName: Interact-Studio-${version}-${arch}.${ext}
 extraResources:
   - from: build/icon.png
     to: icon.png
+  - from: src/platforms/douyin/assets/LICENSE
+    to: douyin-sign/LICENSE
+  - from: THIRD_PARTY_NOTICES.md
+    to: THIRD_PARTY_NOTICES.md
 win:
   icon: build/icon.png
   target:
