@@ -3,6 +3,7 @@ import type { EngineEvent } from '@contracts/engine'
 import { PlatformError } from '@contracts/errors'
 import type { ToolHistory } from '@contracts/history'
 import type { Logger } from '@contracts/log'
+import type { NetworkConfig, NetworkProxyInfo } from '@contracts/network'
 import type { ChatMessage, PlatformAdapterFactory, PlatformEvent, PlatformId } from '@contracts/platform'
 import { err, ok, type Result } from '@contracts/result'
 import type { Clock, RandomSource } from '@contracts/time'
@@ -18,6 +19,8 @@ export interface EngineOptions {
   readonly clock: Clock
   readonly random: RandomSource
   readonly logger: Logger
+  readonly network: NetworkProxyInfo
+  readonly onNetworkChange?: (config: NetworkConfig) => Promise<void>
   readonly store: ConfigStore
   readonly timerFactory: TimerFactory
   readonly historyFactory: (toolId: string) => ToolHistory
@@ -48,12 +51,14 @@ export class Engine {
   async start(): Promise<void> {
     const config = await this.options.store.load()
     this.config = config
+    await this.options.onNetworkChange?.(config.network)
     this.hints = new CommandHintBus()
 
     this.platformHost = new PlatformHost({
       factories: this.options.platformFactories,
       clock: this.options.clock,
       logger: this.options.logger,
+      network: this.options.network,
       hints: this.hints,
       getConfig: () => this.requireConfig(),
       onChange: () => this.publishSnapshot(),
@@ -102,6 +107,7 @@ export class Engine {
       window: {
         display: this.requireConfig().window.display
       },
+      network: this.requireConfig().network,
       feedMode: this.requireConfig().feed.mode
     }
   }
@@ -127,6 +133,22 @@ export class Engine {
     })
     this.config = next
     await this.options.store.save(next)
+    this.publishSnapshot()
+  }
+
+  async updateNetworkConfig(patch: Partial<NetworkConfig>): Promise<void> {
+    const current = this.requireConfig()
+    const next = appConfigSchema.parse({
+      ...current,
+      network: { ...current.network, ...patch }
+    })
+    this.config = next
+    await this.options.store.save(next)
+    await this.options.onNetworkChange?.(next.network)
+
+    if (this.requirePlatformHost().status('bilibili').phase !== 'disconnected') {
+      await this.requirePlatformHost().reconnect('bilibili')
+    }
     this.publishSnapshot()
   }
 

@@ -10,6 +10,16 @@ export async function runSmoke(application: Application): Promise<void> {
   await delay(1_200)
   await application.controlWindow.capture(join(output, 'control.png'))
 
+  await application.controlWindow.browserWindow.webContents.executeJavaScript(
+    "document.querySelectorAll('.nav-item')[3]?.click()"
+  )
+  await delay(250)
+  await application.controlWindow.capture(join(output, 'control-settings-network.png'))
+  await application.controlWindow.browserWindow.webContents.executeJavaScript(
+    "document.querySelectorAll('.nav-item')[0]?.click()"
+  )
+  await delay(250)
+
   await application.engine.updateToolConfig('wheel', {
     presets: [
       {

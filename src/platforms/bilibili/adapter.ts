@@ -7,6 +7,8 @@ import type {
   PlatformStatus
 } from '@contracts/platform'
 import WebSocket from 'ws'
+import { ProxyAgent, fetch as undiciFetch } from 'undici'
+import { HttpsProxyAgent } from 'https-proxy-agent'
 import {
   authBody,
   decodePackets,
@@ -53,6 +55,8 @@ export class BilibiliAdapter implements PlatformAdapter {
   private signal: AbortSignal | null = null
   private wbiKeys: WbiKeys | null = null
   private wbiFetchedAt = 0
+  private proxyDispatcher: ProxyAgent | null = null
+  private proxyFor: string | null = null
 
   constructor(private readonly context: PlatformContext) {}
 
@@ -94,6 +98,7 @@ export class BilibiliAdapter implements PlatformAdapter {
       socket.removeAllListeners()
       socket.close()
     }
+    this.closeProxyDispatcher()
     this.setStatus({ phase: 'disconnected' })
   }
 
@@ -240,12 +245,15 @@ export class BilibiliAdapter implements PlatformAdapter {
   ): Promise<void> {
     const url = 'wss://' + host + (port === 443 ? '' : ':' + port) + '/sub'
 
+    const proxyUrl = this.context.network.proxyUrl
+    const agent = proxyUrl === null ? undefined : new HttpsProxyAgent(proxyUrl)
     await new Promise<void>((resolve, reject) => {
       const socket = new WebSocket(url, {
         headers: {
           'User-Agent': USER_AGENT,
           Origin: 'https://live.bilibili.com'
-        }
+        },
+        ...(agent === undefined ? {} : { agent })
       })
       this.socket = socket
 
@@ -405,6 +413,26 @@ export class BilibiliAdapter implements PlatformAdapter {
     this.context.emit({ type: 'status', status })
   }
 
+  private proxyDispatcherFor(proxyUrl: string | null): ProxyAgent | null {
+    if (proxyUrl === null) {
+      this.closeProxyDispatcher()
+      return null
+    }
+    if (this.proxyDispatcher !== null && this.proxyFor === proxyUrl) return this.proxyDispatcher
+
+    this.closeProxyDispatcher()
+    this.proxyDispatcher = new ProxyAgent(proxyUrl)
+    this.proxyFor = proxyUrl
+    return this.proxyDispatcher
+  }
+
+  private closeProxyDispatcher(): void {
+    const dispatcher = this.proxyDispatcher
+    this.proxyDispatcher = null
+    this.proxyFor = null
+    if (dispatcher !== null) void dispatcher.close().catch(() => undefined)
+  }
+
   private async fetchJson(
     url: string,
     signal: AbortSignal,
@@ -424,10 +452,14 @@ export class BilibiliAdapter implements PlatformAdapter {
     let lastError: Error | null = null
     for (let attempt = 1; attempt <= 3; attempt += 1) {
       try {
-        const response = await fetch(url, {
+        const options = {
           headers,
           signal: AbortSignal.any([signal, AbortSignal.timeout(API_TIMEOUT_MS)])
-        })
+        }
+        const dispatcher = this.proxyDispatcherFor(this.context.network.proxyUrl)
+        const response = await (dispatcher === null
+          ? fetch(url, options)
+          : undiciFetch(url, { ...options, dispatcher }))
         if (response.ok) return (await response.json()) as unknown
 
         const error = new PlatformError('network', 'B站接口返回 HTTP ' + String(response.status))

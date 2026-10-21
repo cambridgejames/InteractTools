@@ -23,10 +23,10 @@ export interface DiceSimulationResult {
 const FIXED_STEP = 1 / 120
 const RECORD_EVERY = 2
 const FRAME_SECONDS = FIXED_STEP * RECORD_EVERY
-const MAX_SECONDS = 12
+const MAX_SECONDS = 13
 const MIN_SETTLE_SECONDS = 1
 const NUDGE_SECONDS = 3
-const STABLE_STEPS_REQUIRED = 20
+const STABLE_STEPS_REQUIRED = 12
 
 /**
  * 用 cannon-es 跑一次真实刚体投掷。
@@ -37,7 +37,7 @@ const STABLE_STEPS_REQUIRED = 20
 export function simulateDice(input: DiceSimulationInput): DiceSimulationResult {
   const geometry = getDiceGeometry(input.faces)
   const rng = createSeededRandom(input.seed)
-  const world = createWorld()
+  const world = createWorld(input.power)
   const body = createDiceBody(geometry, input.power, rng)
 
   world.addBody(body)
@@ -45,7 +45,8 @@ export function simulateDice(input: DiceSimulationInput): DiceSimulationResult {
   const frames: DiceFrame[] = []
   let stableSteps = 0
   let settleStep = -1
-  let nudged = false
+  let nudgeCount = 0
+  let nextNudgeAt = NUDGE_SECONDS
   const maxSteps = Math.ceil(MAX_SECONDS / FIXED_STEP)
 
   for (let step = 0; step < maxSteps; step += 1) {
@@ -56,20 +57,22 @@ export function simulateDice(input: DiceSimulationInput): DiceSimulationResult {
     const seconds = (step + 1) * FIXED_STEP
     if (seconds < MIN_SETTLE_SECONDS) continue
 
-    // 偶尔会停在棱上：低速但没有面朝上时轻推一次，让它倒向某一面。
+    // 偶尔会停在棱上：低速但没有面朝上时轻推，必要时再补一次。
+    // 增加弹性后 d20 更容易卡在棱上，单次轻推不够。
     if (
-      !nudged &&
-      seconds > NUDGE_SECONDS &&
-      body.velocity.length() < 0.25 &&
-      body.angularVelocity.length() < 0.7 &&
-      upwardness(geometry, body.quaternion) < 0.92
+      nudgeCount < 3 &&
+      seconds > nextNudgeAt &&
+      body.velocity.length() < 0.3 &&
+      body.angularVelocity.length() < 0.9 &&
+      upwardness(geometry, body.quaternion) < 0.94
     ) {
       body.applyImpulse(
         new Vec3((rng.next() - 0.5) * 0.5, 0.35, (rng.next() - 0.5) * 0.5)
       )
       body.angularVelocity.x += (rng.next() - 0.5) * 1.4
       body.angularVelocity.z += (rng.next() - 0.5) * 1.4
-      nudged = true
+      nudgeCount += 1
+      nextNudgeAt = seconds + 2.2
     }
 
     if (isStable(body, geometry)) {
@@ -96,10 +99,15 @@ export function simulateDice(input: DiceSimulationInput): DiceSimulationResult {
   }
 }
 
-function createWorld(): World {
+function createWorld(power: number): World {
   const world = new World({ gravity: new Vec3(0, -24, 0) })
   const tableMaterial = new Material('table')
   const diceMaterial = new Material('dice')
+  // 力度越大，台面越“弹”、摩擦越小：中高力度会有二次弹跳和横向咕噜，
+  // 低力度仍然干脆落定，不会变成纯随机乱飞。
+  const ratio = Math.min(1, Math.max(0, power / 100))
+  const restitution = 0.24 + ratio * 0.16
+  const friction = 0.42 - ratio * 0.08
   const table = new Body({ mass: 0, shape: new Plane(), material: tableMaterial })
 
   // Plane 的法线默认是 +Z，绕 X 轴转 -90° 后朝上。
@@ -107,8 +115,8 @@ function createWorld(): World {
   world.addBody(table)
   world.addContactMaterial(
     new ContactMaterial(diceMaterial, tableMaterial, {
-      friction: 0.42,
-      restitution: 0.26
+      friction,
+      restitution
     })
   )
 
@@ -122,8 +130,8 @@ function createWorld(): World {
     world.addBody(wall)
   }
 
-  world.defaultContactMaterial.friction = 0.42
-  world.defaultContactMaterial.restitution = 0.26
+  world.defaultContactMaterial.friction = friction
+  world.defaultContactMaterial.restitution = restitution
   return world
 }
 
@@ -148,7 +156,7 @@ function createDiceBody(
   )
 
   const lift = 3.2 + power * 0.23
-  const horizontal = 0.2 + power * 0.004
+  const horizontal = 0.25 + power * 0.0045
   body.velocity.set(
     (rng.next() - 0.5) * horizontal,
     lift,
@@ -171,11 +179,11 @@ function createDiceBody(
   const tilt = ((24 + rng.next() * 30) * Math.PI) / 180
   const axis = normal.scale(Math.cos(tilt)).vadd(tangent.scale(Math.sin(tilt)))
   axis.normalize()
-  const spin = 2.5 + power * 0.28
+  const spin = 2.5 + power * 0.3
   body.angularVelocity.set(axis.x * spin, axis.y * spin, axis.z * spin)
 
-  body.linearDamping = 0.06
-  body.angularDamping = 0.08
+  body.linearDamping = 0.05
+  body.angularDamping = 0.08 - power * 0.0002
   return body
 }
 

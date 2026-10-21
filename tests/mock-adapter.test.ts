@@ -25,6 +25,7 @@ describe('MockAdapter command hints', () => {
       clock: { now: () => 1_000 },
       logger,
       hints,
+      network: { proxyUrl: null },
       emit: (event) => events.push(event)
     })
 

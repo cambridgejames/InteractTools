@@ -15,6 +15,7 @@ import { JsonHistoryStore } from './services/history-store'
 import { NodeTimerFactory } from './services/timers'
 import { SystemClock } from './services/clock'
 import { registerIpc } from './ipc/handlers'
+import { NetworkProxy } from './services/network-proxy'
 
 export interface Application {
   readonly engine: Engine
@@ -33,6 +34,7 @@ export async function createApplication(): Promise<Application> {
     : join(app.getAppPath(), 'build/icon.png')
   const store = new JsonConfigStore(join(userData, 'config.json'), logger)
   const config = await store.load()
+  const network = new NetworkProxy()
   const controlWindow = new ControlWindow(
     join(__dirname, '../preload/index.js'),
     iconPath,
@@ -46,6 +48,8 @@ export async function createApplication(): Promise<Application> {
     clock,
     random: new MathRandom(),
     logger,
+    network,
+    onNetworkChange: (next) => network.apply(next),
     store,
     timerFactory: new NodeTimerFactory(),
     historyFactory: (toolId) => new JsonHistoryStore(join(userData, 'history', toolId + '.json'), logger),
@@ -55,7 +59,7 @@ export async function createApplication(): Promise<Application> {
     onEvent: (event) => controlWindow.send(event)
   })
 
-  registerIpc(engine, controlWindow)
+  registerIpc(engine, controlWindow, network)
   await engine.start()
   await controlWindow.load()
 

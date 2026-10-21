@@ -4,6 +4,9 @@ export const WHEEL_LABEL_MAX = 48
 
 export type WheelPhase = 'idle' | 'spinning' | 'result'
 
+/** 停止动画尾段：滑步感或更干脆的急停。 */
+export type WheelStopEasing = 'glide' | 'brake'
+
 export interface WheelPreset {
   readonly id: string
   readonly name: string

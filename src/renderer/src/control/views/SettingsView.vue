@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import type { FeedMode } from '@contracts/config'
+import type { NetworkTestResult, ProxyMode } from '@contracts/network'
 import type { WindowDisplayOption } from '@contracts/ipc'
 import AppIcon from '../components/AppIcon.vue'
 import AppSelect from '../components/AppSelect.vue'
@@ -12,6 +13,15 @@ const GITHUB_ISSUES_URL = GITHUB_URL + '/issues'
 const displays = ref<readonly WindowDisplayOption[]>([])
 const selectedDisplay = ref('cursor')
 const selectedFeedMode = ref<FeedMode>('full')
+const proxyMode = ref<ProxyMode>('system')
+const proxyUrl = ref('')
+const testing = ref(false)
+const testResult = ref<NetworkTestResult | null>(null)
+const proxyOptions = [
+  { value: 'none', label: '不使用代理' },
+  { value: 'system', label: '使用系统代理' },
+  { value: 'custom', label: '自定义代理' }
+]
 const displayOptions = computed(() => [
   { value: 'cursor', label: '跟随鼠标' },
   { value: 'primary', label: '主显示器' },
@@ -35,6 +45,8 @@ const feedOptions = [
 onMounted(async () => {
   selectedDisplay.value = state.snapshot?.window.display ?? 'cursor'
   selectedFeedMode.value = state.snapshot?.feedMode ?? 'full'
+  proxyMode.value = state.snapshot?.network.proxyMode ?? 'system'
+  proxyUrl.value = state.snapshot?.network.proxyUrl ?? ''
   try {
     displays.value = await window.api.windowDisplays()
   } catch (error) {
@@ -68,6 +80,41 @@ async function saveFeedMode(): Promise<void> {
     showToast('弹幕栏设置已更新', 'success')
   } catch (error) {
     showToast(error instanceof Error ? error.message : '更新弹幕栏失败', 'error')
+  }
+}
+
+async function chooseProxyMode(value: string): Promise<void> {
+  if (value !== 'none' && value !== 'system' && value !== 'custom') return
+  proxyMode.value = value
+  testResult.value = null
+  try {
+    await window.api.updateNetworkConfig({ proxyMode: value })
+    showToast('网络代理已更新', 'success')
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : '更新网络代理失败', 'error')
+  }
+}
+
+async function saveProxyUrl(): Promise<void> {
+  if (proxyMode.value !== 'custom') return
+  try {
+    await window.api.updateNetworkConfig({ proxyUrl: proxyUrl.value })
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : '保存代理地址失败', 'error')
+  }
+}
+
+async function testNetwork(): Promise<void> {
+  testing.value = true
+  testResult.value = null
+  try {
+    await window.api.updateNetworkConfig({ proxyMode: proxyMode.value, proxyUrl: proxyUrl.value })
+    testResult.value = await window.api.testNetwork()
+    showToast(testResult.value.ok ? '网络连通正常' : '网络连接失败', testResult.value.ok ? 'success' : 'error')
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : '测试网络失败', 'error')
+  } finally {
+    testing.value = false
   }
 }
 
@@ -105,6 +152,48 @@ async function clearAllData(): Promise<void> {
           @update:model-value="chooseDisplay"
         />
       </label>
+    </section>
+
+    <section class="card">
+      <header>
+        <h2>网络代理</h2>
+        <p>部分网络环境需要代理才能连接 B站；修改后会重连 B站。</p>
+      </header>
+
+      <label class="field">
+        <span>代理方式</span>
+        <AppSelect
+          :model-value="proxyMode"
+          :options="proxyOptions"
+          label="选择代理方式"
+          @update:model-value="chooseProxyMode"
+        />
+      </label>
+
+      <label v-if="proxyMode === 'custom'" class="field">
+        <span>代理地址</span>
+        <input
+          v-model="proxyUrl"
+          class="text-input"
+          placeholder="http://127.0.0.1:7890"
+          spellcheck="false"
+          @blur="saveProxyUrl"
+        />
+      </label>
+
+      <div class="network-actions">
+        <button class="secondary" :disabled="testing" @click="testNetwork">
+          <AppIcon name="refresh" :size="15" />
+          {{ testing ? '测试中…' : '测试连通性' }}
+        </button>
+        <span v-if="testResult" class="network-result" :class="{ ok: testResult.ok }">
+          {{ testResult.ok ? '连通' : '失败' }} · {{ testResult.latencyMs }}ms
+        </span>
+      </div>
+      <p v-if="testResult" class="network-detail" :class="{ ok: testResult.ok }">
+        {{ testResult.message }}
+      </p>
+      <p v-else class="network-note">测试会请求 B站房间接口，耗时通常不超过 8 秒。</p>
     </section>
 
     <section class="card">
@@ -217,6 +306,50 @@ header p {
   gap: 6px;
   color: var(--mute);
   font-size: 11px;
+}
+
+.text-input {
+  width: 100%;
+  height: 36px;
+  padding: 0 var(--s-3);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-control);
+  background: var(--inset);
+  color: var(--ink);
+  font-size: 12px;
+}
+
+.text-input:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.network-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.network-result {
+  color: var(--danger);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.network-result.ok {
+  color: var(--success);
+}
+
+.network-detail,
+.network-note {
+  margin: 0;
+  color: var(--mute);
+  font-size: 10px;
+  overflow-wrap: anywhere;
+}
+
+.network-detail.ok {
+  color: var(--success);
 }
 
 .data-actions {

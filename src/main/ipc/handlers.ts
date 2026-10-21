@@ -3,8 +3,10 @@ import { rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { z } from 'zod'
 import { IPC } from '@contracts/ipc'
+import { networkConfigSchema } from '@contracts/network'
 import type { Engine } from '@kernel/engine'
 import type { ControlWindow } from '../windows/control-window'
+import type { NetworkProxy } from '../services/network-proxy'
 
 const platformIdSchema = z.enum(['bilibili', 'mock'])
 const feedModeSchema = z.enum(['full', 'collapsed', 'hidden'])
@@ -23,8 +25,22 @@ const mockChatSchema = z.object({
   userName: z.string().trim().min(1).max(24),
   text: z.string().trim().min(1).max(200)
 })
-export function registerIpc(engine: Engine, controlWindow: ControlWindow): void {
+export function registerIpc(
+  engine: Engine,
+  controlWindow: ControlWindow,
+  network: NetworkProxy
+): void {
   ipcMain.handle(IPC.snapshot, async () => engine.snapshot())
+
+  ipcMain.handle(IPC.networkUpdate, async (_event, rawPatch: unknown) => {
+    const parsed = networkConfigSchema.partial().parse(rawPatch)
+    const patch: { proxyMode?: 'none' | 'system' | 'custom'; proxyUrl?: string } = {}
+    if (parsed.proxyMode !== undefined) patch.proxyMode = parsed.proxyMode
+    if (parsed.proxyUrl !== undefined) patch.proxyUrl = parsed.proxyUrl
+    await engine.updateNetworkConfig(patch)
+  })
+
+  ipcMain.handle(IPC.networkTest, async () => network.test())
 
   ipcMain.handle(IPC.windowDisplays, async () => controlWindow.displayOptions())
 

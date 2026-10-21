@@ -493,13 +493,13 @@ PlatformHost 只保留连接对象，不重复创建。
 
 物理：
 
-- cannon-es 刚体；固定步长 1/120 秒，最多 12 秒。
+- cannon-es 刚体；固定步长 1/120 秒，最多 13 秒。
 - 从中央发射台向上弹射：初始上冲速度 3.2 + power×0.23，自旋 2.5 + power×0.28；自旋轴以当前面法线为基准偏 24–54°，力度只改变能量，不参与选面。
 - d6 渲染层用 RoundedBoxGeometry 做小倒角；物理仍是原凸包，避免改变读数与碰撞。
 - 六种面数：d4/d6/d8/d10/d12/d20。
 - 凸包几何；d10 使用五角双锥。
-- 停稳判定：面朝上程度、稳定步数；连续 20 步低速后判定停稳。
-- 低速停在棱上时轻推一次。
+- 停稳判定：面朝上程度、稳定步数；连续 12 步低速后判定停稳。
+- 中高力度提高台面弹性和滚动；低速停在棱上时最多轻推 3 次。
 - 记录 60Hz 帧，主进程出结果，渲染层只回放。
 
 呈现：
@@ -518,7 +518,7 @@ PlatformHost 只保留连接对象，不重复创建。
 - 2–16 格，每格最多 20 字。
 - 旋转时长 2–10 秒。
 - 主播手动，无命令。
-- RandomSource 均匀选格。
+- RandomSource 均匀选格，再随机生成扇区内落点偏移 stopOffset 和滑步/急停收尾 stopEasing；落点仍属于选中格。
 - WheelPanel 用 CSS rotate 原地旋转；圆盘 400px，扇形内标签随盘面旋转，中心品牌图标顶部的小三角作为固定指针（带深色投影，避免和同色扇形糊在一起）。
 - 标签字号有上限并按文本长度自适应：短选项封顶，长选项缩到两行容量内；不同格数上限 22/20/18/16/14/12px。
 - 预设：最多 12 个命名转盘，保存 segments + spinDurationSeconds；同名覆盖。
@@ -555,6 +555,7 @@ PlatformHost 只保留连接对象，不重复创建。
 4. GET x/web-interface/nav -> wbi_img、sub_url。
 5. WBI：mixinKey 表重排，参数排序，过滤 !'()*，MD5 生成 w_rid。
 6. GET getDanmuInfo?id=...&type=0&web_location=444.8&wts=...&w_rid=... -> token、host_list。
+- HTTP 与 WSS 都读取 NetworkProxy 解析出的 proxyUrl；系统代理用 resolveProxy，自定义代理支持 HTTP(S)。
 7. host 去重，最多尝试 4 个。
 8. WSS wss://host:port/sub，16 字节包头，OP_AUTH。
 9. 认证 body：uid 0、roomid、protover 3、platform web、type 2、key token、buvid。
@@ -591,6 +592,7 @@ PlatformHost 只保留连接对象，不重复创建。
 - 目标 1560×960，按配置的显示器（默认鼠标所在屏）workArea 自动收缩并居中；最小 1120×720。
 - Windows/Linux 使用 `titleBarStyle: 'hidden'` + `titleBarOverlay`，macOS 使用 `hiddenInset`；标题栏消失但系统原生窗口按钮保留。顶栏 `-webkit-app-region: drag`，窗口按钮由系统绘制。
 - 设置页通过 window:displays / window:set-display 选择屏幕；配置持久化到 appConfig.window.display。
+- 设置页网络代理：none/system/custom；修改后重连 B站，network:test 返回延迟与错误。
 - 弹幕栏模式配置为 appConfig.feed.mode；snapshot.feedMode 驱动 App 栅格。
 - 开发模式窗口图标读取 `build/icon.png`；打包后从 `extraResources/icon.png` 读取，任务栏不再显示 Electron 默认图标。
 - contextIsolation true，nodeIntegration false。
@@ -672,7 +674,7 @@ userData 默认是 %APPDATA%/interact-tools；--smoke 时切到 artifacts/smoke/
 
 测试：
 
-- 12 个测试文件，45 个用例通过，1 个 B站真连用例默认跳过。
+- 12 个测试文件，47 个用例通过，1 个 B站真连用例默认跳过。
 - 覆盖骰子 domain、几何、物理、工具、轮盘工具、投票 domain/工具、命令提示总线、MockAdapter、B站协议、WBI。
 - 真连测试：LIVE_BILIBILI=1 npx vitest run tests/bilibili-live.test.ts；最近房间 6 收到 6 条。
 

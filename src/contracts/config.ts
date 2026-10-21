@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { DEFAULT_DICE_CONFIG, diceConfigSchema, type DiceConfig } from './dice'
 import { DEFAULT_WHEEL_CONFIG, wheelConfigSchema } from './wheel'
 import { DEFAULT_VOTE_CONFIG, voteConfigSchema } from './vote'
+import { DEFAULT_NETWORK_CONFIG, networkConfigSchema } from './network'
 
 export const bilibiliConfigSchema = z
   .object({
@@ -59,6 +60,7 @@ export const appConfigSchema = z
       wheel: wheelConfigSchema,
       vote: voteConfigSchema
     }),
+    network: networkConfigSchema.default(DEFAULT_NETWORK_CONFIG),
     overlay: overlayConfigSchema,
     window: windowConfigSchema,
     feed: feedConfigSchema
@@ -100,6 +102,9 @@ export const DEFAULT_APP_CONFIG: AppConfig = {
         options: [...preset.options]
       }))
     }
+  },
+  network: {
+    ...DEFAULT_NETWORK_CONFIG
   },
   overlay: {
     alwaysOnTop: true

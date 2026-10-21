@@ -115,6 +115,10 @@ export class WheelTool implements InteractionTool {
       Math.floor(context.random.next() * segments.length)
     )
     const label = segments[index] ?? ''
+    // 不再每次都停在扇区正中：0.18–0.82 的落点既保留正确结果，也能看出
+    // 指针压线、擦边和最后一段滑行，避免“每次都是黑幕”的观感。
+    const stopOffset = 0.5 + (context.random.next() - 0.5) * 0.64
+    const stopEasing = context.random.next() < 0.5 ? 'glide' : 'brake'
     const now = context.clock.now()
     const spinId = 'wheel-' + now.toString(36) + '-' + index
     const result: WheelResult = { spinId, label, index, at: now }
@@ -122,7 +126,7 @@ export class WheelTool implements InteractionTool {
     const generation = ++this.generation
 
     this.phase = 'spinning'
-    this.currentSpin = { spinId, resultIndex: index, durationMs }
+    this.currentSpin = { spinId, resultIndex: index, stopOffset, stopEasing, durationMs }
     this.lastResult = result
     void context.present({ kind: 'dismiss', toolId: 'wheel' }).catch(() => undefined)
     this.notify()

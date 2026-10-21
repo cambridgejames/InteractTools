@@ -6,7 +6,7 @@
 
 适配器只做三件事：连接、翻译、报告状态。它不解析力度命令，不决定点数，不打开窗口。
 
-允许的依赖：`contracts`、`ws`、Node 标准库、zod。禁止 import `kernel`、`tools`、`electron`。
+允许的依赖：`contracts`、`ws`、`undici`、`https-proxy-agent`、Node 标准库、zod。禁止 import `kernel`、`tools`、`electron`。
 
 ## 2. 建文件
 

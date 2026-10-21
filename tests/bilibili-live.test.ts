@@ -17,6 +17,7 @@ describe.skipIf(!live)('bilibili live connection', () => {
     const context: PlatformContext = {
       clock: { now: () => Date.now() },
       logger,
+      network: { proxyUrl: null },
       emit: (event) => events.push(event)
     }
 

@@ -102,7 +102,14 @@ function checkRule(from, to) {
 
   if (from.kind === 'platforms') {
     if (to.kind === 'contracts' || to.kind === 'platforms') return null
-    if (to.kind === 'package' && (to.name === 'ws' || to.name === 'zod' || to.name.startsWith('node:'))) {
+    if (
+      to.kind === 'package' &&
+      (to.name === 'ws' ||
+        to.name === 'zod' ||
+        to.name === 'undici' ||
+        to.name === 'https-proxy-agent' ||
+        to.name.startsWith('node:'))
+    ) {
       return null
     }
     return 'platforms 不能依赖 ' + describe(to)

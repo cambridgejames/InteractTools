@@ -42,6 +42,8 @@ const api: RendererApi = {
   setFeedMode: (mode) => ipcRenderer.invoke(IPC.feedSetMode, mode),
   openExternal: (url) => ipcRenderer.invoke(IPC.openExternal, url),
   clearAllData: () => ipcRenderer.invoke(IPC.clearAllData),
+  updateNetworkConfig: (patch) => ipcRenderer.invoke(IPC.networkUpdate, patch),
+  testNetwork: () => ipcRenderer.invoke(IPC.networkTest),
   platform: process.platform === 'darwin' ? 'darwin' : process.platform === 'linux' ? 'linux' : 'win32'
 }
 

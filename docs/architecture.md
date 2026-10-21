@@ -40,7 +40,7 @@
 | --- | --- | --- |
 | `contracts/**` | zod、自身 | 任何 `src` 内部模块 |
 | `kernel/**` | contracts | electron、ws、three、cannon-es、node:fs、DOM |
-| `platforms/**` | contracts、ws、zod、Node 标准库 | kernel、tools、electron |
+| `platforms/**` | contracts、ws、undici、https-proxy-agent、zod、Node 标准库 | kernel、tools、electron |
 | `tools/*/domain/**` | contracts | 物理、平台、Electron、Vue |
 | `tools/*/physics/**` | contracts、cannon-es、本工具 domain | Electron、ws、Vue |
 | `main/**` | 全部 | 无（组合根） |
@@ -79,6 +79,8 @@ export type PlatformEvent =
 参与者统一用 `userKey = platform + ':' + userId` 标识。这样同一个人在 B站和模拟源不会串票，换平台也不会误合并。
 
 ### 4.2 适配器
+
+代理由主进程的 `NetworkProxy` 统一解析：`none` 直连、`system` 读取系统代理、`custom` 使用 HTTP(S) 地址。解析结果同时写入 Electron session 和 `PlatformContext.network.proxyUrl`；B站适配器用 undici `ProxyAgent` 发 HTTP 请求、用 `https-proxy-agent` 建 WSS，因此接口和弹幕连接不会一条走代理、一条直连。设置页的连通性测试也复用同一解析结果。
 
 ```ts
 export type PlatformPhase =
@@ -241,7 +243,7 @@ Electron main
 9. 面板动画结束后，`SurfaceHost` 把 `dice.result` 发给控制台，ResultOverlay 播放彩带烟花并等待手动关闭。
 10. 控制台通过快照和 feed 同步状态；历史记录写入配置目录。
 
-转盘是另一条链路：主播在控制台点「开始旋转」→ `Engine.toolAction('wheel', { type: 'spin' })` → `WheelTool` 用 `RandomSource` 选格 → `WheelToolView.currentSpin` 驱动 `WheelPanel` 原地 CSS 旋转 → 停稳后 `wheel.result` 弹应用内结果弹窗。它**不经过 CommandBus**，也没有物理模拟。
+转盘是另一条链路：主播在控制台点「开始旋转」→ `Engine.toolAction('wheel', { type: 'spin' })` → `WheelTool` 用 `RandomSource` 选格，同时随机生成扇区内落点 `stopOffset` 和收尾曲线 `stopEasing` → `WheelToolView.currentSpin` 驱动 `WheelPanel` 原地 CSS 旋转 → 停稳后 `wheel.result` 弹应用内结果弹窗。它**不经过 CommandBus**，也没有物理模拟；落点仍在选中扇区内，不会改变结果。
 
 投票是第三条链路：`VoteTool` 在倒计时内解析 `投票 1` / `投票 选项文字`，按 `userKey` 只保留最后一票；`view()` 把实时票数和剩余时间给 `VotePanel`，倒计时结束或「提前结束」后统计并列最高票，发 `vote.result` 给 ResultOverlay。它不物理、不随机、不写弹幕。
 
@@ -295,7 +297,7 @@ idle ──start──▶ collecting ──timeout──▶ rolling ──frames
 
 - 无弹幕命令：`handleChat` 永远返回 `false`，不抢骰子的指令。
 - 配置：`segments`（2–16 个标签）、`spinDurationSeconds`（2–10）。
-- 结果：`RandomSource.next()` 均匀选格；`currentSpin` 只给面板提供 `resultIndex / durationMs`，面板负责把对应格子转到指针下，最终标签由 ResultOverlay 展示。
+- 结果：`RandomSource.next()` 均匀选格；再随机生成扇区内落点 `stopOffset`（0.18–0.82）和收尾曲线 `stopEasing`（glide/brake）。`currentSpin` 给面板提供 `resultIndex / stopOffset / stopEasing / durationMs`，面板负责把选中格子转到指针下，最终标签由 ResultOverlay 展示。
 - 历史：`history/wheel.json`，与骰子分开。
 - 控制台入口：`control/tool-panels.ts` 注册 `wheel → WheelPanel`；工具切换器选中后动态渲染，Dashboard 不知道具体工具。
 
@@ -303,12 +305,12 @@ idle ──start──▶ collecting ──timeout──▶ rolling ──frames
 
 - 坐标：Y 轴向上，地面 `y = 0`，长度单位约等于骰子外接球半径。
 - 几何：顶点定义 + 凸包算法求面；d10 用五角双锥（pentagonal bipyramid，10 个三角面），d4/d6/d8/d12/d20 用标准多面体。
-- 刚体：cannon-es `ConvexPolyhedron`，质量 1；地面 `Plane`；摩擦 0.4，弹性 0.35。
+- 刚体：cannon-es `ConvexPolyhedron`，质量 1；地面 `Plane`；摩擦和弹性随力度在 0.42→0.34 / 0.24→0.40 之间变化，中高力度更容易二次弹跳和横向滚动。
 - 初始条件：位置、朝向、角速度由 seed 派生；力度 0–100 映射到向上初速度和初始自旋，自旋轴相对面法线偏 24–54°，**不参与选面**。骰子从中央发射台弹射，面板相机随高度上升后拉。d6 渲染使用圆角倒角，物理凸包不变。
-- 固定步长 `1 / 120` 秒，最多 12 秒；每两步记录一帧（60Hz）。
-- 静止判定：线速度 < 0.08、角速度 < 0.12，连续 20 步，且存在法线接近竖直的面。
+- 固定步长 `1 / 120` 秒，最多 13 秒；每两步记录一帧（60Hz）。
+- 静止判定：线速度 < 0.08、角速度 < 0.12，连续 12 步，且存在法线接近竖直的面。
 - 读数：d4 取贴地面（法线 y 最小），其余取朝上面（法线 y 最大）。
-- 未停稳：先施加一次轻推；仍失败则取最近面，`settled: false` 写进结果，UI 明确标注。
+- 未停稳：低速卡在棱上时最多轻推 3 次；仍失败则取最近面，`settled: false` 写进结果，UI 明确标注。
 
 物理是纯函数：`simulate({ faces, power, seed })` 不读时钟、不读配置、不写日志。相同输入必须得到相同输出；单测固定 seed 断言点数和总帧数。
 
@@ -351,6 +353,7 @@ idle ──start──▶ collecting ──timeout──▶ rolling ──frames
       "presets": []
     }
   },
+  "network": { "proxyMode": "system", "proxyUrl": "" },
   "overlay": { "alwaysOnTop": true },
   "window": { "display": "cursor" },
   "feed": { "mode": "full" }
@@ -365,6 +368,7 @@ idle ──start──▶ collecting ──timeout──▶ rolling ──frames
 - 每个 `invoke` 通道在 main 侧有 zod 入参校验；返回值也必须是可序列化数据。
 - 主进程 → 渲染进程只有一条事件通道 `engine:event`，携带 `EngineEvent`。
 - 所有 presentation 都走控制台的 `overlay:present`；结果关闭走 `overlay:dismissed`，不再有 result 通道。
+- 网络配置走 `network:update` / `network:test`；测试结果只返回 `{ ok, latencyMs, message, proxyUrl }`，不把底层异常对象跨进程传递。
 - 所有通道名集中在 `contracts/ipc.ts`，禁止散落字符串。
 
 ## 11. 错误与生命周期

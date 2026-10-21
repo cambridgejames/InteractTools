@@ -10,12 +10,13 @@
 | --- | --- | --- |
 | 类型 | `npm run typecheck` | 通过 |
 | 静态检查 | `npm run lint` | 通过（ESLint + 依赖边界 + 设计 token） |
-| 单元测试 | `npm run test` | 通过，12 个文件 / 45 个用例（另 1 个真连测试默认跳过） |
+| 单元测试 | `npm run test` | 通过，12 个文件 / 47 个用例（另 1 个真连测试默认跳过） |
 | 构建 | `npm run build` | 通过 |
 | 冒烟 | `npm run smoke` | 通过，生成控制台面板动画与应用内结果弹窗截图 |
 | 打包 | `npm run package:win` / `package:mac` / `package:linux` | Windows 本地通过 x64 + arm64；macOS/Linux 由 CI 矩阵构建 |
 | 打包后冒烟 | `release/win-unpacked/互动工坊.exe --smoke` | 通过，进程正常退出 |
 | B站真连 | `LIVE_BILIBILI=1 npx vitest run tests/bilibili-live.test.ts` | 通过，房间 6 / 21144080 可认证；弹幕数随房间活跃度变化，最近一次房间 6 收到 2 条 |
+| 网络测试 | 设置页「测试连通性」 | 通过，直连 B站接口 128ms |
 
 ## 冒烟截图
 
@@ -24,7 +25,8 @@
 - `control.png`：控制台，含平台状态、骰子面板、事件流、历史记录。
 - `control-wheel.png`：转盘扇形标签、中心指针和命名预设列表。
 - `control-platforms.png`：平台设置页仍保留右侧实时弹幕栏。
-- `control-settings.png`：窗口位置、弹幕栏模式、结果展示与 GitHub 入口。
+- `control-settings.png`：窗口位置、网络代理、弹幕栏模式、结果展示与 GitHub 入口。
+- `control-settings-network.png`：网络代理模式与连通性测试入口。
 - `control-settings-select.png`：自定义深色下拉菜单展开态。
 - `control-settings-about.png`：关于区的 GitHub 仓库/问题反馈入口。
 - `control-feed-collapsed.png` / `control-feed-hidden.png`：弹幕栏折叠窄条与隐藏。

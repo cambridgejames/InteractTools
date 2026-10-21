@@ -1,7 +1,8 @@
 import type { Aggregation, DiceConfig, DiceFaces, DiceResult, PowerSummary } from './dice'
 import type { PlatformDescriptor, PlatformStatus } from './platform'
-import type { WheelConfig, WheelPhase, WheelResult } from './wheel'
+import type { WheelConfig, WheelPhase, WheelResult, WheelStopEasing } from './wheel'
 import type { VoteConfig, VoteResult } from './vote'
+import type { NetworkConfig } from './network'
 
 export interface PlatformView {
   readonly descriptor: PlatformDescriptor
@@ -57,6 +58,9 @@ export interface DiceToolView extends BaseToolView {
 export interface WheelSpinView {
   readonly spinId: string
   readonly resultIndex: number
+  /** 落点在扇区内的归一化位置；0.5 才是正中，允许偏左/偏右。 */
+  readonly stopOffset: number
+  readonly stopEasing: WheelStopEasing
   readonly durationMs: number
 }
 
@@ -99,6 +103,7 @@ export interface EngineSnapshot {
   readonly feed: readonly FeedItem[]
   readonly overlay: OverlayView
   readonly window: WindowView
+  readonly network: NetworkConfig
   readonly feedMode: 'full' | 'collapsed' | 'hidden'
 }
 

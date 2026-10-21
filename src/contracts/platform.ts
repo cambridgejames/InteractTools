@@ -2,6 +2,7 @@ import type { ZodType } from 'zod'
 import type { Clock } from './time'
 import type { Logger } from './log'
 import type { CommandHintSource } from './command-hint'
+import type { NetworkProxyInfo } from './network'
 
 export type PlatformId = 'bilibili' | 'mock'
 
@@ -67,6 +68,7 @@ export type PlatformEvent =
 export interface PlatformContext {
   readonly clock: Clock
   readonly logger: Logger
+  readonly network: NetworkProxyInfo
   readonly emit: (event: PlatformEvent) => void
   /** 可选：模拟源订阅当前正在收集的工具命令。 */
   readonly hints?: CommandHintSource

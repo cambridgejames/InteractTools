@@ -165,12 +165,13 @@ watch(
     if (props.view.phase !== 'spinning' || spin === null) return
 
     const step = 360 / Math.max(1, props.view.segments.length)
-    const targetMod = ((-(spin.resultIndex + 0.5) * step) % 360 + 360) % 360
+    const targetMod = ((-(spin.resultIndex + spin.stopOffset) * step) % 360 + 360) % 360
     const currentMod = ((wheelRotation.value % 360) + 360) % 360
     const delta = (targetMod - currentMod + 360) % 360
 
     spinDuration.value = spin.durationMs
-    wheelRotation.value += 360 * 5 + delta
+    const turns = 4 + Math.round(spin.stopOffset * 4)
+    wheelRotation.value += 360 * turns + delta
   }
 )
 
@@ -187,7 +188,11 @@ const wheelStyle = computed(() => {
   return {
     background: 'conic-gradient(' + stops + ')',
     transform: 'rotate(' + wheelRotation.value + 'deg)',
-    transitionDuration: spinDuration.value + 'ms'
+    transitionDuration: spinDuration.value + 'ms',
+    transitionTimingFunction:
+      props.view.currentSpin?.stopEasing === 'brake'
+        ? 'cubic-bezier(0.18, 0.92, 0.3, 1)'
+        : 'cubic-bezier(0.08, 0.62, 0.12, 1)'
   }
 })
 

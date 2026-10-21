@@ -3,6 +3,7 @@ import type { PlatformId } from './platform'
 import type { Presentation } from './presentation'
 import type { ToolAction } from './tool'
 import type { EngineSnapshot } from './view'
+import type { NetworkConfig, NetworkTestResult } from './network'
 
 export const IPC = {
   snapshot: 'engine:snapshot',
@@ -22,7 +23,9 @@ export const IPC = {
   windowDisplay: 'window:set-display',
   feedSetMode: 'feed:set-mode',
   openExternal: 'app:open-external',
-  clearAllData: 'app:clear-all-data'
+  clearAllData: 'app:clear-all-data',
+  networkUpdate: 'network:update',
+  networkTest: 'network:test'
 } as const
 
 export interface WindowDisplayOption {
@@ -64,5 +67,7 @@ export interface RendererApi {
   setFeedMode(mode: 'full' | 'collapsed' | 'hidden'): Promise<void>
   openExternal(url: string): Promise<void>
   clearAllData(): Promise<boolean>
+  updateNetworkConfig(patch: Partial<NetworkConfig>): Promise<void>
+  testNetwork(): Promise<NetworkTestResult>
   readonly platform: 'win32' | 'darwin' | 'linux'
 }
