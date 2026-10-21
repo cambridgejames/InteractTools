@@ -45,7 +45,7 @@
 | `tools/*/physics/**` | contracts、cannon-es、本工具 domain | Electron、ws、Vue |
 | `main/**` | 全部 | 无（组合根） |
 | `preload/**` | contracts、electron | kernel 具体实现、渲染进程代码 |
-| `renderer/**` | contracts 的只读类型、preload API、Vue/Three | kernel、main、platforms、Node API |
+| `renderer/**` | contracts 的只读类型、preload API、Vue/Three、pinyin-pro | kernel、main、platforms、Node API |
 
 边界由 ESLint 的 `no-restricted-imports` 按目录覆盖来强制，不靠自觉。CI 里 `npm run lint` 失败即拒绝合并。
 

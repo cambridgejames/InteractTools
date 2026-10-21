@@ -10,7 +10,7 @@
 | --- | --- | --- |
 | 类型 | `npm run typecheck` | 通过 |
 | 静态检查 | `npm run lint` | 通过（ESLint + 依赖边界 + 设计 token） |
-| 单元测试 | `npm run test` | 通过，13 个文件 / 56 个用例（另 1 个真连测试默认跳过） |
+| 单元测试 | `npm run test` | 通过，13 个文件 / 57 个用例（另 1 个真连测试默认跳过） |
 | 构建 | `npm run build` | 通过 |
 | 冒烟 | `npm run smoke` | 通过，生成控制台面板动画与应用内结果弹窗截图 |
 | 打包 | `npm run package:win` / `package:mac` / `package:linux` | Windows 本地通过 x64 + arm64；macOS/Linux 由 CI 矩阵构建 |
@@ -26,7 +26,7 @@
 - `control-wheel.png`：转盘扇形标签、中心指针和命名预设列表。
 - `control-platforms.png`：平台设置页仍保留右侧实时弹幕栏。
 - `control-tools.png`：互动工具页三张工具卡片、卡片内开关与搜索框。
-- `control-tool-search.png`：互动工具页搜索“物理”，命中卡片、关键词高亮与相关度排序。
+- `control-tool-search.png`：互动工具页搜索拼音“touzi”，命中卡片、拼音高亮与相关度排序。
 - `control-settings.png`：窗口位置、网络代理、弹幕栏模式、结果展示与 GitHub 入口。
 - `control-settings-network.png`：网络代理模式与连通性测试入口。
 - `control-settings-select.png`：自定义深色下拉菜单展开态。

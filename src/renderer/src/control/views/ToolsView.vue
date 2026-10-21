@@ -48,6 +48,12 @@ function clearSearch(): void {
 function highlight(text: string): ReturnType<typeof highlightText> {
   return highlightText(text, tokens.value)
 }
+
+function nameParts(item: { tool: ToolCatalogItem; pinyinMatch: boolean }): ReturnType<typeof highlightText> {
+  return item.pinyinMatch
+    ? [{ text: item.tool.name, match: true }]
+    : highlight(item.tool.name)
+}
 </script>
 
 <template>
@@ -57,8 +63,8 @@ function highlight(text: string): ReturnType<typeof highlightText> {
         <AppIcon name="search" :size="15" />
         <input
           v-model="query"
-          type="search"
-          placeholder="搜索工具、玩法或关键词…"
+          type="text"
+          placeholder="搜索工具、玩法、关键词或拼音…"
           aria-label="搜索互动工具"
           spellcheck="false"
         />
@@ -87,7 +93,7 @@ function highlight(text: string): ReturnType<typeof highlightText> {
         </span>
       </header>
       <h2>
-        <template v-for="(part, index) in highlight(item.tool.name)" :key="index">
+        <template v-for="(part, index) in nameParts(item)" :key="index">
           <mark v-if="part.match">{{ part.text }}</mark>
           <template v-else>{{ part.text }}</template>
         </template>
@@ -166,10 +172,18 @@ function highlight(text: string): ReturnType<typeof highlightText> {
   min-width: 0;
   flex: 1;
   border: 0;
+  border-radius: 0;
   outline: none;
+  appearance: none;
   background: transparent;
+  box-shadow: none;
   color: var(--ink);
   font-size: 13px;
+}
+
+.search input::-webkit-search-cancel-button,
+.search input::-webkit-search-decoration {
+  display: none;
 }
 
 .search input::placeholder {

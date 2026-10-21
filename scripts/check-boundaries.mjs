@@ -137,7 +137,10 @@ function checkRule(from, to) {
     if (to.kind === 'contracts' || to.kind === 'renderer') return null
     if (
       to.kind === 'package' &&
-      (to.name === 'vue' || to.name === 'three' || to.name.startsWith('three/'))
+      (to.name === 'vue' ||
+        to.name === 'three' ||
+        to.name.startsWith('three/') ||
+        to.name === 'pinyin-pro')
     ) {
       return null
     }

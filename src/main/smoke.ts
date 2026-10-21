@@ -18,7 +18,7 @@ export async function runSmoke(application: Application): Promise<void> {
   await application.controlWindow.browserWindow.webContents.executeJavaScript(
     "document.querySelector('.tools-head .search input')?.focus()"
   )
-  application.controlWindow.browserWindow.webContents.insertText('物理')
+  application.controlWindow.browserWindow.webContents.insertText('touzi')
   await delay(250)
   await application.controlWindow.capture(join(output, 'control-tool-search.png'))
   await application.controlWindow.browserWindow.webContents.executeJavaScript(

@@ -53,6 +53,16 @@ describe('tool search', () => {
     expect(row?.snippet).toContain('物理')
   })
 
+  it('matches full pinyin and initials', () => {
+    const dice = rankTools(tools, 'touzi')[0]
+    expect(dice?.tool.toolId).toBe('dice')
+    expect(dice?.pinyinMatch).toBe(true)
+    expect(rankTools(tools, 'zhuanpan')[0]?.tool.toolId).toBe('wheel')
+    expect(rankTools(tools, 'toupiao')[0]?.tool.toolId).toBe('vote')
+    expect(rankTools(tools, 'wuli')[0]?.tool.toolId).toBe('dice')
+    expect(rankTools(tools, 'tz')[0]?.tool.toolId).toBe('dice')
+  })
+
   it('returns no rows for an unknown term', () => {
     expect(rankTools(tools, 'zzz')).toEqual([])
   })
