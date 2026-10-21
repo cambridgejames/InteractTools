@@ -1,4 +1,4 @@
-import { app } from 'electron'
+import { app, Menu, type MenuItemConstructorOptions } from 'electron'
 import { writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { createApplication, type Application } from './composition'
@@ -55,9 +55,33 @@ async function reportFatal(error: unknown): Promise<void> {
   app.quit()
 }
 
+function installMenu(): void {
+  if (process.platform !== 'darwin') {
+    Menu.setApplicationMenu(null)
+    return
+  }
+
+  // macOS 保留编辑菜单（复制/粘贴），但不放 Cmd+Q/Cmd+W 的退出/关闭项。
+  const template: MenuItemConstructorOptions[] = [
+    {
+      label: app.name,
+      submenu: [
+        { role: 'about' },
+        { type: 'separator' },
+        { role: 'hide' },
+        { role: 'hideOthers' },
+        { role: 'unhide' }
+      ]
+    },
+    { role: 'editMenu' }
+  ]
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template))
+}
+
 async function start(): Promise<void> {
   app.setName('互动工坊')
   app.setAppUserModelId('com.interact1017.studio')
+  installMenu()
   application = await createApplication()
   application.controlWindow.show()
   application.controlWindow.browserWindow.on('closed', () => app.quit())

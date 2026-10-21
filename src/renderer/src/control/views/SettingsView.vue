@@ -277,6 +277,29 @@ async function clearAllData(): Promise<void> {
             预览结果动画
           </button>
         </section>
+
+        <section class="card">
+          <header>
+            <h2>快捷键</h2>
+            <p>直播时误触退出快捷键会中断互动；应用已拦截常见的关闭组合。</p>
+          </header>
+
+          <div class="row">
+            <div>
+              <strong>关闭 / 退出</strong>
+              <span>Ctrl+W、Cmd+W、Ctrl+Q、Cmd+Q、Alt+F4 已拦截，请使用标题栏关闭按钮。</span>
+            </div>
+            <span class="shortcut-state">已拦截</span>
+          </div>
+
+          <div class="row">
+            <div>
+              <strong>全局快捷键</strong>
+              <span>应用当前不注册系统级全局快捷键，避免与直播工具冲突。</span>
+            </div>
+            <span class="shortcut-state muted">未启用</span>
+          </div>
+        </section>
       </template>
 
       <template v-else-if="section === 'data'">
@@ -573,6 +596,20 @@ header p {
 .row span {
   color: var(--faint);
   font-size: 12px;
+}
+
+.row .shortcut-state {
+  flex: none;
+  padding: 2px 7px;
+  border: 1px solid color-mix(in srgb, var(--success) 35%, var(--hairline));
+  border-radius: var(--r-chip);
+  color: var(--success);
+  font-size: 12px;
+}
+
+.row .shortcut-state.muted {
+  border-color: var(--hairline);
+  color: var(--mute);
 }
 
 .about ul {

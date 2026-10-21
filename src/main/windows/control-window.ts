@@ -61,6 +61,16 @@ export class ControlWindow {
       void shell.openExternal(url).catch(() => undefined)
     })
 
+    // 直播场景误触 Ctrl/Cmd+W、Ctrl/Cmd+Q 或 Alt+F4 会直接退出；
+    // 关闭窗口只保留标题栏原生按钮，避免输入/切换窗口时误杀应用。
+    this.window.webContents.on('before-input-event', (event, input) => {
+      const key = input.key.toLowerCase()
+      if ((input.control || input.meta) && (key === 'w' || key === 'q')) {
+        event.preventDefault()
+      }
+      if (input.alt && key === 'f4') event.preventDefault()
+    })
+
     this.window.once('ready-to-show', () => this.window.show())
   }
 
