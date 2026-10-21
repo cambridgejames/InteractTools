@@ -175,7 +175,7 @@ async function clearAllData(): Promise<void> {
 
     <section class="card">
       <header>
-        <h2>游戏工具</h2>
+        <h2>互动工具</h2>
         <p>关闭后该工具不会出现在工具切换器，也不会接收弹幕命令。</p>
       </header>
 

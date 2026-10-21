@@ -25,7 +25,7 @@
 - `control.png`：控制台，含平台状态、骰子面板、事件流、历史记录。
 - `control-wheel.png`：转盘扇形标签、中心指针和命名预设列表。
 - `control-platforms.png`：平台设置页仍保留右侧实时弹幕栏。
-- `control-settings.png`：窗口位置、游戏工具开关、网络代理、弹幕栏模式、结果展示与 GitHub 入口。
+- `control-settings.png`：窗口位置、互动工具开关、网络代理、弹幕栏模式、结果展示与 GitHub 入口。
 - `control-settings-network.png`：网络代理模式与连通性测试入口。
 - `control-settings-select.png`：自定义深色下拉菜单展开态。
 - `control-settings-about.png`：关于区的 GitHub 仓库/问题反馈入口。
