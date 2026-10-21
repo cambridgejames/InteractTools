@@ -1,63 +1,115 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import AppIcon from '../components/AppIcon.vue'
-import { actions, selectDice, selectTool, state } from '../store'
+import { computed, ref } from 'vue'
+import type { ToolCatalogItem } from '@contracts/view'
 import { DICE_FACES } from '@contracts/dice'
+import AppIcon from '../components/AppIcon.vue'
+import ToggleSwitch from '../components/ToggleSwitch.vue'
+import { actions, selectDice, selectTool, state } from '../store'
+import { highlightText, rankTools, tokenizeQuery } from '../tool-search'
 
 const emit = defineEmits<{ navigate: [page: 'dashboard'] }>()
-const dice = computed(() => selectDice(state.snapshot))
-const wheel = computed(() => {
-  const tool = selectTool(state.snapshot, 'wheel')
-  return tool?.toolId === 'wheel' ? tool : null
-})
-const vote = computed(() => {
-  const tool = selectTool(state.snapshot, 'vote')
-  return tool?.toolId === 'vote' ? tool : null
-})
 
-function openTool(toolId: string): void {
-  actions.selectTool(toolId)
+const query = ref('')
+const tokens = computed(() => tokenizeQuery(query.value))
+const catalog = computed(() => state.snapshot?.toolCatalog ?? [])
+const rows = computed(() => rankTools(catalog.value, query.value))
+const dice = computed(() => selectDice(state.snapshot))
+const wheel = computed(() => selectTool(state.snapshot, 'wheel'))
+const vote = computed(() => selectTool(state.snapshot, 'vote'))
+
+const tagsByTool: Record<string, readonly string[]> = {
+  dice: DICE_FACES.map((faces) => 'D' + String(faces)),
+  wheel: ['主播手动', '无命令', '2–16 格'],
+  vote: ['弹幕互动', '2–8 项', '实时票数']
+}
+
+function historyOf(tool: ToolCatalogItem): string {
+  if (!tool.enabled) return '已关闭'
+  if (tool.toolId === 'dice') return dice.value ? dice.value.history.length + ' 条记录' : '加载中'
+  if (tool.toolId === 'wheel') return wheel.value?.toolId === 'wheel' ? wheel.value.history.length + ' 条记录' : '加载中'
+  if (tool.toolId === 'vote') return vote.value?.toolId === 'vote' ? vote.value.history.length + ' 条记录' : '加载中'
+  return ''
+}
+
+function openTool(tool: ToolCatalogItem): void {
+  if (!tool.enabled) return
+  actions.selectTool(tool.toolId)
   emit('navigate', 'dashboard')
+}
+
+async function toggleTool(tool: ToolCatalogItem, enabled: boolean): Promise<void> {
+  await actions.setToolEnabled(tool.toolId, enabled)
+}
+
+function clearSearch(): void {
+  query.value = ''
+}
+
+function highlight(text: string): ReturnType<typeof highlightText> {
+  return highlightText(text, tokens.value)
 }
 </script>
 
 <template>
   <div class="tools">
-    <section class="tool-card active">
+    <div class="tools-head">
+      <div class="search">
+        <AppIcon name="search" :size="15" />
+        <input
+          v-model="query"
+          type="search"
+          placeholder="搜索工具、玩法或关键词…"
+          aria-label="搜索互动工具"
+          spellcheck="false"
+        />
+        <button v-if="query.length > 0" class="clear" aria-label="清空搜索" @click="clearSearch">
+          <AppIcon name="close" :size="13" />
+        </button>
+        <span v-if="query.length > 0" class="search-count">{{ rows.length }} / {{ catalog.length }}</span>
+      </div>
+    </div>
+
+    <section
+      v-for="item in rows"
+      :key="item.tool.toolId"
+      class="tool-card"
+      :class="{ active: item.tool.enabled, off: !item.tool.enabled }"
+    >
       <header>
-        <span class="icon"><AppIcon name="dice" :size="20" /></span>
-        <span class="status">已启用</span>
+        <span class="icon"><AppIcon :name="item.tool.icon === 'dice' || item.tool.icon === 'wheel' || item.tool.icon === 'vote' ? item.tool.icon : 'tools'" :size="20" /></span>
+        <span class="card-controls">
+          <span class="status" :class="{ off: !item.tool.enabled }">{{ item.tool.enabled ? '已启用' : '已关闭' }}</span>
+          <ToggleSwitch
+            :model-value="item.tool.enabled"
+            :label="'启用' + item.tool.name"
+            @update:model-value="(enabled) => toggleTool(item.tool, enabled)"
+          />
+        </span>
       </header>
-      <h2>投骰子</h2>
-      <p>弹幕设置力度，倒计时结束后聚合，用真实刚体物理掷骰并在独立窗口播放结果。</p>
+      <h2>
+        <template v-for="(part, index) in highlight(item.tool.name)" :key="index">
+          <mark v-if="part.match">{{ part.text }}</mark>
+          <template v-else>{{ part.text }}</template>
+        </template>
+      </h2>
+      <p>
+        <template v-for="(part, index) in highlight(query.length === 0 ? item.tool.description : item.snippet)" :key="index">
+          <mark v-if="part.match">{{ part.text }}</mark>
+          <template v-else>{{ part.text }}</template>
+        </template>
+      </p>
       <div class="tags">
-        <span v-for="faces in DICE_FACES" :key="faces" class="tag">D{{ faces }}</span>
+        <span v-for="tag in tagsByTool[item.tool.toolId] ?? []" :key="tag" class="tag">{{ tag }}</span>
       </div>
       <footer>
-        <span class="meta">{{ dice ? dice.history.length + ' 条记录' : '加载中' }}</span>
-        <button class="open" @click="openTool('dice')">去控制台</button>
+        <span class="meta">{{ historyOf(item.tool) }}</span>
+        <button class="open" :disabled="!item.tool.enabled" @click="openTool(item.tool)">
+          {{ item.tool.enabled ? '去控制台' : '启用后使用' }}
+        </button>
       </footer>
     </section>
 
-    <section class="tool-card active">
-      <header>
-        <span class="icon"><AppIcon name="wheel" :size="20" /></span>
-        <span class="status">已启用</span>
-      </header>
-      <h2>转转盘</h2>
-      <p>主播手动旋转，不需要弹幕命令。适合抽奖、选品和现场做决定。</p>
-      <div class="tags">
-        <span class="tag">主播手动</span>
-        <span class="tag">无命令</span>
-        <span class="tag">2–16 格</span>
-      </div>
-      <footer>
-        <span class="meta">{{ wheel ? wheel.history.length + ' 条记录' : '加载中' }}</span>
-        <button class="open" @click="openTool('wheel')">去控制台</button>
-      </footer>
-    </section>
-
-    <section class="tool-card muted-card">
+    <section v-if="query.length === 0" class="tool-card muted-card">
       <header>
         <span class="icon"><AppIcon name="gift" :size="20" /></span>
         <span class="status soon">即将推出</span>
@@ -73,22 +125,10 @@ function openTool(toolId: string): void {
       </footer>
     </section>
 
-    <section class="tool-card active">
-      <header>
-        <span class="icon"><AppIcon name="vote" :size="20" /></span>
-        <span class="status">已启用</span>
-      </header>
-      <h2>弹幕投票</h2>
-      <p>观众发「投票 1」或选项文字，实时统计；倒计时结束弹出结果，同一观众以最后一票为准。</p>
-      <div class="tags">
-        <span class="tag">弹幕互动</span>
-        <span class="tag">2–8 项</span>
-        <span class="tag">实时票数</span>
-      </div>
-      <footer>
-        <span class="meta">{{ vote ? vote.history.length + ' 条记录' : '加载中' }}</span>
-        <button class="open" @click="openTool('vote')">去控制台</button>
-      </footer>
+    <section v-if="rows.length === 0" class="empty">
+      <AppIcon name="search" :size="26" />
+      <strong>没有匹配的互动工具</strong>
+      <span>换一个关键词，或清空搜索查看全部工具。</span>
     </section>
   </div>
 </template>
@@ -100,6 +140,63 @@ function openTool(toolId: string): void {
   gap: var(--s-5);
   max-width: var(--content-max);
   margin: 0 auto;
+}
+
+.tools-head {
+  grid-column: 1 / -1;
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  height: 40px;
+  padding: 0 var(--s-3);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-control);
+  background: var(--surface);
+  color: var(--mute);
+}
+
+.search:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--hairline));
+}
+
+.search input {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.search input::placeholder {
+  color: var(--faint);
+}
+
+.clear {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--mute);
+}
+
+.clear:hover {
+  background: var(--surface-hover);
+  color: var(--ink);
+}
+
+.search-count {
+  color: var(--faint);
+  font-family: var(--font-mono);
+  font-size: 10px;
 }
 
 .tool-card {
@@ -117,10 +214,21 @@ function openTool(toolId: string): void {
   border-color: color-mix(in srgb, var(--accent) 28%, var(--hairline));
 }
 
+.tool-card.off {
+  opacity: 0.62;
+}
+
 .tool-card header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.card-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
 }
 
 .icon {
@@ -140,6 +248,11 @@ function openTool(toolId: string): void {
   color: var(--accent);
   font-size: 10px;
   font-weight: 500;
+}
+
+.status.off {
+  background: var(--surface-active);
+  color: var(--faint);
 }
 
 .status.soon {
@@ -200,10 +313,42 @@ footer {
   font-size: 11px;
 }
 
-.open:hover {
+.open:hover:not(:disabled) {
   background: var(--surface-hover);
   border-color: var(--accent);
   color: var(--accent);
+}
+
+.open:disabled {
+  cursor: not-allowed;
+  color: var(--faint);
+}
+
+mark {
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--accent) 24%, transparent);
+  color: var(--ink);
+}
+
+.empty {
+  grid-column: 1 / -1;
+  display: grid;
+  justify-items: center;
+  gap: var(--s-2);
+  padding: 48px;
+  border: 1px dashed var(--hairline-strong);
+  border-radius: var(--r-card);
+  color: var(--faint);
+}
+
+.empty strong {
+  color: var(--body);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.empty span {
+  font-size: 11px;
 }
 
 .muted-card {

@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
-import type { BuiltinToolId, FeedMode } from '@contracts/config'
+import { computed, onMounted, ref } from 'vue'
+import type { FeedMode } from '@contracts/config'
 import type { NetworkTestResult, ProxyMode } from '@contracts/network'
 import type { WindowDisplayOption } from '@contracts/ipc'
 import AppIcon from '../components/AppIcon.vue'
 import AppSelect from '../components/AppSelect.vue'
-import ToggleSwitch from '../components/ToggleSwitch.vue'
 import { actions, showToast, state } from '../store'
 
 const GITHUB_URL = 'https://github.com/cambridgejames/InteractTools'
@@ -18,12 +17,6 @@ const proxyMode = ref<ProxyMode>('none')
 const proxyUrl = ref('')
 const testing = ref(false)
 const testResult = ref<NetworkTestResult | null>(null)
-const enabledTools = reactive<Record<BuiltinToolId, boolean>>({ dice: true, wheel: true, vote: true })
-const toolRows: Array<{ id: BuiltinToolId; name: string; description: string }> = [
-  { id: 'dice', name: '投骰子', description: '弹幕力度投掷，带真实物理' },
-  { id: 'wheel', name: '转转盘', description: '主播手动旋转抽奖' },
-  { id: 'vote', name: '弹幕投票', description: '观众投票与实时票数' }
-]
 const proxyOptions = [
   { value: 'none', label: '不使用代理' },
   { value: 'system', label: '使用系统代理' },
@@ -54,7 +47,6 @@ onMounted(async () => {
   selectedFeedMode.value = state.snapshot?.feedMode ?? 'full'
   proxyMode.value = state.snapshot?.network.proxyMode ?? 'none'
   proxyUrl.value = state.snapshot?.network.proxyUrl ?? ''
-  Object.assign(enabledTools, state.snapshot?.enabledTools ?? { dice: true, wheel: true, vote: true })
   try {
     displays.value = await window.api.windowDisplays()
   } catch (error) {
@@ -88,17 +80,6 @@ async function saveFeedMode(): Promise<void> {
     showToast('弹幕栏设置已更新', 'success')
   } catch (error) {
     showToast(error instanceof Error ? error.message : '更新弹幕栏失败', 'error')
-  }
-}
-
-async function toggleTool(id: BuiltinToolId, value: boolean): Promise<void> {
-  enabledTools[id] = value
-  try {
-    await window.api.setToolEnabled(id, value)
-    showToast(value ? '已启用「' + toolRows.find((row) => row.id === id)?.name + '」' : '已关闭该工具', 'success')
-  } catch (error) {
-    enabledTools[id] = !value
-    showToast(error instanceof Error ? error.message : '更新工具开关失败', 'error')
   }
 }
 
@@ -171,27 +152,6 @@ async function clearAllData(): Promise<void> {
           @update:model-value="chooseDisplay"
         />
       </label>
-    </section>
-
-    <section class="card">
-      <header>
-        <h2>互动工具</h2>
-        <p>关闭后该工具不会出现在工具切换器，也不会接收弹幕命令。</p>
-      </header>
-
-      <div class="tool-toggles">
-        <div v-for="row in toolRows" :key="row.id" class="tool-toggle">
-          <div>
-            <strong>{{ row.name }}</strong>
-            <span>{{ row.description }}</span>
-          </div>
-          <ToggleSwitch
-            :model-value="enabledTools[row.id]"
-            :label="'启用' + row.name"
-            @update:model-value="(value) => toggleTool(row.id, value)"
-          />
-        </div>
-      </div>
     </section>
 
     <section class="card">
@@ -346,42 +306,6 @@ header p {
   gap: 6px;
   color: var(--mute);
   font-size: 11px;
-}
-
-.tool-toggles {
-  display: flex;
-  flex-direction: column;
-}
-
-.tool-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--s-4);
-  padding: var(--s-3) 0;
-  border-top: 1px solid var(--hairline);
-}
-
-.tool-toggle:first-child {
-  border-top: 0;
-  padding-top: 0;
-}
-
-.tool-toggle div {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.tool-toggle strong {
-  color: var(--body);
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.tool-toggle span {
-  color: var(--mute);
-  font-size: 10px;
 }
 
 .text-input {

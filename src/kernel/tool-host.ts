@@ -5,7 +5,7 @@ import type { Logger } from '@contracts/log'
 import type { Presentation } from '@contracts/presentation'
 import type { Clock, RandomSource, TimerScope } from '@contracts/time'
 import type { InteractionTool, ToolAction } from '@contracts/tool'
-import type { ToolView } from '@contracts/view'
+import type { ToolCatalogItem, ToolView } from '@contracts/view'
 import type { SurfaceHost, TimerFactory } from './ports'
 
 interface ToolHostOptions {
@@ -36,7 +36,7 @@ export class ToolHost {
     }
   }
 
-  /** 设置页开关：停用中的工具不再接收命令，也不会出现在快照里。 */
+  /** 互动工具页开关：停用中的工具不再接收命令，但 manifest 仍保留在 catalog。 */
   async updateEnabled(
     config: AppConfig,
     enabled: Readonly<Record<string, boolean>>
@@ -55,6 +55,18 @@ export class ToolHost {
       const tool = this.active.get(id)
       return tool === undefined ? [] : [tool]
     })
+  }
+
+  catalog(enabled: Readonly<Record<string, boolean>>): readonly ToolCatalogItem[] {
+    return this.options.tools.map((tool) => ({
+      toolId: tool.manifest.id,
+      name: tool.manifest.name,
+      description: tool.manifest.description,
+      icon: tool.manifest.icon,
+      commands: [...tool.manifest.commands],
+      keywords: [...tool.manifest.keywords],
+      enabled: enabled[tool.manifest.id] === true
+    }))
   }
 
   get(id: string): InteractionTool | undefined {

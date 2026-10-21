@@ -13,7 +13,7 @@
 
 ```
 src/tools/example/
-  manifest.ts       # id、名称、描述、版本、icon、commands
+  manifest.ts       # id、名称、描述、版本、icon、commands、keywords
   config.ts         # 配置类型 + zod schema + 默认值（也可放 contracts）
   domain/           # 纯函数：解析、聚合、状态迁移
   tool.ts           # 实现 InteractionTool
@@ -84,7 +84,7 @@ export class ExampleTool implements InteractionTool {
 
 **没命令**（转盘）：
 
-- `manifest.commands = []`。
+- `manifest.commands = []`；同时补 `keywords`，供互动工具页搜索。
 - `handleChat` 永远返回 `false`。
 - 只通过 `handleAction` 由主播/控制台触发。
 - 不要为了「统一」硬塞一个假命令；工具框架本来就支持两种形态。

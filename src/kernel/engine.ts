@@ -98,6 +98,7 @@ export class Engine {
       revision: this.revision,
       startedAt: this.startedAt,
       enabledTools: this.requireConfig().enabledTools,
+      toolCatalog: this.requireToolHost().catalog(this.requireConfig().enabledTools),
       platforms: this.requirePlatformHost().list(),
       tools: this.requireToolHost().views(),
       feed: [...this.feed],

@@ -11,6 +11,22 @@ export async function runSmoke(application: Application): Promise<void> {
   await application.controlWindow.capture(join(output, 'control.png'))
 
   await application.controlWindow.browserWindow.webContents.executeJavaScript(
+    "document.querySelectorAll('.nav-item')[1]?.click()"
+  )
+  await delay(250)
+  await application.controlWindow.capture(join(output, 'control-tools.png'))
+  await application.controlWindow.browserWindow.webContents.executeJavaScript(
+    "document.querySelector('.tools-head .search input')?.focus()"
+  )
+  application.controlWindow.browserWindow.webContents.insertText('物理')
+  await delay(250)
+  await application.controlWindow.capture(join(output, 'control-tool-search.png'))
+  await application.controlWindow.browserWindow.webContents.executeJavaScript(
+    "const input = document.querySelector('.tools-head .search input'); if (input) { input.value = ''; input.dispatchEvent(new Event('input', { bubbles: true })); }"
+  )
+  await delay(150)
+
+  await application.controlWindow.browserWindow.webContents.executeJavaScript(
     "document.querySelectorAll('.nav-item')[3]?.click()"
   )
   await delay(250)

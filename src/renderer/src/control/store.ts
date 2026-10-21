@@ -119,6 +119,11 @@ export const actions = {
     await run(() => window.api.toolAction(toolId, action))
   },
 
+  async setToolEnabled(toolId: string, enabled: boolean): Promise<void> {
+    if (toolId !== 'dice' && toolId !== 'wheel' && toolId !== 'vote') return
+    await run(() => window.api.setToolEnabled(toolId, enabled))
+  },
+
   async updateToolConfig(
     toolId: string,
     patch: Readonly<Record<string, unknown>>

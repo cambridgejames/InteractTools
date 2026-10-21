@@ -136,6 +136,8 @@ export interface ToolManifest {
   readonly version: string;
   /** 供 UI 展示与冲突检查；真正的解析在工具内部。 */
   readonly commands: readonly string[];
+  /** 搜索关键词：别名、玩法、场景，不参与命令解析。 */
+  readonly keywords: readonly string[];
 }
 
 export interface ToolContext {
@@ -167,7 +169,7 @@ export interface InteractionTool {
 
 工具不 import 其他工具；需要共享时把通用能力放进 contracts 或 kernel。工具不直接操作窗口，只调用 `present()`。
 
-`ToolHost` 按 `enabledTools` 过滤：关闭的工具不激活、不接收 CommandBus 消息、不出现在快照；设置页切换时调用 `updateEnabled`，会对该工具执行 `deactivate` 并清理它的定时器/命令提示。重新打开会重新激活并加载原配置与历史。
+`ToolHost` 按 `enabledTools` 过滤：关闭的工具不激活、不接收 CommandBus 消息、不出现在快照；互动工具页切换时调用 `updateEnabled`，会对该工具执行 `deactivate` 并清理它的定时器/命令提示。重新打开会重新激活并加载原配置与历史。
 
 ### 4.4 呈现
 
@@ -208,7 +210,7 @@ export type EngineEvent =
   | { readonly type: 'presentation'; readonly presentation: Presentation };
 ```
 
-控制台通过 `snapshot` 渲染全部状态，通过 `feed` 追加时间线。当前快照在状态变化时即时广播，没有 50ms 合并；feed 使用增量事件与虚拟滚动降低渲染压力。ResultOverlay 只接收最终 result，不接收逐帧动画。
+`EngineSnapshot` 同时带 `enabledTools` 和 `toolCatalog`：前者给 ToolHost 过滤，后者保留全部工具 manifest 与启用状态，让互动工具页在工具关闭时仍能展示卡片和开关。控制台通过 `snapshot` 渲染全部状态，通过 `feed` 追加时间线。当前快照在状态变化时即时广播，没有 50ms 合并；feed 使用增量事件与虚拟滚动降低渲染压力。ResultOverlay 只接收最终 result，不接收逐帧动画。
 
 ## 5. 运行时对象图
 
@@ -313,6 +315,7 @@ idle ──start──▶ collecting ──timeout──▶ rolling ──frames
 - 静止判定：线速度 < 0.08、角速度 < 0.12，连续 12 步，且存在法线接近竖直的面；另外，超过 1 秒位置位移 < 0.02、姿态变化 < 0.15rad 时也判停（专门覆盖 d10 等没有大平面的骰子）。
 - 读数：d4 取贴地面（法线 y 最小），其余取朝上面（法线 y 最大）。
 - 未停稳：低速卡在棱上时最多轻推 3 次；仍失败则取最近面，`settled: false` 写进结果，UI 明确标注。
+- 启动或主进程未捕获异常写入 `userData/startup-error.log`，然后自动退出；不使用阻塞式 `dialog.showErrorBox`。
 
 物理是纯函数：`simulate({ faces, power, seed })` 不读时钟、不读配置、不写日志。相同输入必须得到相同输出；单测固定 seed 断言点数和总帧数。
 

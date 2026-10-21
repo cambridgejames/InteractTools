@@ -92,6 +92,16 @@ export interface VoteToolView extends BaseToolView {
 
 export type ToolView = DiceToolView | WheelToolView | VoteToolView
 
+export interface ToolCatalogItem {
+  readonly toolId: string
+  readonly name: string
+  readonly description: string
+  readonly icon: string
+  readonly commands: readonly string[]
+  readonly keywords: readonly string[]
+  readonly enabled: boolean
+}
+
 export interface WindowView {
   readonly display: string
 }
@@ -100,6 +110,7 @@ export interface EngineSnapshot {
   readonly revision: number
   readonly startedAt: number
   readonly enabledTools: ToolEnablement
+  readonly toolCatalog: readonly ToolCatalogItem[]
   readonly platforms: readonly PlatformView[]
   readonly tools: readonly ToolView[]
   readonly feed: readonly FeedItem[]

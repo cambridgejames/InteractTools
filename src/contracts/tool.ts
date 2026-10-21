@@ -16,6 +16,8 @@ export interface ToolManifest {
   readonly icon: string
   /** 供 UI 展示与冲突检查；无弹幕命令的工具留空数组。 */
   readonly commands: readonly string[]
+  /** 搜索用关键词：玩法、别名、面向场景，不参与命令解析。 */
+  readonly keywords: readonly string[]
 }
 
 export interface ToolAction {

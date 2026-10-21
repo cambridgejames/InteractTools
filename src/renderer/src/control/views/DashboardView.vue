@@ -33,7 +33,7 @@ const panel = computed(() => (active.value === null ? null : TOOL_PANELS[active.
         <span>
           {{
             tools.length === 0
-              ? '到「设置 → 互动工具」重新打开；弹幕和平台连接不受影响。'
+              ? '到「互动工具」页重新打开；弹幕和平台连接不受影响。'
               : '在 renderer/src/control/tool-panels.ts 注册组件，框架和结果窗不用改。'
           }}
         </span>

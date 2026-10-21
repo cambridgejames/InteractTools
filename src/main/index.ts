@@ -1,4 +1,5 @@
-import { app, dialog } from 'electron'
+import { app } from 'electron'
+import { writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { createApplication, type Application } from './composition'
 import { runSmoke } from './smoke'
@@ -19,9 +20,7 @@ if (!hasLock) {
   })
 
   app.whenReady().then(start).catch((error: unknown) => {
-    const message = error instanceof Error ? error.message : String(error)
-    dialog.showErrorBox('互动工坊启动失败', message)
-    app.quit()
+    void reportFatal(error)
   })
 
   app.on('window-all-closed', () => {
@@ -34,6 +33,26 @@ if (!hasLock) {
     quitting = true
     void application.dispose().finally(() => app.quit())
   })
+}
+
+process.on('uncaughtException', (error) => {
+  console.error('[main-uncaught]', error)
+  void reportFatal(error)
+})
+
+process.on('unhandledRejection', (reason) => {
+  console.error('[main-rejection]', reason)
+})
+
+async function reportFatal(error: unknown): Promise<void> {
+  const message = error instanceof Error ? error.stack ?? error.message : String(error)
+  console.error('[startup-error]', message)
+  try {
+    await writeFile(join(app.getPath('userData'), 'startup-error.log'), message + '\n', 'utf8')
+  } catch {
+    // 日志失败时也不能再弹阻塞对话框；直接退出。
+  }
+  app.quit()
 }
 
 async function start(): Promise<void> {
