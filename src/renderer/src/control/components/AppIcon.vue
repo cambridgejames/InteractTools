@@ -24,6 +24,7 @@ type IconName =
   | 'users'
   | 'external'
   | 'search'
+  | 'globe'
 
 const props = withDefaults(defineProps<{ name: IconName; size?: number; strokeWidth?: number }>(), {
   size: 18,
@@ -54,7 +55,8 @@ const paths: Record<IconName, string> = {
   gift: 'M4 10h16v10H4zM2 6h20v4H2zM12 6v14M8 6a2 2 0 1 1 4 0M16 6a2 2 0 1 0-4 0',
   users: 'M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2 20c0-3 2.7-5 6-5s6 2 6 5M17 11a3 3 0 1 0 0-6M16 15c3 0 5 2 5 5',
   external: 'M14 4h6v6M20 4l-9 9M18 14v5H5V6h5',
-  search: 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM16 16l4 4'
+  search: 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM16 16l4 4',
+  globe: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18'
 }
 </script>
 

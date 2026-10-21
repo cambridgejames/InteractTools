@@ -7,9 +7,21 @@ import { actions, connectedCount, platformPhaseLabel, state } from '../store'
 defineProps<{ title: string; subtitle: string }>()
 
 const connected = computed(() => connectedCount(state.snapshot))
-const mock = computed(() => state.snapshot?.platforms.find((item) => item.descriptor.id === 'mock'))
-const bilibili = computed(() => state.snapshot?.platforms.find((item) => item.descriptor.id === 'bilibili'))
-const douyin = computed(() => state.snapshot?.platforms.find((item) => item.descriptor.id === 'douyin'))
+const activePlatforms = computed(() =>
+  (state.snapshot?.platforms ?? []).filter(
+    (item) =>
+      item.status.phase === 'connected' ||
+      item.status.phase === 'connecting' ||
+      item.status.phase === 'reconnecting'
+  )
+)
+
+function platformLabel(id: string): string {
+  if (id === 'bilibili') return 'B站'
+  if (id === 'douyin') return '抖音'
+  if (id === 'mock') return '模拟'
+  return '平台'
+}
 </script>
 
 <template>
@@ -28,19 +40,10 @@ const douyin = computed(() => state.snapshot?.platforms.find((item) => item.desc
     <div class="actions">
       <div class="pills">
         <StatusPill
-          v-if="mock"
-          :phase="mock.status.phase"
-          :label="'模拟 · ' + platformPhaseLabel(mock.status.phase)"
-        />
-        <StatusPill
-          v-if="bilibili"
-          :phase="bilibili.status.phase"
-          :label="'B站 · ' + platformPhaseLabel(bilibili.status.phase)"
-        />
-        <StatusPill
-          v-if="douyin"
-          :phase="douyin.status.phase"
-          :label="'抖音 · ' + platformPhaseLabel(douyin.status.phase)"
+          v-for="platform in activePlatforms"
+          :key="platform.descriptor.id"
+          :phase="platform.status.phase"
+          :label="platformLabel(platform.descriptor.id) + ' · ' + platformPhaseLabel(platform.status.phase)"
         />
       </div>
       <button class="preview" @click="actions.previewActiveTool()">

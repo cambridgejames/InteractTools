@@ -5,15 +5,14 @@ import { actions } from '../store'
 
 const isMac = window.api.platform === 'darwin'
 
-type Page = 'dashboard' | 'tools' | 'platforms' | 'settings'
+type Page = 'dashboard' | 'tools' | 'settings'
 
 defineProps<{ page: Page }>()
 const emit = defineEmits<{ navigate: [page: Page] }>()
 
-const nav: Array<{ id: Page; label: string; icon: 'dashboard' | 'tools' | 'platforms' | 'settings' }> = [
+const nav: Array<{ id: Page; label: string; icon: 'dashboard' | 'tools' | 'settings' }> = [
   { id: 'dashboard', label: '控制台', icon: 'dashboard' },
   { id: 'tools', label: '互动工具', icon: 'tools' },
-  { id: 'platforms', label: '平台连接', icon: 'platforms' },
   { id: 'settings', label: '设置', icon: 'settings' }
 ]
 </script>

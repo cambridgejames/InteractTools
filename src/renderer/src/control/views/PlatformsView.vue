@@ -18,6 +18,7 @@ const douyinEnabled = ref(false)
 const mockEnabled = ref(false)
 const botsEnabled = ref(true)
 const botsInterval = ref(3)
+const userCount = ref(8)
 let biliTimer: ReturnType<typeof setTimeout> | null = null
 let douyinTimer: ReturnType<typeof setTimeout> | null = null
 let mockTimer: ReturnType<typeof setTimeout> | null = null
@@ -56,13 +57,14 @@ watch(
     if (typeof config.enabled === 'boolean') mockEnabled.value = config.enabled
     if (typeof config.botsEnabled === 'boolean') botsEnabled.value = config.botsEnabled
     if (typeof config.botsIntervalSeconds === 'number') botsInterval.value = config.botsIntervalSeconds
+    if (typeof config.userCount === 'number') userCount.value = config.userCount
   },
   { immediate: true }
 )
 
 watch(roomId, () => scheduleBiliSave())
 watch([douyinRoomId, douyinSigner], () => scheduleDouyinSave())
-watch(botsInterval, () => scheduleMockSave())
+watch([botsInterval, userCount], () => scheduleMockSave())
 
 function scheduleBiliSave(): void {
   if (biliTimer !== null) clearTimeout(biliTimer)
@@ -121,8 +123,14 @@ async function persistMock(): Promise<void> {
   const raw = Number(botsInterval.value)
   const next = Number.isFinite(raw) ? Math.min(60, Math.max(1, Math.round(raw))) : 3
   botsInterval.value = next
-  if (next === config.botsIntervalSeconds) return
-  await actions.updatePlatformConfig('mock', { botsIntervalSeconds: next })
+  const rawUsers = Number(userCount.value)
+  const nextUsers = Number.isFinite(rawUsers) ? Math.min(100, Math.max(1, Math.round(rawUsers))) : 8
+  userCount.value = nextUsers
+  if (next === config.botsIntervalSeconds && nextUsers === config.userCount) return
+  await actions.updatePlatformConfig('mock', {
+    botsIntervalSeconds: next,
+    userCount: nextUsers
+  })
 }
 
 async function setBiliEnabled(next: boolean): Promise<void> {
@@ -232,7 +240,14 @@ async function connectMock(): Promise<void> {
             <p>匿名只读弹幕 · 不登录、不发消息</p>
           </div>
         </div>
-        <StatusPill v-if="bilibili" :phase="bilibili.status.phase" />
+        <div class="card-controls">
+          <StatusPill v-if="bilibili" :phase="bilibili.status.phase" />
+          <ToggleSwitch
+            v-model="biliEnabled"
+            label="启用 B站弹幕源"
+            @update:modelValue="setBiliEnabled"
+          />
+        </div>
       </header>
 
       <p v-if="bilibili?.status.detail" class="detail" :class="bilibili.status.phase">
@@ -244,17 +259,6 @@ async function connectMock(): Promise<void> {
           <span>直播间房间号</span>
           <input v-model="roomId" placeholder="房间号或直播间 URL" maxlength="256" />
         </label>
-        <div class="switch-row">
-          <div>
-            <strong>启用 B站弹幕源</strong>
-            <span>关闭即断开，不再接收弹幕</span>
-          </div>
-          <ToggleSwitch
-            v-model="biliEnabled"
-            label="启用 B站弹幕源"
-            @update:modelValue="setBiliEnabled"
-          />
-        </div>
       </div>
 
       <div class="capabilities">
@@ -286,7 +290,14 @@ async function connectMock(): Promise<void> {
             <p>匿名只读弹幕 · 不登录、不发送内容</p>
           </div>
         </div>
-        <StatusPill v-if="douyin" :phase="douyin.status.phase" />
+        <div class="card-controls">
+          <StatusPill v-if="douyin" :phase="douyin.status.phase" />
+          <ToggleSwitch
+            v-model="douyinEnabled"
+            label="启用抖音弹幕源"
+            @update:modelValue="setDouyinEnabled"
+          />
+        </div>
       </header>
 
       <p v-if="douyin?.status.detail" class="detail" :class="douyin.status.phase">
@@ -302,17 +313,6 @@ async function connectMock(): Promise<void> {
           <span>签名服务地址</span>
           <input v-model="douyinSigner" placeholder="http://127.0.0.1:18080" maxlength="512" spellcheck="false" />
         </label>
-        <div class="switch-row">
-          <div>
-            <strong>启用抖音弹幕源</strong>
-            <span>只读接收弹幕、礼物和进场</span>
-          </div>
-          <ToggleSwitch
-            v-model="douyinEnabled"
-            label="启用抖音弹幕源"
-            @update:modelValue="setDouyinEnabled"
-          />
-        </div>
       </div>
 
       <p class="signer-note">
@@ -345,26 +345,22 @@ async function connectMock(): Promise<void> {
             <p>离线演示 · 自动观众会发送力度指令</p>
           </div>
         </div>
-        <StatusPill v-if="mock" :phase="mock.status.phase" />
+        <div class="card-controls">
+          <StatusPill v-if="mock" :phase="mock.status.phase" />
+          <ToggleSwitch
+            v-model="mockEnabled"
+            label="启用本地模拟源"
+            @update:modelValue="setMockEnabled"
+          />
+        </div>
       </header>
 
       <p v-if="mock?.status.detail" class="detail" :class="mock.status.phase">
         {{ mock.status.detail }}
       </p>
 
-      <div class="form">
+      <div class="form mock-form">
         <div class="switch-stack">
-          <div class="switch-row">
-            <div>
-              <strong>启用模拟源</strong>
-              <span>关闭即断开本地模拟</span>
-            </div>
-            <ToggleSwitch
-              v-model="mockEnabled"
-              label="启用本地模拟源"
-              @update:modelValue="setMockEnabled"
-            />
-          </div>
           <div class="switch-row">
             <div>
               <strong>自动观众</strong>
@@ -377,13 +373,22 @@ async function connectMock(): Promise<void> {
             />
           </div>
         </div>
-        <label class="field compact">
-          <span>发送间隔</span>
-          <div class="unit">
-            <input v-model.number="botsInterval" type="number" min="1" max="60" />
-            <em>秒</em>
-          </div>
-        </label>
+        <div class="mock-limits">
+          <label class="field compact">
+            <span>用户数量</span>
+            <div class="unit">
+              <input v-model.number="userCount" type="number" min="1" max="100" />
+              <em>人</em>
+            </div>
+          </label>
+          <label class="field compact">
+            <span>发送间隔</span>
+            <div class="unit">
+              <input v-model.number="botsInterval" type="number" min="1" max="60" />
+              <em>秒</em>
+            </div>
+          </label>
+        </div>
       </div>
 
       <div class="capabilities">
@@ -410,11 +415,14 @@ async function connectMock(): Promise<void> {
 
 <style scoped>
 .platforms {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--s-5);
+  display: flex;
+  flex-direction: column;
   max-width: var(--content-max);
   margin: 0 auto;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-card);
+  background: var(--surface);
+  overflow: hidden;
 }
 
 .card {
@@ -422,9 +430,18 @@ async function connectMock(): Promise<void> {
   flex-direction: column;
   gap: var(--s-4);
   padding: var(--s-5);
-  border: 1px solid var(--hairline);
-  border-radius: var(--r-card);
-  background: var(--surface);
+  border-bottom: 1px solid var(--hairline);
+  background: transparent;
+}
+
+.card:last-child {
+  border-bottom: 0;
+}
+
+.card-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
 }
 
 header {
@@ -504,6 +521,16 @@ h2 {
 .form {
   display: flex;
   align-items: flex-end;
+  gap: var(--s-4);
+}
+
+.mock-form {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.mock-limits {
+  display: flex;
   gap: var(--s-4);
 }
 
@@ -673,9 +700,4 @@ footer {
   background: color-mix(in srgb, var(--danger) 10%, transparent);
 }
 
-@media (min-width: 1500px) {
-  .platforms {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
 </style>

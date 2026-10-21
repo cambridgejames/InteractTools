@@ -102,7 +102,7 @@ this.context.emit({ type: 'chat', message });
 
 ## 7. 注册
 
-在 `main/composition.ts` 把 factory 放进 `PlatformHost` 的列表。UI 的平台页从 `EngineSnapshot.platforms` 自动渲染，不需要为每个平台写页面。
+在 `main/composition.ts` 把 factory 放进 `PlatformHost` 的列表。设置页「平台连接」从 `EngineSnapshot.platforms` 渲染平台行；新增平台仍需要在 `PlatformsView` 补一行配置表单。
 
 ## 8. 检查清单
 

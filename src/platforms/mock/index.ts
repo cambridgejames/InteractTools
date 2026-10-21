@@ -72,6 +72,13 @@ export class MockAdapter implements PlatformAdapter {
     this.context.emit({ type: 'chat', message })
   }
 
+  private pickName(): string {
+    const names = this.config?.botNames ?? []
+    const count = this.config?.userCount ?? names.length
+    const index = Math.floor(Math.random() * Math.max(1, count))
+    return names[index] ?? '观众 ' + String(index + 1)
+  }
+
   private pickHint(): string | null {
     if (this.hints.length === 0) return null
     const hint = this.hints[Math.floor(Math.random() * this.hints.length)]
@@ -87,7 +94,7 @@ export class MockAdapter implements PlatformAdapter {
     this.botTimer = setTimeout(() => {
       if (this.disposed || this.config === null) return
 
-      const name = this.config.botNames[Math.floor(Math.random() * this.config.botNames.length)]
+      const name = this.pickName()
       if (name !== undefined) {
         const hint = this.pickHint()
         const roll = Math.random()

@@ -329,10 +329,12 @@ idle ──start──▶ collecting ──timeout──▶ rolling ──frames
   "enabledTools": { "dice": true, "wheel": true, "vote": true },
   "platforms": {
     "bilibili": { "enabled": false, "roomId": "" },
+    "douyin": { "enabled": false, "roomId": "", "signerUrl": "http://127.0.0.1:18080" },
     "mock": {
       "enabled": true,
       "botsEnabled": true,
       "botsIntervalSeconds": 3,
+      "userCount": 8,
       "botNames": ["小满", "阿七"]
     }
   },

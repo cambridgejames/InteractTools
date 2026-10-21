@@ -47,6 +47,7 @@ export const mockConfigSchema = z
     enabled: z.boolean(),
     botsEnabled: z.boolean(),
     botsIntervalSeconds: z.number().min(1).max(60),
+    userCount: z.number().int().min(1).max(100).default(8),
     botNames: z.array(z.string().trim().min(1).max(24)).min(1).max(50)
   })
   .strict()
@@ -110,6 +111,7 @@ export const DEFAULT_APP_CONFIG: AppConfig = {
       enabled: true,
       botsEnabled: true,
       botsIntervalSeconds: 3,
+      userCount: 8,
       botNames: ['小满', '阿七', '团子', '空格', '汽水', '晚风', '白露', '十一']
     }
   },

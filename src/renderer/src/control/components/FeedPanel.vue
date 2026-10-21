@@ -97,12 +97,7 @@ function feedClass(item: FeedItem): string {
   return 'feed-item kind-' + item.kind
 }
 
-function platformLabel(item: FeedItem): string {
-  if (item.platform === 'bilibili') return 'B站'
-  if (item.platform === 'douyin') return '抖音'
-  if (item.platform === 'mock') return '模拟'
-  return '系统'
-}
+
 </script>
 
 <template>
@@ -126,7 +121,7 @@ function platformLabel(item: FeedItem): string {
       <div v-if="(state.snapshot?.feed.length ?? 0) === 0" class="empty">
         <AppIcon name="platforms" :size="28" />
         <strong>还没有弹幕</strong>
-        <span>连接本地模拟或 B站，消息会实时出现在这里。</span>
+        <span>连接平台后，消息会实时出现在这里。</span>
       </div>
 
       <div :style="{ height: topPad + 'px' }" />
@@ -140,7 +135,6 @@ function platformLabel(item: FeedItem): string {
         <div class="content">
           <div class="meta">
             <strong>{{ item.userName }}</strong>
-            <span class="tag">{{ platformLabel(item) }}</span>
             <time class="mono">{{ formatTime(item.at) }}</time>
           </div>
           <p>{{ item.text }}</p>

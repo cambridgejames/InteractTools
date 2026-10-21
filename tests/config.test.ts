@@ -26,6 +26,21 @@ describe('app layout config', () => {
     if (parsed.success) expect(parsed.data.network.proxyMode).toBe('none')
   })
 
+  it('defaults mock users and rejects an out-of-range count', () => {
+    const parsed = appConfigSchema.safeParse(DEFAULT_APP_CONFIG)
+    expect(parsed.success).toBe(true)
+    if (parsed.success) expect(parsed.data.platforms.mock.userCount).toBe(8)
+
+    const invalid = appConfigSchema.safeParse({
+      ...DEFAULT_APP_CONFIG,
+      platforms: {
+        ...DEFAULT_APP_CONFIG.platforms,
+        mock: { ...DEFAULT_APP_CONFIG.platforms.mock, userCount: 0 }
+      }
+    })
+    expect(invalid.success).toBe(false)
+  })
+
   it('defaults all game tools to enabled', () => {
     const { network: _network, enabledTools: _enabledTools, ...legacy } = DEFAULT_APP_CONFIG
     const parsed = appConfigSchema.safeParse(legacy)

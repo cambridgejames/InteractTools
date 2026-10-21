@@ -189,7 +189,7 @@
     schemaVersion: 1
     platforms:
       bilibili: enabled, roomId
-      mock: enabled, botsEnabled, botsIntervalSeconds, botNames
+      mock: enabled, botsEnabled, botsIntervalSeconds, userCount, botNames
     tools:
       dice: faces, countdownSeconds, aggregation, fallbackPower, commandAliases
       wheel: segments, spinDurationSeconds
@@ -683,7 +683,7 @@ userData 默认是 %APPDATA%/interact-tools；--smoke 时切到 artifacts/smoke/
 
 测试：
 
-- 14 个测试文件，59 个用例通过，1 个 B站真连用例默认跳过。
+- 14 个测试文件，60 个用例通过，1 个 B站真连用例默认跳过。
 - 覆盖骰子 domain、几何、物理、工具、轮盘工具、投票 domain/工具、命令提示总线、MockAdapter、B站协议、WBI。
 - 真连测试：LIVE_BILIBILI=1 npx vitest run tests/bilibili-live.test.ts；最近房间 6 收到 6 条。
 
@@ -702,7 +702,7 @@ smoke 流程：
 
 - 控制台首屏截图。
 - 转盘面板截图。
-- 平台页截图。
+- 设置页平台连接子页截图。
 - 投票面板、投票中、投票结果截图。
 - 骰子面板投掷中、骰子结果截图。
 - 转盘旋转中、转盘结果截图。
