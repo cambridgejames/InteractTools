@@ -19,6 +19,9 @@ const mockEnabled = ref(false)
 const botsEnabled = ref(true)
 const botsInterval = ref(3)
 const userCount = ref(8)
+const anyEnabled = computed(
+  () => state.snapshot === null || biliEnabled.value || douyinEnabled.value || mockEnabled.value
+)
 let biliTimer: ReturnType<typeof setTimeout> | null = null
 let douyinTimer: ReturnType<typeof setTimeout> | null = null
 let mockTimer: ReturnType<typeof setTimeout> | null = null
@@ -197,6 +200,14 @@ async function setBotsEnabled(next: boolean): Promise<void> {
 
 <template>
   <div class="platforms">
+    <div v-if="!anyEnabled" class="platform-hint">
+      <div>
+        <strong>当前没有启用平台</strong>
+        <span>填写房间号并打开开关，或先用本地模拟跑通弹幕链路。</span>
+      </div>
+      <button class="hint-action" type="button" @click="setMockEnabled(true)">启用本地模拟</button>
+    </div>
+
     <section class="card">
       <header>
         <div class="platform-title">
@@ -227,7 +238,7 @@ async function setBotsEnabled(next: boolean): Promise<void> {
         </label>
       </div>
 
-
+      <p class="platform-note">填写房间号后打开开关；关闭只断开连接，不清空房间号。</p>
     </section>
 
     <section class="card">
@@ -334,12 +345,56 @@ async function setBotsEnabled(next: boolean): Promise<void> {
 <style scoped>
 .platforms {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   align-items: start;
   gap: var(--s-4);
   width: 100%;
   max-width: var(--content-max);
   margin: 0 auto;
+}
+
+.platform-hint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding: var(--s-3) var(--s-4);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-card);
+  background: var(--canvas-elevated);
+}
+
+.platform-hint div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.platform-hint strong {
+  color: var(--body);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.platform-hint span {
+  color: var(--mute);
+  font-size: 12px;
+}
+
+.hint-action {
+  flex: none;
+  height: 32px;
+  padding: 0 var(--s-3);
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--body);
+  font-size: 13px;
+}
+
+.hint-action:hover {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .card {
@@ -403,11 +458,12 @@ h2 {
   font-size: 12px;
 }
 
+.platform-note,
 .signer-note {
   margin: 0;
   color: var(--faint);
   font-size: 12px;
-  line-height: 16px;
+  line-height: 18px;
 }
 
 .detail {
@@ -551,17 +607,4 @@ h2 {
   accent-color: var(--accent);
 }
 
-.card:last-child {
-  grid-column: 1 / -1;
-}
-
-@media (max-width: 1100px) {
-  .platforms {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .card:last-child {
-    grid-column: auto;
-  }
-}
 </style>
