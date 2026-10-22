@@ -41,7 +41,8 @@
     "package:win": "npm run build && electron-builder --win --x64 && electron-builder --win --arm64",
     "package:mac": "npm run build && electron-builder --mac --x64 && electron-builder --mac --arm64",
     "package:linux": "npm run build && electron-builder --linux --x64 && electron-builder --linux --arm64",
-    "check:design": "node scripts/check-design-tokens.mjs"
+    "check:design": "node scripts/check-design-tokens.mjs",
+    "release:notes": "node scripts/release-notes.mjs"
   },
   "dependencies": {
     "archiver": "^7.0.1",

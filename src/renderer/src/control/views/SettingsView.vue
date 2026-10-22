@@ -9,14 +9,7 @@ import ToggleSwitch from '../components/ToggleSwitch.vue'
 import PlatformsView from './PlatformsView.vue'
 import { actions, showToast, state } from '../store'
 
-const changelogEntries = [
-  '浅色 / 跟随系统主题，原生窗口控件同步换色',
-  '日志按天 + 20MB 滚动，设置页可收集日志',
-  '首次启动 spotlight 操作指引，可在关于页重放',
-  '代理支持用户名、密码、直连域名和跳过 SSL 校验',
-  '连通性测试按平台显示 B站 / 抖音状态与延迟',
-  '转盘 / 投票默认预设与更安全的默认选项'
-]
+const changelogEntries = ref<string[]>([])
 
 const GITHUB_URL = 'https://github.com/cambridgejames/InteractTools'
 const GITHUB_ISSUES_URL = GITHUB_URL + '/issues'
@@ -185,6 +178,11 @@ onMounted(async () => {
   proxyBypass.value = state.snapshot?.network.proxyBypass ?? ''
   allowInsecureTls.value = state.snapshot?.network.allowInsecureTls ?? false
   logLevel.value = state.snapshot?.logging.level ?? 'info'
+  try {
+    changelogEntries.value = [...(await window.api.getChangelog())]
+  } catch {
+    changelogEntries.value = []
+  }
   try {
     displays.value = await window.api.windowDisplays()
   } catch (error) {
@@ -710,7 +708,7 @@ async function clearAllData(): Promise<void> {
           </div>
           <button class="secondary" @click="actions.openTour">重新播放</button>
         </div>
-        <div class="about-changelog">
+        <div v-if="changelogEntries.length > 0" class="about-changelog">
           <strong>最近更新</strong>
           <ul>
             <li v-for="entry in changelogEntries" :key="entry">{{ entry }}</li>

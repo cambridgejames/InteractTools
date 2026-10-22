@@ -65,6 +65,12 @@
 - 工具实现统一 `InteractionTool`；只读平台事件，不反向发弹幕/礼物/关注。
 - 物理结果是唯一事实源；UI 只回放 presentation。
 
+## 发布
+
+标签 `v*` 触发 `.github/workflows/release.yml`：guard 校验 tag 在 main/master 且与 `package.json` 一致 → 三平台构建 → `scripts/release-notes.mjs` 从 `CHANGELOG.md` 生成 Release body → `action-gh-release`。
+
+发布说明不猜提交内容，也不自动改 CHANGELOG；条目由人写进 `[Unreleased]`，CI 只负责把上次 tag 之后的条目带到 Release。
+
 ## 网络、日志、主题
 
 - 网络：直连/系统/自定义代理，统一 `NetworkProxyInfo`；平台请求与 WSS 都走它。详见 [design/network.md](design/network.md)。

@@ -1,5 +1,5 @@
 import { app, dialog, ipcMain, nativeTheme, shell } from 'electron'
-import { rm } from 'node:fs/promises'
+import { readFile, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { z } from 'zod'
 import { IPC } from '@contracts/ipc'
@@ -87,6 +87,20 @@ export function registerIpc(
     const file = await logger.collect()
     shell.showItemInFolder(file)
     return file
+  })
+
+  ipcMain.handle(IPC.changelog, async () => {
+    try {
+      const text = await readFile(join(app.getAppPath(), 'CHANGELOG.md'), 'utf8')
+      const section = text.split('## [Unreleased]')[1]?.split('## [')[0] ?? ''
+      return section
+        .split('\n')
+        .filter((line) => line.startsWith('- '))
+        .slice(0, 8)
+        .map((line) => line.slice(2))
+    } catch {
+      return []
+    }
   })
 
   ipcMain.handle(IPC.themeApply, async (_event, rawTheme: unknown, rawMode: unknown) => {

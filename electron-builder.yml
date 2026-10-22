@@ -6,6 +6,7 @@ directories:
 files:
   - out/**
   - package.json
+  - CHANGELOG.md
 asar: true
 artifactName: Interact-Studio-${version}-${arch}.${ext}
 extraResources:

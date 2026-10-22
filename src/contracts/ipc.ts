@@ -32,6 +32,7 @@ export const IPC = {
   uiUpdate: 'ui:update',
   loggingUpdate: 'logging:update',
   collectLogs: 'app:collect-logs',
+  changelog: 'app:changelog',
   themeApply: 'theme:apply',
   navigate: 'app:navigate'
 } as const
@@ -83,6 +84,7 @@ export interface RendererApi {
   updateUi(patch: Partial<UiConfig>): Promise<void>
   updateLogging(level: 'debug' | 'info' | 'warn' | 'error'): Promise<void>
   collectLogs(): Promise<string>
+  getChangelog(): Promise<readonly string[]>
   applyTheme(theme: 'dark' | 'light', mode: 'dark' | 'light' | 'system'): Promise<void>
   readonly platform: 'win32' | 'darwin' | 'linux'
 }

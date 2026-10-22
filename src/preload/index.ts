@@ -57,6 +57,7 @@ const api: RendererApi = {
   updateUi: (patch) => ipcRenderer.invoke(IPC.uiUpdate, patch),
   updateLogging: (level) => ipcRenderer.invoke(IPC.loggingUpdate, level),
   collectLogs: () => ipcRenderer.invoke(IPC.collectLogs),
+  getChangelog: () => ipcRenderer.invoke(IPC.changelog),
   applyTheme: (theme, mode) => ipcRenderer.invoke(IPC.themeApply, theme, mode),
   platform: process.platform === 'darwin' ? 'darwin' : process.platform === 'linux' ? 'linux' : 'win32'
 }
