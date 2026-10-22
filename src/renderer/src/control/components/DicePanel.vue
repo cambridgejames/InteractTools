@@ -8,6 +8,7 @@ import CountdownRing from './CountdownRing.vue'
 import ToolHeader from './ToolHeader.vue'
 import { actions, state } from '../store'
 import { DiceScene } from '../result/dice-scene'
+import { SCENE, SCENE_LIGHT, type ScenePalette } from '../result/palette'
 import { formatPower, methodLabel, phaseLabel } from '../../shared/format'
 
 const props = defineProps<{ view: DiceToolView }>()
@@ -17,6 +18,13 @@ let ticker: ReturnType<typeof setInterval> | null = null
 const countdown = ref(props.view.config.countdownSeconds)
 const diceStage = ref<HTMLElement | null>(null)
 let diceScene: DiceScene | null = null
+const scenePalette = computed<ScenePalette>(() => {
+  const mode = state.snapshot?.ui.theme ?? 'dark'
+  const resolved = mode === 'system'
+    ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+    : mode
+  return resolved === 'light' ? SCENE_LIGHT : SCENE
+})
 
 onMounted(() => {
   ticker = setInterval(() => {
@@ -47,7 +55,7 @@ function mountDiceScene(): void {
   if (diceScene !== null && mountedRollId === roll.rollId) return
 
   diceScene?.dispose()
-  diceScene = new DiceScene(diceStage.value, () => undefined)
+  diceScene = new DiceScene(diceStage.value, () => undefined, scenePalette.value)
   mountedRollId = roll.rollId
   diceScene.play(roll)
 }
@@ -57,6 +65,15 @@ onUnmounted(() => {
   diceScene?.dispose()
   diceScene = null
   mountedRollId = null
+})
+
+watch(scenePalette, async () => {
+  if (diceScene === null) return
+  diceScene.dispose()
+  diceScene = null
+  mountedRollId = null
+  await nextTick()
+  mountDiceScene()
 })
 
 watch(

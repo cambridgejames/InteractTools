@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 import type { DiceFrame, DiceMesh, DiceMeshFace } from '@contracts/presentation'
-import { SCENE } from './palette'
+import { SCENE, type ScenePalette } from './palette'
 
 const FACE_SIZE = 256
 
@@ -26,7 +26,8 @@ export class DiceScene {
 
   constructor(
     private readonly container: HTMLElement,
-    private readonly onFinished: () => void
+    private readonly onFinished: () => void,
+    private readonly palette: ScenePalette = SCENE
   ) {
     this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
     this.renderer.setClearColor(0x000000, 0)
@@ -144,7 +145,7 @@ export class DiceScene {
     this.scene.add(fill)
 
     const tableMaterial = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(SCENE.table),
+      color: new THREE.Color(this.palette.table),
       roughness: 0.88,
       metalness: 0.06
     })
@@ -162,8 +163,8 @@ export class DiceScene {
     const grid = new THREE.GridHelper(
       24,
       24,
-      new THREE.Color(SCENE.tableEdge),
-      new THREE.Color(SCENE.table)
+      new THREE.Color(this.palette.tableEdge),
+      new THREE.Color(this.palette.table)
     )
     grid.position.y = 0.002
     const gridMaterial = grid.material
@@ -194,10 +195,10 @@ export class DiceScene {
     const pad = new THREE.Mesh(
       new THREE.CylinderGeometry(0.62, 0.72, 0.12, 48),
       new THREE.MeshStandardMaterial({
-        color: new THREE.Color(SCENE.table),
+        color: new THREE.Color(this.palette.table),
         roughness: 0.55,
         metalness: 0.25,
-        emissive: new THREE.Color(SCENE.tableEdge),
+        emissive: new THREE.Color(this.palette.tableEdge),
         emissiveIntensity: 0.12
       })
     )
@@ -208,7 +209,7 @@ export class DiceScene {
 
     const padRing = new THREE.Mesh(
       new THREE.TorusGeometry(0.5, 0.025, 8, 64),
-      new THREE.MeshBasicMaterial({ color: new THREE.Color(SCENE.tableEdge), transparent: true, opacity: 0.8 })
+      new THREE.MeshBasicMaterial({ color: new THREE.Color(this.palette.tableEdge), transparent: true, opacity: 0.8 })
     )
     padRing.rotation.x = Math.PI / 2
     padRing.position.y = 0.14
@@ -220,7 +221,7 @@ export class DiceScene {
         new THREE.Vector3(0, 20, 0)
       ]),
       new THREE.LineDashedMaterial({
-        color: new THREE.Color(SCENE.tableEdge),
+        color: new THREE.Color(this.palette.tableEdge),
         transparent: true,
         opacity: 0.22,
         dashSize: 0.16,
@@ -234,7 +235,7 @@ export class DiceScene {
       const marker = new THREE.Mesh(
         new THREE.TorusGeometry(0.56, 0.012, 6, 48),
         new THREE.MeshBasicMaterial({
-          color: new THREE.Color(SCENE.tableEdge),
+          color: new THREE.Color(this.palette.tableEdge),
           transparent: true,
           opacity: 0.18
         })
@@ -245,7 +246,7 @@ export class DiceScene {
     }
 
     const edgeMaterial = new THREE.MeshBasicMaterial({
-      color: new THREE.Color(SCENE.tableEdge),
+      color: new THREE.Color(this.palette.tableEdge),
       transparent: true,
       opacity: 0.45
     })
@@ -288,7 +289,7 @@ export class DiceScene {
   private buildDice(mesh: DiceMesh): void {
     this.disposeDice()
 
-    const built = buildDiceGeometry(mesh, this.renderer)
+    const built = buildDiceGeometry(mesh, this.renderer, this.palette)
     const dice = new THREE.Mesh(built.geometry, built.materials)
     dice.castShadow = true
     dice.receiveShadow = true
@@ -345,8 +346,8 @@ interface BuiltDice {
   readonly textures: THREE.CanvasTexture[]
 }
 
-function buildDiceGeometry(mesh: DiceMesh, renderer: THREE.WebGLRenderer): BuiltDice {
-  if (mesh.faces.length === 6) return buildRoundedD6(mesh, renderer)
+function buildDiceGeometry(mesh: DiceMesh, renderer: THREE.WebGLRenderer, palette: ScenePalette): BuiltDice {
+  if (mesh.faces.length === 6) return buildRoundedD6(mesh, renderer, palette)
 
   const positions: number[] = []
   const normals: number[] = []
@@ -369,7 +370,7 @@ function buildDiceGeometry(mesh: DiceMesh, renderer: THREE.WebGLRenderer): Built
     }
     geometry.addGroup(start, positions.length / 3 - start, faceIndex)
 
-    const texture = createFaceTexture(face.number, mesh.faces.length, renderer)
+    const texture = createFaceTexture(face.number, mesh.faces.length, renderer, palette)
     textures.push(texture)
     materials.push(
       new THREE.MeshStandardMaterial({
@@ -388,7 +389,7 @@ function buildDiceGeometry(mesh: DiceMesh, renderer: THREE.WebGLRenderer): Built
   return { geometry, materials, textures }
 }
 
-function buildRoundedD6(mesh: DiceMesh, renderer: THREE.WebGLRenderer): BuiltDice {
+function buildRoundedD6(mesh: DiceMesh, renderer: THREE.WebGLRenderer, palette: ScenePalette): BuiltDice {
   // BoxGeometry 的 group 顺序是 +X/-X/+Y/-Y/+Z/-Z；倒角只改视觉，物理仍是原凸包。
   const axes = [
     new THREE.Vector3(1, 0, 0),
@@ -426,7 +427,7 @@ function buildRoundedD6(mesh: DiceMesh, renderer: THREE.WebGLRenderer): BuiltDic
     if (slot < 0 || assigned.has(slot)) continue
     assigned.add(slot)
 
-    const texture = createFaceTexture(face.number, 6, renderer)
+    const texture = createFaceTexture(face.number, 6, renderer, palette)
     textures.push(texture)
     materials[slot] = new THREE.MeshStandardMaterial({
       map: texture,
@@ -437,7 +438,7 @@ function buildRoundedD6(mesh: DiceMesh, renderer: THREE.WebGLRenderer): BuiltDic
 
   for (let slot = 0; slot < 6; slot += 1) {
     if (materials[slot] === undefined) {
-      materials[slot] = new THREE.MeshStandardMaterial({ color: new THREE.Color(SCENE.faceDark) })
+      materials[slot] = new THREE.MeshStandardMaterial({ color: new THREE.Color(palette.faceDark) })
     }
   }
 
@@ -493,7 +494,7 @@ function faceTriangles(
   return { triangles, normal }
 }
 
-function createFaceTexture(number: number, faces: number, renderer: THREE.WebGLRenderer): THREE.CanvasTexture {
+function createFaceTexture(number: number, faces: number, renderer: THREE.WebGLRenderer, palette: ScenePalette): THREE.CanvasTexture {
   const canvas = document.createElement('canvas')
   canvas.width = FACE_SIZE
   canvas.height = FACE_SIZE
@@ -501,19 +502,19 @@ function createFaceTexture(number: number, faces: number, renderer: THREE.WebGLR
   if (context === null) throw new Error('无法创建骰子纹理')
 
   const gradient = context.createLinearGradient(0, 0, 0, FACE_SIZE)
-  gradient.addColorStop(0, SCENE.faceLight)
-  gradient.addColorStop(1, SCENE.faceDark)
+  gradient.addColorStop(0, palette.faceLight)
+  gradient.addColorStop(1, palette.faceDark)
   context.fillStyle = gradient
   context.fillRect(0, 0, FACE_SIZE, FACE_SIZE)
 
-  context.strokeStyle = SCENE.faceEdge
+  context.strokeStyle = palette.faceEdge
   context.lineWidth = 10
   context.strokeRect(5, 5, FACE_SIZE - 10, FACE_SIZE - 10)
 
   if (faces === 6) {
     drawPips(context, number)
   } else {
-    drawNumber(context, number, faces)
+    drawNumber(context, number, faces, palette)
   }
 
   const texture = new THREE.CanvasTexture(canvas)
@@ -523,9 +524,9 @@ function createFaceTexture(number: number, faces: number, renderer: THREE.WebGLR
   return texture
 }
 
-function drawNumber(context: CanvasRenderingContext2D, number: number, faces: number): void {
+function drawNumber(context: CanvasRenderingContext2D, number: number, faces: number, palette: ScenePalette): void {
   const size = faces === 20 ? 92 : faces === 10 ? 108 : 112
-  context.fillStyle = SCENE.ink
+  context.fillStyle = palette.ink
   context.font = '600 ' + size + 'px "SF Mono", "Cascadia Code", Consolas, monospace'
   context.textAlign = 'center'
   context.textBaseline = 'middle'

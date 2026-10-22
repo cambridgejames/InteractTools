@@ -184,8 +184,13 @@ export async function runSmoke(application: Application): Promise<void> {
   )
   await delay(200)
 
+  await application.engine.updateUi({ theme: 'light' })
+  await delay(300)
   await application.engine.previewTool('dice')
   await delay(1_500)
+  await application.controlWindow.capture(join(output, 'control-dice-rolling-light.png'))
+  await application.engine.updateUi({ theme: 'dark' })
+  await delay(250)
   await application.controlWindow.capture(join(output, 'control-dice-rolling.png'))
   await waitForResult(application)
   await application.controlWindow.capture(join(output, 'control-dice-result.png'))
