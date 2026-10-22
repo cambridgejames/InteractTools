@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import FeedPanel from './components/FeedPanel.vue'
 import OnboardingTour from './components/OnboardingTour.vue'
 import AppIcon from './components/AppIcon.vue'
@@ -27,17 +27,34 @@ const tourVisible = computed(
   () => state.showTour || (state.snapshot !== null && !state.snapshot.ui.onboardingDone)
 )
 const isMac = window.api.platform === 'darwin'
+const darkMedia = window.matchMedia('(prefers-color-scheme: dark)')
+
+function applyTheme(): void {
+  const mode = state.snapshot?.ui.theme ?? 'dark'
+  const resolved = mode === 'system' ? (darkMedia.matches ? 'dark' : 'light') : mode
+  document.documentElement.dataset.theme = resolved
+  document.documentElement.style.colorScheme = resolved
+  void window.api.applyTheme(resolved, mode).catch(() => undefined)
+}
+
+function onSystemThemeChange(): void {
+  if ((state.snapshot?.ui.theme ?? 'dark') === 'system') applyTheme()
+}
+
+watch(() => state.snapshot?.ui.theme, applyTheme, { immediate: true })
 
 let unsubscribeNavigate: (() => void) | null = null
 
 onMounted(() => {
   void initStore()
+  darkMedia.addEventListener('change', onSystemThemeChange)
   unsubscribeNavigate = window.api.onNavigate((target) => {
     page.value = target
   })
 })
 
 onUnmounted(() => {
+  darkMedia.removeEventListener('change', onSystemThemeChange)
   unsubscribeNavigate?.()
 })
 </script>
@@ -81,7 +98,7 @@ onUnmounted(() => {
       :result="state.resultPopup"
       @close="actions.dismissOverlay"
     />
-    <OnboardingTour v-if="tourVisible" @done="actions.completeTour" />
+    <OnboardingTour v-if="tourVisible" @done="actions.completeTour" @navigate="page = $event" />
     <Toast />
   </div>
 </template>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { DEFAULT_SHORTCUTS, DEFAULT_UI_CONFIG, type FeedMode, type ShortcutAction, type ShortcutsConfig } from '@contracts/config'
+import { DEFAULT_SHORTCUTS, DEFAULT_UI_CONFIG, type FeedMode, type ShortcutAction, type ShortcutsConfig, type ThemeMode } from '@contracts/config'
 import type { NetworkTestResult, ProxyMode } from '@contracts/network'
 import type { WindowDisplayOption } from '@contracts/ipc'
 import AppIcon from '../components/AppIcon.vue'
@@ -9,20 +9,30 @@ import ToggleSwitch from '../components/ToggleSwitch.vue'
 import PlatformsView from './PlatformsView.vue'
 import { actions, showToast, state } from '../store'
 
+const changelogEntries = [
+  '浅色 / 跟随系统主题，原生窗口控件同步换色',
+  '日志按天 + 20MB 滚动，设置页可收集日志',
+  '首次启动 spotlight 操作指引，可在关于页重放',
+  '代理支持用户名、密码、直连域名和跳过 SSL 校验',
+  '连通性测试按平台显示 B站 / 抖音状态与延迟',
+  '转盘 / 投票默认预设与更安全的默认选项'
+]
+
 const GITHUB_URL = 'https://github.com/cambridgejames/InteractTools'
 const GITHUB_ISSUES_URL = GITHUB_URL + '/issues'
 
-type SettingsSection = 'platforms' | 'network' | 'interface' | 'shortcuts' | 'data' | 'about'
+type SettingsSection = 'platforms' | 'network' | 'appearance' | 'window' | 'shortcuts' | 'data' | 'about'
 
 const section = ref<SettingsSection>('platforms')
 const sections: Array<{
   id: SettingsSection
   label: string
-  icon: 'platforms' | 'globe' | 'settings' | 'keyboard' | 'folder' | 'users'
+  icon: 'platforms' | 'globe' | 'settings' | 'dashboard' | 'keyboard' | 'folder' | 'users'
 }> = [
   { id: 'platforms', label: '平台连接', icon: 'platforms' },
   { id: 'network', label: '网络', icon: 'globe' },
-  { id: 'interface', label: '界面与窗口', icon: 'settings' },
+  { id: 'appearance', label: '外观', icon: 'settings' },
+  { id: 'window', label: '窗口', icon: 'dashboard' },
   { id: 'shortcuts', label: '快捷键', icon: 'keyboard' },
   { id: 'data', label: '数据', icon: 'folder' },
   { id: 'about', label: '关于', icon: 'users' }
@@ -39,6 +49,13 @@ const proxyPassword = ref('')
 const proxyBypass = ref('')
 const allowInsecureTls = ref(false)
 const testing = ref(false)
+const logLevel = ref<'debug' | 'info' | 'warn' | 'error'>('info')
+const logLevelOptions = [
+  { value: 'debug', label: 'Debug（最详细，日志增长快）' },
+  { value: 'info', label: 'Info（推荐）' },
+  { value: 'warn', label: 'Warn' },
+  { value: 'error', label: 'Error（只记错误）' }
+]
 const testResult = ref<NetworkTestResult | null>(null)
 const probeResults = computed(() => (testResult.value?.platforms ?? []).filter((probe) => probe.platformId !== 'mock'))
 const proxyOptions = [
@@ -60,6 +77,11 @@ const displayOptions = computed(() => [
       String(display.height)
   }))
 ])
+const themeOptions: Array<{ value: ThemeMode; label: string }> = [
+  { value: 'dark', label: '深色（默认）' },
+  { value: 'light', label: '浅色' },
+  { value: 'system', label: '跟随系统' }
+]
 const feedOptions = [
   { value: 'full', label: '完整显示' },
   { value: 'collapsed', label: '折叠成窄条' },
@@ -162,6 +184,7 @@ onMounted(async () => {
   proxyPassword.value = state.snapshot?.network.proxyPassword ?? ''
   proxyBypass.value = state.snapshot?.network.proxyBypass ?? ''
   allowInsecureTls.value = state.snapshot?.network.allowInsecureTls ?? false
+  logLevel.value = state.snapshot?.logging.level ?? 'info'
   try {
     displays.value = await window.api.windowDisplays()
   } catch (error) {
@@ -191,6 +214,11 @@ async function saveDisplay(): Promise<void> {
 
 async function setUi(patch: Partial<typeof DEFAULT_UI_CONFIG>): Promise<void> {
   await actions.updateUi(patch)
+}
+
+async function chooseTheme(value: string): Promise<void> {
+  if (value !== 'dark' && value !== 'light' && value !== 'system') return
+  await setUi({ theme: value })
 }
 
 async function saveFeedMode(): Promise<void> {
@@ -244,6 +272,12 @@ async function saveProxyExtras(): Promise<void> {
   } catch (error) {
     showToast(error instanceof Error ? error.message : '保存代理设置失败', 'error')
   }
+}
+
+async function chooseLogLevel(value: string): Promise<void> {
+  if (value !== 'debug' && value !== 'info' && value !== 'warn' && value !== 'error') return
+  logLevel.value = value
+  await actions.updateLogging(value)
 }
 
 async function setInsecureTls(value: boolean): Promise<void> {
@@ -302,6 +336,7 @@ async function clearAllData(): Promise<void> {
         :key="item.id"
         class="nav-item"
         :class="{ active: section === item.id }"
+        :data-tour="'settings-' + item.id"
         :aria-current="section === item.id ? 'page' : undefined"
         @click="section = item.id"
       >
@@ -325,6 +360,10 @@ async function clearAllData(): Promise<void> {
           <p>代理只影响平台连接；默认不使用代理。</p>
         </header>
         <section class="card">
+          <header>
+            <h2>连接方式</h2>
+            <p>代理只影响平台连接；默认直连。</p>
+          </header>
 
         <label class="field">
           <span>代理方式</span>
@@ -396,7 +435,7 @@ async function clearAllData(): Promise<void> {
         </div>
 
         <div class="network-actions">
-          <button class="secondary" :disabled="testing" @click="testNetwork">
+          <button class="secondary" data-tour="network-test" :disabled="testing" @click="testNetwork">
             <AppIcon name="refresh" :size="15" />
             {{ testing ? '测试中…' : '测试连通性' }}
           </button>
@@ -426,15 +465,15 @@ async function clearAllData(): Promise<void> {
         </section>
       </template>
 
-      <template v-else-if="section === 'interface'">
+      <template v-else-if="section === 'window'">
         <header class="section-head">
-          <h2>界面与窗口</h2>
-          <p>控制台显示在哪、弹幕栏怎么排、结果怎么展示。</p>
+          <h2>窗口</h2>
+          <p>控制台启动时放在哪块屏幕；选择后立即移动。</p>
         </header>
         <section class="card">
           <header>
             <h2>窗口位置</h2>
-            <p>控制台启动时放在哪块屏幕；选择后立即移动。</p>
+            <p>多屏直播时把控制台固定到主屏或跟随鼠标。</p>
           </header>
 
           <label class="field">
@@ -444,6 +483,29 @@ async function clearAllData(): Promise<void> {
               :options="displayOptions"
               label="选择显示器"
               @update:model-value="chooseDisplay"
+            />
+          </label>
+        </section>
+      </template>
+
+      <template v-else-if="section === 'appearance'">
+        <header class="section-head">
+          <h2>外观</h2>
+          <p>主题、弹幕栏、平台标签和结果展示。</p>
+        </header>
+        <section class="card">
+          <header>
+            <h2>主题</h2>
+            <p>默认深色；跟随系统会随系统外观实时切换，窗口按钮也会同步。</p>
+          </header>
+
+          <label class="field">
+            <span>外观</span>
+            <AppSelect
+              :model-value="ui.theme"
+              :options="themeOptions"
+              label="选择主题"
+              @update:model-value="chooseTheme"
             />
           </label>
         </section>
@@ -535,6 +597,11 @@ async function clearAllData(): Promise<void> {
         </header>
 
         <section class="card">
+          <header>
+            <h2>按键绑定</h2>
+            <p>点击按键框后按下组合键；每项可以单独设为全局。</p>
+          </header>
+
           <div v-for="row in shortcutRows" :key="row.id" class="shortcut-row">
             <div class="shortcut-info">
               <span class="shortcut-icon"><AppIcon :name="row.icon" :size="15" /></span>
@@ -584,6 +651,10 @@ async function clearAllData(): Promise<void> {
           <p>配置、历史与日志都保存在本机用户目录。</p>
         </header>
         <section class="card">
+          <header>
+            <h2>存储</h2>
+            <p>配置、历史与日志都在本机用户目录。</p>
+          </header>
         <div class="data-actions">
           <button class="secondary" @click="actions.openDataFolder()">
             <AppIcon name="folder" :size="15" />
@@ -592,6 +663,32 @@ async function clearAllData(): Promise<void> {
           <button class="danger" @click="clearAllData">清除所有数据…</button>
         </div>
         <p class="data-note">清除会删除配置、工具历史和日志，并重新启动应用。</p>
+        </section>
+
+        <section class="card">
+          <header>
+            <h2>日志</h2>
+            <p>按天 + 20MB 分文件，历史压缩，最多保留 20 个；日志留在本机。</p>
+          </header>
+
+          <label class="field">
+            <span>日志等级</span>
+            <AppSelect
+              :model-value="logLevel"
+              :options="logLevelOptions"
+              label="选择日志等级"
+              @update:model-value="chooseLogLevel"
+            />
+          </label>
+          <p class="data-note warn-note">除非排查问题，不要改成 Debug；它会显著增加日志体积。</p>
+
+          <div class="data-actions">
+            <button class="secondary" @click="actions.collectLogs()">
+              <AppIcon name="folder" :size="15" />
+              收集日志
+            </button>
+          </div>
+          <p class="data-note">收集会打包当前日志并打开所在文件夹，可直接附到问题反馈里。</p>
         </section>
       </template>
 
@@ -604,7 +701,7 @@ async function clearAllData(): Promise<void> {
         <ul>
           <li>本地优先：B站匿名弹幕、抖音只读弹幕 + 本地模拟，不依赖自建服务端。</li>
           <li>物理结果由 cannon-es 刚体模拟产生，结果动画只回放录制数据。</li>
-          <li>视觉规格见 DESIGN.md，组件只使用 tokens.css 的变量。</li>
+          <li>视觉规格见 docs/design/DESIGN.md，组件只使用 tokens.css 的变量。</li>
         </ul>
         <div class="about-replay">
           <div>
@@ -612,6 +709,12 @@ async function clearAllData(): Promise<void> {
             <span>第一次开播的流程：接平台、选玩法、看弹幕、绑快捷键。</span>
           </div>
           <button class="secondary" @click="actions.openTour">重新播放</button>
+        </div>
+        <div class="about-changelog">
+          <strong>最近更新</strong>
+          <ul>
+            <li v-for="entry in changelogEntries" :key="entry">{{ entry }}</li>
+          </ul>
         </div>
         <div class="links">
           <button class="link" @click="openExternal(GITHUB_URL)">
@@ -903,6 +1006,10 @@ header p {
   color: var(--success);
 }
 
+.warn-note {
+  color: var(--warning);
+}
+
 .data-actions {
   display: flex;
   flex-wrap: wrap;
@@ -1130,6 +1237,22 @@ header p {
   border-color: var(--accent);
   color: var(--accent);
 }
+.about-changelog {
+  margin-top: var(--s-3);
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--hairline);
+}
+
+.about-changelog > strong {
+  color: var(--body);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.about-changelog ul {
+  margin: var(--s-2) 0 0;
+}
+
 .about-replay {
   display: flex;
   align-items: center;

@@ -102,6 +102,22 @@ export class ControlWindow {
     this.window.webContents.send(IPC.navigate, page)
   }
 
+  applyTheme(theme: 'dark' | 'light'): void {
+    if (this.window.isDestroyed()) return
+    const dark = theme === 'dark'
+    this.window.setBackgroundColor(dark ? '#08090b' : '#f4f5ef')
+    if (process.platform === 'darwin') return
+    try {
+      this.window.setTitleBarOverlay({
+        color: dark ? '#0b0d10' : '#ffffff',
+        symbolColor: dark ? '#f2f4f1' : '#161a13',
+        height: 48
+      })
+    } catch {
+      // 某些 Linux 窗口管理器不支持 overlay，忽略即可。
+    }
+  }
+
   /** 把窗口居中到指定屏幕；'cursor' 跟随鼠标，'primary' 主屏，其余是 Display.id。 */
   placeOnDisplay(preference: string): void {
     const bounds = centeredBounds(resolveDisplay(preference))

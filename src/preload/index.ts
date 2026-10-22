@@ -55,6 +55,9 @@ const api: RendererApi = {
   testNetwork: () => ipcRenderer.invoke(IPC.networkTest),
   updateShortcuts: (shortcuts) => ipcRenderer.invoke(IPC.shortcutsUpdate, shortcuts),
   updateUi: (patch) => ipcRenderer.invoke(IPC.uiUpdate, patch),
+  updateLogging: (level) => ipcRenderer.invoke(IPC.loggingUpdate, level),
+  collectLogs: () => ipcRenderer.invoke(IPC.collectLogs),
+  applyTheme: (theme, mode) => ipcRenderer.invoke(IPC.themeApply, theme, mode),
   platform: process.platform === 'darwin' ? 'darwin' : process.platform === 'linux' ? 'linux' : 'win32'
 }
 

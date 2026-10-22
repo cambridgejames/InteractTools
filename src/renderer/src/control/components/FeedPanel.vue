@@ -148,7 +148,7 @@ function platformLabel(platform: FeedItem['platform']): string {
 </script>
 
 <template>
-  <section class="card feed-card" :class="{ mac: isMac }">
+  <section class="card feed-card" data-tour="feed" :class="{ mac: isMac }">
     <header class="card-head">
       <div>
         <h2>直播间弹幕</h2>

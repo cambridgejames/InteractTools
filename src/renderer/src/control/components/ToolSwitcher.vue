@@ -21,7 +21,7 @@ function modeOf(tool: ToolView): string {
 </script>
 
 <template>
-  <div class="switcher" role="tablist" aria-label="互动工具">
+  <div class="switcher" data-tour="tool-switcher" role="tablist" aria-label="互动工具">
     <button
       v-for="tool in tools"
       :key="tool.toolId"

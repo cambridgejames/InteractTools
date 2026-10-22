@@ -1,15 +1,16 @@
-import { app, dialog, ipcMain, shell } from 'electron'
+import { app, dialog, ipcMain, nativeTheme, shell } from 'electron'
 import { rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { z } from 'zod'
 import { IPC } from '@contracts/ipc'
-import { networkConfigSchema } from '@contracts/network'
-import { shortcutsConfigSchema, TOOL_IDS, uiConfigSchema } from '@contracts/config'
+import { networkConfigSchema, type NetworkConfig } from '@contracts/network'
+import { loggingConfigSchema, shortcutsConfigSchema, TOOL_IDS, uiConfigSchema } from '@contracts/config'
 import type { Engine } from '@kernel/engine'
 import type { ControlWindow } from '../windows/control-window'
 import type { NetworkProxy } from '../services/network-proxy'
 import { externalUrlSchema } from './external-url'
 import type { ShortcutManager } from '../services/shortcut-manager'
+import type { AppLogger } from '../services/logger'
 
 const platformIdSchema = z.enum(['bilibili', 'douyin', 'mock'])
 const toolIdSchema = z.enum(TOOL_IDS)
@@ -27,15 +28,20 @@ export function registerIpc(
   engine: Engine,
   controlWindow: ControlWindow,
   network: NetworkProxy,
-  shortcuts: ShortcutManager
+  shortcuts: ShortcutManager,
+  logger: AppLogger
 ): void {
   ipcMain.handle(IPC.snapshot, async () => engine.snapshot())
 
   ipcMain.handle(IPC.networkUpdate, async (_event, rawPatch: unknown) => {
     const parsed = networkConfigSchema.partial().parse(rawPatch)
-    const patch: { proxyMode?: 'none' | 'system' | 'custom'; proxyUrl?: string } = {}
+    const patch: Partial<NetworkConfig> = {}
     if (parsed.proxyMode !== undefined) patch.proxyMode = parsed.proxyMode
     if (parsed.proxyUrl !== undefined) patch.proxyUrl = parsed.proxyUrl
+    if (parsed.proxyUsername !== undefined) patch.proxyUsername = parsed.proxyUsername
+    if (parsed.proxyPassword !== undefined) patch.proxyPassword = parsed.proxyPassword
+    if (parsed.proxyBypass !== undefined) patch.proxyBypass = parsed.proxyBypass
+    if (parsed.allowInsecureTls !== undefined) patch.allowInsecureTls = parsed.allowInsecureTls
     await engine.updateNetworkConfig(patch)
   })
 
@@ -71,14 +77,35 @@ export function registerIpc(
     await engine.updateShortcuts(parsed)
   })
 
+  ipcMain.handle(IPC.loggingUpdate, async (_event, rawLevel: unknown) => {
+    const level = loggingConfigSchema.shape.level.parse(rawLevel)
+    logger.setLevel(level)
+    await engine.updateLogging(level)
+  })
+
+  ipcMain.handle(IPC.collectLogs, async () => {
+    const file = await logger.collect()
+    shell.showItemInFolder(file)
+    return file
+  })
+
+  ipcMain.handle(IPC.themeApply, async (_event, rawTheme: unknown, rawMode: unknown) => {
+    const theme = z.enum(['dark', 'light']).parse(rawTheme)
+    const mode = z.enum(['dark', 'light', 'system']).parse(rawMode)
+    nativeTheme.themeSource = mode === 'system' ? 'system' : theme
+    controlWindow.applyTheme(theme)
+  })
+
   ipcMain.handle(IPC.uiUpdate, async (_event, rawPatch: unknown) => {
     const parsed = uiConfigSchema.partial().parse(rawPatch)
     const patch: {
+      theme?: 'dark' | 'light' | 'system'
       showActivePlatforms?: boolean
       showFeedPlatforms?: boolean
       showMockLabel?: boolean
       onboardingDone?: boolean
     } = {}
+    if (parsed.theme !== undefined) patch.theme = parsed.theme
     if (parsed.showActivePlatforms !== undefined) patch.showActivePlatforms = parsed.showActivePlatforms
     if (parsed.showFeedPlatforms !== undefined) patch.showFeedPlatforms = parsed.showFeedPlatforms
     if (parsed.showMockLabel !== undefined) patch.showMockLabel = parsed.showMockLabel

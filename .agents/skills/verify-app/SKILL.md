@@ -28,7 +28,7 @@ npm run smoke
 - [ ] 没有新增 `any`、`@ts-ignore`、`as any`。
 - [ ] 没有跨层 import（lint 已覆盖）。
 - [ ] @@npm run check:design@@ 通过，组件里没有裸颜色。
-- [ ] 新组件在 `DESIGN.md` 有对应规格。
+- [ ] 新组件在 `docs/design/DESIGN.md` 有对应规格。
 - [ ] 新增公共类型有 JSDoc，注释解释「为什么」。
 - [ ] 配置变更更新了 zod schema 与迁移。
 

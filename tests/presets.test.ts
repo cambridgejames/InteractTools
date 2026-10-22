@@ -23,6 +23,7 @@ describe('默认预设', () => {
   it('界面默认显示顶部平台，关闭真实平台标签但保留模拟标签', () => {
     const ui = uiConfigSchema.parse({})
     expect(ui).toEqual({
+      theme: 'dark',
       showActivePlatforms: true,
       showFeedPlatforms: false,
       showMockLabel: true,

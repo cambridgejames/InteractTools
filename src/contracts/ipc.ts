@@ -30,6 +30,9 @@ export const IPC = {
   toolSetEnabled: 'tool:set-enabled',
   shortcutsUpdate: 'shortcuts:update',
   uiUpdate: 'ui:update',
+  loggingUpdate: 'logging:update',
+  collectLogs: 'app:collect-logs',
+  themeApply: 'theme:apply',
   navigate: 'app:navigate'
 } as const
 
@@ -78,5 +81,8 @@ export interface RendererApi {
   testNetwork(): Promise<NetworkTestResult>
   updateShortcuts(shortcuts: ShortcutsConfig): Promise<void>
   updateUi(patch: Partial<UiConfig>): Promise<void>
+  updateLogging(level: 'debug' | 'info' | 'warn' | 'error'): Promise<void>
+  collectLogs(): Promise<string>
+  applyTheme(theme: 'dark' | 'light', mode: 'dark' | 'light' | 'system'): Promise<void>
   readonly platform: 'win32' | 'darwin' | 'linux'
 }

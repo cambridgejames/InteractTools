@@ -14,7 +14,7 @@ description: 为 1017 互动工坊新增或修改直播平台适配器时使用�
 ## 前置阅读
 
 1. `AGENTS.md` 第 5 节架构不变量。
-2. `docs/architecture.md` 第 4.1–4.2 节。
+2. `docs/architecture/README.md` 与 `docs/architecture/platforms.md`。
 3. `docs/guides/add-platform.md`。
 
 ## 步骤
@@ -25,8 +25,9 @@ description: 为 1017 互动工坊新增或修改直播平台适配器时使用�
 4. 实现 `PlatformAdapterFactory` 与 `PlatformAdapter`；`connect` 必须响应 `AbortSignal`。
 5. 把原始消息翻译成 `PlatformEvent`；不要在这里解析力度命令。
 6. 在 `main/composition.ts` 注册 factory。
-7. 用脱敏 fixture 写协议测试；不要连真实直播间。
-8. 更新 `docs/architecture.md` 的平台能力表。
+7. 实现可选的 `probe(config, context)`，让平台自动出现在网络连通性测试里。
+8. 用脱敏 fixture 写协议测试；不要连真实直播间。
+9. 更新 `docs/architecture/platforms.md` 的平台能力表。
 
 ## 硬性要求
 

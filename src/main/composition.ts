@@ -1,4 +1,4 @@
-import { app } from 'electron'
+import { app, nativeTheme } from 'electron'
 import { join } from 'node:path'
 import { DiceTool } from '@tools/dice/tool'
 import { WheelTool } from '@tools/wheel/tool'
@@ -28,20 +28,27 @@ export interface Application {
 
 export async function createApplication(): Promise<Application> {
   const userData = app.getPath('userData')
-  const logger = new AppLogger()
+  const logger = new AppLogger(userData)
   const clock = new SystemClock()
+  logger.info('app', '互动工坊启动', 'Electron ' + process.versions.electron + ' / Node ' + process.versions.node)
 
   const iconPath = app.isPackaged
     ? join(process.resourcesPath, 'icon.png')
     : join(app.getAppPath(), 'build/icon.png')
   const store = new JsonConfigStore(join(userData, 'config.json'), logger)
   const config = await store.load()
+  logger.setLevel(config.logging.level)
+  logger.info('config', '配置已载入', join(userData, 'config.json'))
   const network = new NetworkProxy()
   const controlWindow = new ControlWindow(
     join(__dirname, '../preload/index.js'),
     iconPath,
     config.window.display
   )
+  const initialTheme = config.ui.theme === 'system'
+    ? (nativeTheme.shouldUseDarkColors ? 'dark' : 'light')
+    : config.ui.theme
+  controlWindow.applyTheme(initialTheme)
   const surface = new ResultSurface(controlWindow)
 
   logger.subscribe((entry) => controlWindow.send({ type: 'log', entry }))
@@ -68,7 +75,7 @@ export async function createApplication(): Promise<Application> {
   } catch (error) {
     logger.warn('shortcuts', '快捷键注册失败，已保留为空', String(error))
   }
-  registerIpc(engine, controlWindow, network, shortcutManager)
+  registerIpc(engine, controlWindow, network, shortcutManager, logger)
   await controlWindow.load()
 
   return {

@@ -42,7 +42,7 @@ npm run dev
 ## 开发流程
 
 1. Fork 仓库，从 `master`（或仓库当前主分支）切出特性分支，例如 `feat/wheel-presets`。
-2. 阅读 [AGENTS.md](./AGENTS.md) 与相关模块文档；UI 改动先读 [DESIGN.md](./DESIGN.md)。
+2. 阅读 [AGENTS.md](./AGENTS.md) 与相关模块文档；UI 改动先读 [docs/design/DESIGN.md](./docs/design/DESIGN.md)。
 3. 修改代码和测试；新增或修改逻辑必须有对应测试。
 4. 跑完下面的自检清单。
 5. 提交 PR，说明动机、行为和验证方式。
@@ -74,7 +74,7 @@ npm run build
 
 涉及界面时再运行 `npm run smoke`，确认无白屏、无未处理报错；涉及打包配置时运行 `npm run package:win` 并执行打包后冒烟。
 
-文档与实现必须同步：契约变更更新 `docs/architecture.md`，玩法变更更新 `docs/usage.md`，视觉变更遵循 `DESIGN.md`，并在 `CHANGELOG.md` 的 `[Unreleased]` 段补条目。
+文档与实现必须同步：契约变更更新 `docs/architecture/README.md`，玩法变更更新 `docs/usage.md`，视觉变更遵循 `docs/design/DESIGN.md`，并在 `CHANGELOG.md` 的 `[Unreleased]` 段补条目。
 
 ## 分支与发布
 

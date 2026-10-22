@@ -85,8 +85,20 @@ export const DEFAULT_SHORTCUTS: ShortcutsConfig = {
   openSettings: { accelerator: '', global: false }
 }
 
+export const LOG_LEVELS = ['debug', 'info', 'warn', 'error'] as const
+export const loggingConfigSchema = z
+  .object({ level: z.enum(LOG_LEVELS).default('info') })
+  .strict()
+
+export type LoggingConfig = z.infer<typeof loggingConfigSchema>
+export const DEFAULT_LOGGING_CONFIG: LoggingConfig = { level: 'info' }
+
+export const THEME_MODES = ['dark', 'light', 'system'] as const
+export type ThemeMode = (typeof THEME_MODES)[number]
+
 export const uiConfigSchema = z
   .object({
+    theme: z.enum(THEME_MODES).default('dark'),
     showActivePlatforms: z.boolean().default(true),
     showFeedPlatforms: z.boolean().default(false),
     showMockLabel: z.boolean().default(true),
@@ -97,6 +109,7 @@ export const uiConfigSchema = z
 export type UiConfig = z.infer<typeof uiConfigSchema>
 
 export const DEFAULT_UI_CONFIG: UiConfig = {
+  theme: 'dark',
   showActivePlatforms: true,
   showFeedPlatforms: false,
   showMockLabel: true,
@@ -144,6 +157,7 @@ export const appConfigSchema = z
     network: networkConfigSchema.default(DEFAULT_NETWORK_CONFIG),
     shortcuts: shortcutsConfigSchema.default(DEFAULT_SHORTCUTS),
     ui: uiConfigSchema.default(DEFAULT_UI_CONFIG),
+    logging: loggingConfigSchema.default(DEFAULT_LOGGING_CONFIG),
     overlay: overlayConfigSchema,
     window: windowConfigSchema,
     feed: feedConfigSchema
@@ -199,6 +213,7 @@ export const DEFAULT_APP_CONFIG: AppConfig = {
     openSettings: { accelerator: '', global: false }
   },
   ui: { ...DEFAULT_UI_CONFIG },
+  logging: { ...DEFAULT_LOGGING_CONFIG },
   overlay: {
     alwaysOnTop: true
   },

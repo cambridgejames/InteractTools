@@ -132,7 +132,8 @@ export const actions = {
     patch: Readonly<Record<string, unknown>>
   ): Promise<boolean> {
     try {
-      await window.api.updateToolConfig(toolId, patch)
+      // config 来自 Vue reactive Proxy；跨 IPC 前必须转成可结构化克隆的普通对象。
+      await window.api.updateToolConfig(toolId, plainClone(patch))
       return true
     } catch (error) {
       showToast(errorMessage(error), 'error')
@@ -161,7 +162,7 @@ export const actions = {
     patch: Readonly<Record<string, unknown>>
   ): Promise<boolean> {
     try {
-      await window.api.updatePlatformConfig(id, patch)
+      await window.api.updatePlatformConfig(id, plainClone(patch))
       return true
     } catch (error) {
       showToast(errorMessage(error), 'error')
@@ -225,6 +226,14 @@ export const actions = {
     state.showTour = true
   },
 
+  async updateLogging(level: 'debug' | 'info' | 'warn' | 'error'): Promise<void> {
+    await run(() => window.api.updateLogging(level), '日志等级已更新')
+  },
+
+  async collectLogs(): Promise<void> {
+    await run(() => window.api.collectLogs(), '日志已打包')
+  },
+
   async completeTour(): Promise<void> {
     state.showTour = false
     try {
@@ -282,6 +291,10 @@ async function run<T>(task: () => Promise<T>, success?: string): Promise<T | und
     showToast(errorMessage(error), 'error')
     return undefined
   }
+}
+
+function plainClone<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T
 }
 
 function trimFeed(feed: EngineSnapshot['feed']): EngineSnapshot['feed'] {

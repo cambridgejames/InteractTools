@@ -52,6 +52,7 @@ export class Engine {
   async start(): Promise<void> {
     const config = await this.options.store.load()
     this.config = config
+    this.options.logger.info('engine', '内核启动', String(Object.values(config.enabledTools).filter(Boolean).length) + ' 个工具')
     await this.options.onNetworkChange?.(config.network)
     this.hints = new CommandHintBus()
 
@@ -114,6 +115,7 @@ export class Engine {
       network: this.requireConfig().network,
       shortcuts: this.requireConfig().shortcuts,
       ui: this.requireConfig().ui,
+      logging: this.requireConfig().logging,
       feedMode: this.requireConfig().feed.mode
     }
   }
@@ -158,6 +160,15 @@ export class Engine {
     this.publishSnapshot()
   }
 
+  async updateLogging(level: AppConfig['logging']['level']): Promise<void> {
+    const current = this.requireConfig()
+    const next = appConfigSchema.parse({ ...current, logging: { level } })
+    this.config = next
+    await this.options.store.save(next)
+    this.options.logger.info('logging', '日志等级更新为 ' + level)
+    this.publishSnapshot()
+  }
+
   async testPlatforms(): Promise<readonly { platformId: string; name: string; ok: boolean; latencyMs: number; message: string }[]> {
     return this.requirePlatformHost().probeAll(AbortSignal.timeout(10_000))
   }
@@ -171,6 +182,7 @@ export class Engine {
     this.config = next
     await this.options.store.save(next)
     await this.options.onNetworkChange?.(next.network)
+    this.options.logger.info('network', '网络配置已更新', next.network.proxyMode)
 
     if (this.requirePlatformHost().status('bilibili').phase !== 'disconnected') {
       await this.requirePlatformHost().reconnect('bilibili')
@@ -192,7 +204,9 @@ export class Engine {
 
   async connectPlatform(id: PlatformId): Promise<Result<void, string>> {
     try {
+      this.options.logger.info('engine', '连接平台：' + id)
       await this.requirePlatformHost().connect(id)
+      this.options.logger.info('engine', '平台已连接：' + id)
       return ok(undefined)
     } catch (error) {
       const message = formatError(error)
@@ -202,6 +216,7 @@ export class Engine {
   }
 
   async disconnectPlatform(id: PlatformId): Promise<void> {
+    this.options.logger.info('engine', '断开平台：' + id)
     await this.requirePlatformHost().disconnect(id)
     this.publishSnapshot()
   }

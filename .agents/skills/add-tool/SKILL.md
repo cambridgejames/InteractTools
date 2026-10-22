@@ -14,7 +14,7 @@ description: 为 1017 互动工坊新增互动工具（命令驱动或主播手�
 ## 前置阅读
 
 1. `AGENTS.md` 第 5–6 节。
-2. `docs/architecture.md` 第 4.3–4.5、7 节。
+2. `docs/architecture/README.md` 与 `docs/architecture/overview.md` 第 4.3–4.5、7 节。
 3. `docs/guides/add-tool.md`。
 
 ## 步骤

@@ -33,6 +33,7 @@ const nav: Array<{ id: Page; label: string; icon: 'dashboard' | 'tools' | 'setti
         :key="item.id"
         class="nav-item"
         :class="{ active: page === item.id }"
+        :data-tour="item.id === 'settings' ? 'nav-settings' : undefined"
         :aria-current="page === item.id ? 'page' : undefined"
         @click="emit('navigate', item.id)"
       >

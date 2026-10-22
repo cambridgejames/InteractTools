@@ -53,9 +53,10 @@ src/
     control/                 Vue 控制台
     control/result/          骰子 3D、结果弹窗、彩带烟花
     src/styles/tokens.css    唯一视觉 token
-DESIGN.md                    视觉语言与组件规则
+docs/design/DESIGN.md        视觉语言与组件规则
 docs/
-  architecture.md            架构与契约细节
+  architecture/              架构索引、网络、平台、UI 子文档
+  design/                    视觉、浅色主题、动效规范
   adr/                       决策记录
   guides/                    扩展指南
   testing.md                 测试策略
@@ -74,7 +75,7 @@ docs/
 8. 所有跨进程、配置文件、平台报文入口，先用 zod 解析，再进入类型系统。
 9. 工具之间禁止互相 import；共享逻辑上移到 contracts/kernel 或 tools/shared。
 10. 物理结果是唯一事实源；UI 不得自行随机、重算或改判点数。
-11. UI 只允许使用 `src/renderer/src/styles/tokens.css` 的变量；禁止在组件里写死颜色、字体、圆角。视觉规格以 `DESIGN.md` 为唯一事实源。
+11. UI 只允许使用 `src/renderer/src/styles/tokens.css` 的变量；禁止在组件里写死颜色、字体、圆角。视觉规格以 `docs/design/DESIGN.md` 为唯一事实源。
 
 ## 6. TypeScript 与注释
 
@@ -104,7 +105,7 @@ recordPower(vote: PowerVote): void
 
 ## 7. 扩展流程
 
-- 改 UI：先读 `DESIGN.md`，再按 `.agents/skills/design-review/SKILL.md` 执行；颜色、间距、组件不得在 Vue 文件里临时发明。
+- 改 UI：先读 `docs/design/DESIGN.md`，再按 `.agents/skills/design-review/SKILL.md` 执行；颜色、间距、组件不得在 Vue 文件里临时发明。
 - 加平台：读 `.agents/skills/add-platform/SKILL.md`。
 - 加工具：读 `.agents/skills/add-tool/SKILL.md`。
 - 交付前：读 `.agents/skills/verify-app/SKILL.md`。
@@ -114,7 +115,7 @@ recordPower(vote: PowerVote): void
 - `npm run typecheck`、`npm run lint`（含 `check:design`）、`npm run test` 全绿。
 - 新增或修改的逻辑有对应测试；协议解析用 fixture；物理用固定 seed 断言。
 - `npm run build` 通过；涉及界面时 `npm run smoke` 有截图，且无白屏、无未处理报错。
-- 文档与实现同步：契约变更必须更新 `docs/architecture.md` 和对应 ADR；UI 变更遵循 `DESIGN.md`。
+- 文档与实现同步：契约变更必须更新 `docs/architecture/README.md` 和对应 ADR；UI 变更遵循 `docs/design/DESIGN.md`。
 - 没有新增 `any`、裸 `setInterval`、未处理的 Promise rejection。
 - 不把「以后再说」留在代码里而不留 TODO 链接；TODO 必须写清触发条件。
 

@@ -10,7 +10,7 @@
 | --- | --- | --- |
 | 类型 | `npm run typecheck` | 通过 |
 | 静态检查 | `npm run lint` | 通过（ESLint + 依赖边界 + 设计 token） |
-| 单元测试 | `npm run test` | 通过，15 个文件 / 63 个用例；2 个真连/集成测试默认跳过 |
+| 单元测试 | `npm run test` | 通过，16 个文件 / 64 个用例；2 个真连/集成测试默认跳过 |
 | 构建 | `npm run build` | 通过 |
 | 冒烟 | `npm run smoke` | 通过，生成控制台面板动画与应用内结果弹窗截图 |
 | 打包 | `npm run package:win` / `package:mac` / `package:linux` | Windows 本地通过 x64 + arm64；macOS/Linux 由 CI 矩阵构建 |
@@ -47,7 +47,7 @@
 
 ## 覆盖范围
 
-- 基础设施：AGENTS.md、DESIGN.md、docs、ADR、4 个 agent skill、CI。
+- 基础设施：AGENTS.md、docs/design、docs/architecture、ADR、4 个 agent skill、CI。
 - 平台层：统一 `PlatformAdapter`，本地模拟 + B站匿名弹幕（WBI 签名）+ 抖音只读（本地签名、protobuf fixture、真实 WSS 可选测试）。
 - 工具层：统一 `InteractionTool`，投骰子（命令驱动）、转转盘（主播手动）、弹幕投票（命令驱动）三种形态，历史记录分开。
 - 控制台：通用工具切换器按 manifest 渲染，骰子/转盘面板分离；转盘不经过 CommandBus；转盘/投票各支持最多 12 个命名预设。
@@ -55,7 +55,7 @@
 - 呈现：主进程录制帧，骰子在 `DicePanel` 内联 Three.js 回放，转盘在 `WheelPanel` 内 CSS 旋转；停稳后在控制台内弹出 `ResultOverlay` + 彩带烟花，手动关闭。
 - 配置：面板 500ms / 平台 600ms debounce 自动保存；feed 使用 68px 行高虚拟滚动并保持贴底。
 - 配置：zod 校验、原子写、坏配置回落。
-- 设计：DESIGN.md 规格 + tokens.css + `check:design` 强制。
+- 设计：docs/design/DESIGN.md 规格 + tokens.css + `check:design` 强制。
 
 ## 已知限制
 

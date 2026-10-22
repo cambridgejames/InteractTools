@@ -11,7 +11,10 @@ export async function runSmoke(application: Application): Promise<void> {
   await application.engine.updateUi({ onboardingDone: false })
   await delay(350)
   await application.controlWindow.capture(join(output, 'control-onboarding.png'))
-  await application.engine.updateUi({ onboardingDone: true })
+  await application.engine.updateUi({ onboardingDone: true, theme: 'light' })
+  await delay(450)
+  await application.controlWindow.capture(join(output, 'control-light.png'))
+  await application.engine.updateUi({ theme: 'dark' })
   await delay(350)
   await application.controlWindow.capture(join(output, 'control.png'))
 
@@ -68,9 +71,19 @@ export async function runSmoke(application: Application): Promise<void> {
     "document.querySelectorAll('.settings-tabs .nav-item')[3]?.click()"
   )
   await delay(250)
+  await application.controlWindow.capture(join(output, 'control-settings-window.png'))
+  await application.controlWindow.browserWindow.webContents.executeJavaScript(
+    "document.querySelectorAll('.settings-tabs .nav-item')[4]?.click()"
+  )
+  await delay(250)
   await application.controlWindow.capture(join(output, 'control-settings-shortcuts.png'))
   await application.controlWindow.browserWindow.webContents.executeJavaScript(
     "document.querySelectorAll('.settings-tabs .nav-item')[5]?.click()"
+  )
+  await delay(250)
+  await application.controlWindow.capture(join(output, 'control-settings-data.png'))
+  await application.controlWindow.browserWindow.webContents.executeJavaScript(
+    "document.querySelectorAll('.settings-tabs .nav-item')[6]?.click()"
   )
   await delay(250)
   await application.controlWindow.capture(join(output, 'control-settings-about.png'))

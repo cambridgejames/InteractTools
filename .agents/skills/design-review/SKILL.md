@@ -1,6 +1,6 @@
 ---
 name: design-review
-description: 实现或修改任何界面、组件、弹窗、配色前使用；强制对照 DESIGN.md 与 tokens.css，检查状态、间距、截图与裸颜色。
+description: 实现或修改任何界面、组件、弹窗、配色前使用；强制对照 docs/design/DESIGN.md 与 tokens.css，检查状态、间距、截图与裸颜色。
 ---
 
 # 设计规格执行
@@ -13,19 +13,20 @@ description: 实现或修改任何界面、组件、弹窗、配色前使用；�
 
 ## 前置
 
-1. 读 @@DESIGN.md@@。它是唯一视觉事实源，不要凭记忆或参考图改。
+1. 读 @@docs/design/DESIGN.md@@。它是唯一视觉事实源，不要凭记忆或参考图改。
 2. 读 @@src/renderer/src/styles/tokens.css@@。组件只允许 @@var(--...)@@。
 3. 若规格里没有你要的组件，先补规格，再写代码。
 
 ## 步骤
 
-1. 在 @@DESIGN.md@@ 里找到对应组件或页面章节；找不到就先加一节。
+1. 在 @@docs/design/DESIGN.md@@ 里找到对应组件或页面章节；找不到就先加一节。
 2. 选择已有 token：表面、文字、强调、语义、间距、圆角、时长。
 3. 写组件时按规格实现所有状态：default / hover / active / focus-visible / disabled / loading / empty / error。
 4. 检查响应式：< 1180px、< 980px 的折叠行为。
 5. 跑 @@npm run check:design@@；任何裸 @@#hex@@、@@rgb()@@、@@rgba()@@ 都必须改成 token。
 6. 跑 @@npm run smoke@@，检查 @@artifacts/smoke/control.png@@ 与 @@overlay.png@@。
-7. 与 @@DESIGN.md@@ 不一致就改代码，不改规格；除非规格本身有问题，那就先改规格并记录原因。
+7. 与 @@docs/design/DESIGN.md@@ 不一致就改代码，不改规格；除非规格本身有问题，那就先改规格并记录原因。
+8. 浅色/跟随系统主题同时检查 @@docs/design/light-theme.md@@；动效遵循 @@docs/design/motion.md@@。
 
 ## 硬性规则
 

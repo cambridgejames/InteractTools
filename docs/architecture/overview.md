@@ -668,7 +668,7 @@ userData 默认是 %APPDATA%/interact-tools；--smoke 时切到 artifacts/smoke/
 
 ## 14. 视觉系统
 
-- DESIGN.md 是唯一视觉事实源。
+- docs/design/DESIGN.md 是唯一视觉事实源。
 - tokens.css 是唯一颜色/间距/圆角/动效变量来源。
 - check:design 扫描 Vue/CSS 中的裸 hex/rgb/rgba。
 - 控件规格：开关 36×20；按钮 34/36 高；卡片 14px 圆角；结果弹窗 20px 圆角。
@@ -687,7 +687,7 @@ userData 默认是 %APPDATA%/interact-tools；--smoke 时切到 artifacts/smoke/
 
 测试：
 
-- 17 个测试文件（15 个通过、2 个默认跳过），63 个用例通过，2 个真连/集成用例默认跳过。
+- 18 个测试文件（16 个通过、2 个默认跳过），64 个用例通过，2 个真连/集成用例默认跳过。
 - 覆盖骰子 domain、几何、物理、工具、轮盘工具、投票 domain/工具、命令提示总线、MockAdapter、B站协议、WBI。
 - 真连测试：LIVE_BILIBILI=1 npx vitest run tests/bilibili-live.test.ts；最近房间 6 收到 6 条。
 

@@ -1,69 +1,148 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import AppIcon from './AppIcon.vue'
 
-type TourIcon = 'platforms' | 'dice' | 'wheel' | 'vote' | 'globe' | 'keyboard'
+type Page = 'dashboard' | 'tools' | 'settings'
+type TourIcon = 'settings' | 'dice' | 'vote' | 'keyboard' | 'globe'
 
 interface TourStep {
   readonly icon: TourIcon
   readonly title: string
   readonly body: string
   readonly hint: string
+  readonly page: Page
+  readonly target: string
+  readonly open?: string
 }
 
 const steps: readonly TourStep[] = [
   {
-    icon: 'platforms',
-    title: '先接一个直播间',
-    body: '打开「设置 → 平台连接」，填 B站房间号或抖音直播间地址。所有平台都是只读：只收弹幕、礼物和进场，不会替你发言或送礼。',
-    hint: '没有直播间也可以先用本地模拟试玩。'
+    icon: 'settings',
+    title: '先打开设置',
+    body: '点左侧「设置」，所有平台连接、网络和外观都在这里。这个高亮就是入口。',
+    hint: '所有平台都只读，不会替你发言或送礼。',
+    page: 'dashboard',
+    target: '[data-tour="nav-settings"]'
   },
   {
     icon: 'dice',
-    title: '选一个今晚的玩法',
-    body: '控制台顶部可以切换投骰子、转转盘和弹幕投票。转盘和投票都带预设，真心话、大冒险一键载入。',
-    hint: '工具参数会自动保存，下次打开还是这套设置。'
+    title: '回到控制台选玩法',
+    body: '这里切换投骰子、转转盘和弹幕投票。点一下工具卡片就能换玩法。',
+    hint: '参数会自动保存，下次打开还是这套设置。',
+    page: 'dashboard',
+    target: '[data-tour="tool-switcher"]'
   },
   {
     icon: 'vote',
-    title: '弹幕就在右边',
-    body: '右侧弹幕栏会实时显示聊天和礼物，进场观众合并成底部的一行提示。向上翻看历史时不会强制拉回底部，有新消息会提示你。',
-    hint: '点击「N 条新弹幕」或自己滚到底，就能回到最新消息。'
-  },
-  {
-    icon: 'keyboard',
-    title: '把常用动作绑成快捷键',
-    body: '「设置 → 快捷键」可以录显示/隐藏窗口、显示/隐藏弹幕栏、清空弹幕和打开设置。默认全部为空，需要时再绑定，也可以设为全局。',
-    hint: '关闭/退出组合固定不可绑定，避免直播时误退。'
+    title: '眼睛看右边',
+    body: '这里就是实时弹幕。向上翻历史时不会强制拉回底部，有新消息会出现提示按钮。',
+    hint: '进场观众只占底部一行，不抢聊天历史。',
+    page: 'dashboard',
+    target: '[data-tour="feed"]'
   },
   {
     icon: 'globe',
-    title: '网络有问题再看这里',
-    body: '「设置 → 网络」支持系统代理和自定义代理，可填用户名、密码和直连域名。内网自签名证书可以临时跳过校验，测试连通性会分别显示每个平台。',
-    hint: '代理只影响平台连接，不影响本地模拟。'
+    title: '网络在这里测',
+    body: '进入设置 → 网络，点「测试连通性」会分别显示 B站和抖音的连通状态与延迟。',
+    hint: '内网自签名代理可以打开 SSL 跳过校验。',
+    page: 'settings',
+    target: '[data-tour="network-test"]',
+    open: '[data-tour="settings-network"]'
+  },
+  {
+    icon: 'keyboard',
+    title: '最后绑快捷键',
+    body: '设置 → 快捷键，默认全空。点输入框后按下组合键即可，关闭/退出组合不会被接受。',
+    hint: '直播前先试一遍，确认不会误触。',
+    page: 'settings',
+    target: '[data-tour="settings-shortcuts"]',
+    open: '[data-tour="settings-shortcuts"]'
   }
 ]
 
 const step = ref(0)
+const target = ref('')
+const cardStyle = ref({ left: '50%', top: '50%', transform: 'translate(-50%, -50%)' })
+const spotStyle = ref({ display: 'none', left: '0px', top: '0px', width: '0px', height: '0px' })
+const panels = ref([
+  { display: 'none', left: '0px', top: '0px', width: '0px', height: '0px' },
+  { display: 'none', left: '0px', top: '0px', width: '0px', height: '0px' },
+  { display: 'none', left: '0px', top: '0px', width: '0px', height: '0px' },
+  { display: 'none', left: '0px', top: '0px', width: '0px', height: '0px' }
+])
 const current = computed<TourStep>(() => steps[step.value] ?? steps[0] ?? {
-  icon: 'platforms',
+  icon: 'settings',
   title: '操作指引',
   body: '按下一步继续。',
-  hint: 'Esc 可以跳过。'
+  hint: 'Esc 可以跳过。',
+  page: 'dashboard',
+  target: ''
 })
 const last = computed(() => step.value === steps.length - 1)
-const emit = defineEmits<{ done: [] }>()
+const emit = defineEmits<{ done: []; navigate: [page: Page] }>()
+
+function locate(): void {
+  const selector = current.value.target
+  const element = selector.length > 0 ? document.querySelector<HTMLElement>(selector) : null
+  if (element === null) {
+    target.value = ''
+    spotStyle.value = { display: 'none', left: '0px', top: '0px', width: '0px', height: '0px' }
+    panels.value = panels.value.map(() => ({ display: 'none', left: '0px', top: '0px', width: '0px', height: '0px' }))
+    cardStyle.value = { left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }
+    return
+  }
+  element.scrollIntoView({ block: 'center', inline: 'nearest' })
+  const rect = element.getBoundingClientRect()
+  const pad = 8
+  const left = Math.max(0, rect.left - pad)
+  const top = Math.max(0, rect.top - pad)
+  const right = Math.min(window.innerWidth, rect.right + pad)
+  const bottom = Math.min(window.innerHeight, rect.bottom + pad)
+  const width = Math.max(0, right - left)
+  const height = Math.max(0, bottom - top)
+  target.value = selector
+  spotStyle.value = { display: 'block', left: left + 'px', top: top + 'px', width: width + 'px', height: height + 'px' }
+  panels.value = [
+    { display: 'block', left: '0px', top: '0px', width: '100vw', height: top + 'px' },
+    { display: 'block', left: '0px', top: bottom + 'px', width: '100vw', height: Math.max(0, window.innerHeight - bottom) + 'px' },
+    { display: 'block', left: '0px', top: top + 'px', width: left + 'px', height: height + 'px' },
+    { display: 'block', left: right + 'px', top: top + 'px', width: Math.max(0, window.innerWidth - right) + 'px', height: height + 'px' }
+  ]
+  const cardWidth = 380
+  const below = bottom + 18
+  const cardTop = below + 190 < window.innerHeight ? below : Math.max(18, top - 206)
+  cardStyle.value = {
+    left: Math.max(18, Math.min(rect.left, window.innerWidth - cardWidth - 18)) + 'px',
+    top: cardTop + 'px',
+    transform: 'none'
+  }
+}
+
+async function goTo(index: number): Promise<void> {
+  step.value = Math.max(0, Math.min(steps.length - 1, index))
+  const currentStep = steps[step.value]
+  if (currentStep === undefined) return
+  emit('navigate', currentStep.page)
+  await nextTick()
+  if (currentStep.open !== undefined) {
+    window.setTimeout(() => {
+      document.querySelector<HTMLElement>(currentStep.open ?? '')?.click()
+      window.setTimeout(locate, 120)
+    }, 80)
+  }
+  window.setTimeout(locate, 180)
+}
 
 function next(): void {
   if (last.value) {
     emit('done')
     return
   }
-  step.value += 1
+  void goTo(step.value + 1)
 }
 
 function previous(): void {
-  if (step.value > 0) step.value -= 1
+  void goTo(step.value - 1)
 }
 
 function onKey(event: KeyboardEvent): void {
@@ -72,16 +151,40 @@ function onKey(event: KeyboardEvent): void {
   if (event.key === 'ArrowLeft') previous()
 }
 
-onMounted(() => window.addEventListener('keydown', onKey))
-onUnmounted(() => window.removeEventListener('keydown', onKey))
+function onViewportChange(): void {
+  locate()
+}
+
+watch(step, () => locate())
+
+onMounted(() => {
+  window.addEventListener('keydown', onKey)
+  window.addEventListener('resize', onViewportChange)
+  window.addEventListener('scroll', onViewportChange, true)
+  void goTo(0)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', onKey)
+  window.removeEventListener('resize', onViewportChange)
+  window.removeEventListener('scroll', onViewportChange, true)
+})
 </script>
 
 <template>
   <Teleport to="body">
-    <div class="tour-backdrop" role="dialog" aria-modal="true" aria-labelledby="tour-title">
-      <section class="tour-card">
+    <div class="tour-layer" role="dialog" aria-modal="true" aria-labelledby="tour-title">
+      <div
+        v-for="(panel, index) in panels"
+        :key="index"
+        class="tour-panel"
+        :style="panel"
+      />
+      <div v-if="spotStyle.display === 'block'" class="tour-spot" :style="spotStyle" />
+
+      <section class="tour-card" :style="cardStyle">
         <header class="tour-head">
-          <span class="tour-icon"><AppIcon :name="current.icon" :size="20" /></span>
+          <span class="tour-icon"><AppIcon :name="current.icon" :size="18" /></span>
           <span class="tour-count">{{ String(step + 1).padStart(2, '0') }} / {{ String(steps.length).padStart(2, '0') }}</span>
         </header>
 
@@ -98,7 +201,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
               :class="{ active: index === step }"
               type="button"
               :aria-label="'第 ' + String(index + 1) + ' 步'"
-              @click="step = index"
+              @click="goTo(index)"
             />
           </div>
           <div class="tour-actions">
@@ -113,24 +216,40 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 </template>
 
 <style scoped>
-.tour-backdrop {
+.tour-layer {
   position: fixed;
   inset: 0;
   z-index: 80;
-  display: grid;
-  place-items: center;
-  padding: var(--s-5);
+  pointer-events: none;
+}
+
+.tour-panel {
+  position: fixed;
+  z-index: 1;
   background: var(--overlay-veil);
-  backdrop-filter: blur(6px);
+  pointer-events: auto;
+}
+
+.tour-spot {
+  position: fixed;
+  z-index: 2;
+  border: 1px solid var(--accent);
+  border-radius: var(--r-control);
+  box-shadow: 0 0 0 3px var(--accent-soft), var(--glow-accent);
+  pointer-events: none;
+  transition: all var(--dur-fast) var(--ease-out);
 }
 
 .tour-card {
-  width: min(520px, 100%);
-  padding: var(--s-5);
+  position: fixed;
+  z-index: 3;
+  width: min(380px, calc(100vw - 36px));
+  padding: var(--s-4);
   border: 1px solid var(--hairline-strong);
   border-radius: var(--r-card);
   background: var(--canvas-elevated);
   box-shadow: var(--shadow-pop);
+  pointer-events: auto;
 }
 
 .tour-head {
@@ -142,8 +261,8 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 .tour-icon {
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--hairline));
   border-radius: var(--r-icon);
   background: var(--accent-soft);
@@ -157,9 +276,9 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 }
 
 h2 {
-  margin: var(--s-4) 0 var(--s-2);
+  margin: var(--s-3) 0 var(--s-1);
   color: var(--ink);
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 600;
   letter-spacing: -0.02em;
 }
@@ -168,11 +287,11 @@ h2 {
   margin: 0;
   color: var(--body);
   font-size: 14px;
-  line-height: 22px;
+  line-height: 21px;
 }
 
 .tour-hint {
-  margin: var(--s-3) 0 0;
+  margin: var(--s-2) 0 0;
   padding: var(--s-2) var(--s-3);
   border-left: 2px solid var(--accent);
   background: var(--accent-soft);
@@ -185,8 +304,8 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--s-4);
-  margin-top: var(--s-5);
+  gap: var(--s-3);
+  margin-top: var(--s-4);
 }
 
 .tour-dots {
@@ -218,7 +337,7 @@ h2 {
 .tour-skip,
 .tour-prev,
 .tour-next {
-  height: 32px;
+  height: 30px;
   padding: 0 var(--s-3);
   border-radius: var(--r-control);
   font-size: 12px;
@@ -242,9 +361,5 @@ h2 {
 .tour-prev:hover {
   color: var(--body);
   border-color: var(--hairline-strong);
-}
-
-.tour-next:hover {
-  filter: brightness(1.05);
 }
 </style>
