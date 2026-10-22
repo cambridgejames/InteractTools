@@ -22,7 +22,8 @@
 - 第三个工具是「弹幕投票」：观众发 `!投票 1` 或选项文字；默认同一观众只计第一票，可开启「允许改票」改为后票覆盖；大倒计时结束后统计并列最高票并弹出结果。
 - 控制台是通用工具宿主：顶部工具切换器按 manifest 自动出现，三个工具共用同一套平台、历史、面板动画与应用内结果弹窗基础设施。
 - 右侧实时弹幕栏可完整显示、折叠成窄条或隐藏，使用虚拟滚动固定行高并保持贴底；窗口小于 1180px 时优先让出中间工具区。
-- 设置页提供网络代理：直连（默认）/ 系统代理 / 自定义 HTTP(S) 代理，可测试 B站连通性；B站接口与弹幕 WebSocket 都走同一代理。
+- 设置页提供网络代理：直连（默认）/ 系统代理 / 自定义 HTTP(S) 代理，支持认证、直连域名与自签名 TLS；连通性测试按平台显示状态与延迟。
+- 深色 / 浅色 / 跟随系统主题；日志按天 + 20MB 滚动，设置页可改等级并收集 zip。
 - 实时弹幕栏：进场消息合并到底部单行 ticker，模拟消息带「模拟」标签，礼物带「礼物」标签，不显示平台来源。
 - 抖音只读接入：填写直播间号即可，本地匿名签名连接，采集弹幕、礼物、进场；不登录、不发消息，不提供签名服务地址。签名/WSS 已联调；真实弹幕内容需用活跃房间记录。
 - 「互动工具」页的卡片内可以单独开关投骰子、转转盘或弹幕投票；关闭后不接收弹幕命令，重新打开恢复配置与历史。
@@ -46,10 +47,10 @@ B站弹幕已通过 WBI 签名 + WSS 认证真连：房间 6、21144080 均可�
 
 ## 文档
 
-- [docs/design/DESIGN.md](docs/design/DESIGN.md) — 唯一视觉规格
+- [docs/design/ui-guidelines.md](docs/design/ui-guidelines.md) — 唯一视觉规格
 - [AGENTS.md](AGENTS.md) — 协作规范与架构不变量
-- [docs/architecture/README.md](docs/architecture/README.md) — 分层、契约、数据流
-- [docs/architecture/README.md](docs/architecture/README.md) — 架构索引与子系统拆分
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — 分层、进程、IPC 与数据流
+- [docs/design/](docs/design/README.md) — 已落地子系统说明
 - [docs/usage.md](docs/usage.md) — 使用与 OBS 配置
 - [docs/roadmap.md](docs/roadmap.md) — 进度
 - [docs/testing.md](docs/testing.md) — 测试策略

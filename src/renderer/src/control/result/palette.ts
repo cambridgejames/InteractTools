@@ -1,4 +1,4 @@
-/** 3D 场景颜色；CSS 变量在 WebGL 里不可用，集中在这里便于对照 docs/design/DESIGN.md。 */
+/** 3D 场景颜色；CSS 变量在 WebGL 里不可用，集中在这里便于对照 docs/design/ui-guidelines.md。 */
 export const SCENE = {
   faceLight: '#f7f1de',
   faceDark: '#e6dcc2',

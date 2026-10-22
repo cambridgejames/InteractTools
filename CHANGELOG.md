@@ -39,6 +39,7 @@
 
 ### 变更
 
+- 文档体系按 `docs/README.md` 分层：已落地子系统进 `docs/design/`，未实施方案进 `docs/roadmap/`；新增 `doc-convention` skill 与 `check:docs` 校验（链接、索引、frontmatter、占位符）
 - 移除系统标题栏，保留 Windows/Linux 原生窗口按钮与 macOS 红绿灯，顶栏支持拖拽移动
 - 骰子中高力度增加台面弹性和横向滚动，力度越大越容易二次弹跳/咕噜；停稳上限 13 秒、连续 12 步，并增加“1 秒位移/姿态几乎不变”判停，d10 不再长时间空等
 - d20 停稳判定放宽，减少实际已停稳却报未停稳

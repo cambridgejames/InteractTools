@@ -27,7 +27,7 @@
 - `control-platforms.png`：设置页「平台连接」子页，B站、抖音、本地模拟三张独立卡片与统一位置开关。
 - `control-tools.png`：互动工具页三张工具卡片、卡片内开关与搜索框。
 - `control-tool-search.png`：互动工具页搜索拼音“touzi”，命中卡片、拼音高亮与相关度排序。
-- `control-settings.png`：设置「界面与窗口」子页，窗口位置、弹幕栏模式和结果展示。
+- `control-settings.png` / `control-settings-window.png`：外观与窗口子页；另有快捷键、数据、关于、浅色主题截图。
 - `control-settings-network.png`：设置「网络」子页，代理模式与连通性测试入口。
 - `control-settings-select.png`：自定义深色下拉菜单展开态。
 - `control-settings-about.png`：关于区的 GitHub 仓库/问题反馈入口。
@@ -47,7 +47,7 @@
 
 ## 覆盖范围
 
-- 基础设施：AGENTS.md、docs/design、docs/architecture、ADR、4 个 agent skill、CI。
+- 基础设施：AGENTS.md、docs/design、docs/ARCHITECTURE.md、ADR、技能与文档校验、CI。
 - 平台层：统一 `PlatformAdapter`，本地模拟 + B站匿名弹幕（WBI 签名）+ 抖音只读（本地签名、protobuf fixture、真实 WSS 可选测试）。
 - 工具层：统一 `InteractionTool`，投骰子（命令驱动）、转转盘（主播手动）、弹幕投票（命令驱动）三种形态，历史记录分开。
 - 控制台：通用工具切换器按 manifest 渲染，骰子/转盘面板分离；转盘不经过 CommandBus；转盘/投票各支持最多 12 个命名预设。
@@ -55,7 +55,7 @@
 - 呈现：主进程录制帧，骰子在 `DicePanel` 内联 Three.js 回放，转盘在 `WheelPanel` 内 CSS 旋转；停稳后在控制台内弹出 `ResultOverlay` + 彩带烟花，手动关闭。
 - 配置：面板 500ms / 平台 600ms debounce 自动保存；feed 使用 68px 行高虚拟滚动并保持贴底。
 - 配置：zod 校验、原子写、坏配置回落。
-- 设计：docs/design/DESIGN.md 规格 + tokens.css + `check:design` 强制。
+- 设计：docs/design/ui-guidelines.md 规格 + tokens.css + `check:design` 强制。
 
 ## 已知限制
 

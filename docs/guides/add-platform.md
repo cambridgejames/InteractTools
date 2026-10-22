@@ -1,6 +1,6 @@
 # 新增平台适配器
 
-本文以新增平台 `example` 为例。完整契约见 `docs/architecture/README.md` 第 4 节。
+本文以新增平台 `example` 为例。完整契约见 `docs/ARCHITECTURE.md`。
 
 ## 1. 先确认能力边界
 
@@ -111,5 +111,5 @@ this.context.emit({ type: 'chat', message });
 - [ ] `connect / disconnect` 可重复调用，退出应用不残留定时器。
 - [ ] 所有入口数据经 zod 解析。
 - [ ] fixture 测试覆盖正常与异常包。
-- [ ] 文档与 `docs/architecture/platforms.md` 的能力表一致。
+- [ ] 文档与 `docs/design/platforms.md` 的能力表一致。
 - [ ] 没有把凭据写入仓库或日志。

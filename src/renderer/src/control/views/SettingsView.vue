@@ -701,7 +701,7 @@ async function clearAllData(): Promise<void> {
         <ul>
           <li>本地优先：B站匿名弹幕、抖音只读弹幕 + 本地模拟，不依赖自建服务端。</li>
           <li>物理结果由 cannon-es 刚体模拟产生，结果动画只回放录制数据。</li>
-          <li>视觉规格见 docs/design/DESIGN.md，组件只使用 tokens.css 的变量。</li>
+          <li>视觉规格见 docs/design/ui-guidelines.md，组件只使用 tokens.css 的变量。</li>
         </ul>
         <div class="about-replay">
           <div>

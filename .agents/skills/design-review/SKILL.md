@@ -1,6 +1,6 @@
 ---
 name: design-review
-description: 实现或修改任何界面、组件、弹窗、配色前使用；强制对照 docs/design/DESIGN.md 与 tokens.css，检查状态、间距、截图与裸颜色。
+description: 实现或修改任何界面、组件、弹窗、配色前使用；强制对照 docs/design/ui-guidelines.md 与 tokens.css，检查状态、间距、截图与裸颜色。
 ---
 
 # 设计规格执行
