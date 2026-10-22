@@ -187,11 +187,15 @@ watch(
 const wheelStyle = computed(() => {
   const segments = props.view.segments
   const step = 360 / Math.max(1, segments.length)
+  const gap = 0.8
   const stops = segments
     .map((_, index) => {
-      const start = (index * step).toFixed(2)
-      const end = ((index + 1) * step).toFixed(2)
-      return 'var(' + paletteVar(index) + ') ' + start + 'deg ' + end + 'deg'
+      const start = index * step
+      const end = (index + 1) * step
+      return (
+        'var(--wheel-gap) ' + start.toFixed(2) + 'deg ' + (start + gap).toFixed(2) + 'deg, ' +
+        'var(' + paletteVar(index) + ') ' + (start + gap).toFixed(2) + 'deg ' + end.toFixed(2) + 'deg'
+      )
     })
     .join(', ')
   return {
@@ -206,7 +210,7 @@ const wheelStyle = computed(() => {
 })
 
 function paletteVar(index: number): string {
-  const palette = ['--wheel-1', '--wheel-2', '--wheel-3', '--wheel-4', '--wheel-5', '--wheel-6', '--wheel-7']
+  const palette = ['--wheel-1', '--wheel-2', '--wheel-3', '--wheel-4', '--wheel-5', '--wheel-6', '--wheel-7', '--wheel-8']
   return palette[index % palette.length] ?? '--wheel-4'
 }
 
@@ -384,7 +388,11 @@ async function clearHistory(): Promise<void> {
   width: 400px;
   height: 400px;
   border-radius: 50%;
-  box-shadow: 0 0 0 1px var(--hairline-strong), var(--glow-accent);
+  box-shadow:
+    0 0 0 1px var(--hairline-strong),
+    0 0 0 7px var(--surface),
+    0 0 0 8px var(--hairline),
+    var(--shadow-pop);
 }
 
 .wheel-disc {
@@ -401,7 +409,8 @@ async function clearHistory(): Promise<void> {
   display: -webkit-box;
   overflow: hidden;
   font-weight: 600;
-  line-height: 1.2;
+  line-height: 1.18;
+  text-shadow: 0 1px 0 color-mix(in srgb, var(--ink) 10%, transparent);
   text-align: center;
   text-overflow: ellipsis;
   -webkit-box-orient: vertical;

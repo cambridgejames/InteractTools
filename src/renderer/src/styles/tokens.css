@@ -40,6 +40,8 @@
   --wheel-5: var(--success);
   --wheel-6: var(--warning);
   --wheel-7: var(--accent-strong);
+  --wheel-8: #8b7aa8;
+  --wheel-gap: var(--surface);
   --wheel-text: var(--canvas);
   --wheel-text-alt: var(--ink);
 
@@ -79,15 +81,17 @@
   --danger: #c52d2d;
   --overlay-veil: rgba(18, 22, 16, 0.55);
 
-  --wheel-1: #5c7800;
-  --wheel-2: #1f6f7a;
-  --wheel-3: #a24f6d;
-  --wheel-4: #7c8a6a;
-  --wheel-5: #2f7d55;
-  --wheel-6: #9a6a20;
-  --wheel-7: #7c8f2a;
-  --wheel-text: #ffffff;
-  --wheel-text-alt: #ffffff;
+  --wheel-1: #d9e3c2;
+  --wheel-2: #c2dfe3;
+  --wheel-3: #efd3dc;
+  --wheel-4: #e8dfc8;
+  --wheel-5: #cfe2cc;
+  --wheel-6: #f0dfc0;
+  --wheel-7: #dce6b8;
+  --wheel-8: #e3d5e5;
+  --wheel-gap: var(--surface);
+  --wheel-text: #28301f;
+  --wheel-text-alt: #28301f;
 
   --shadow-pop: 0 12px 32px rgba(28, 34, 22, 0.16);
   --glow-accent: 0 0 28px rgba(92, 120, 0, 0.12);
