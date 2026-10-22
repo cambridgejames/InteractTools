@@ -36,7 +36,7 @@
   --wheel-1: var(--accent);
   --wheel-2: var(--info);
   --wheel-3: var(--bilibili);
-  --wheel-4: var(--surface-active);
+  --wheel-4: #5f6b78;
   --wheel-5: var(--success);
   --wheel-6: var(--warning);
   --wheel-7: var(--accent-strong);
