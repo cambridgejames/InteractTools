@@ -297,7 +297,9 @@ async function clearHistory(): Promise<void> {
             </span>
           </div>
           <span class="hub">
-            <span class="hub-pointer" />
+            <svg class="hub-shape" viewBox="0 0 100 112" aria-hidden="true">
+              <path d="M50 0 L56.74 12.52 A44 44 0 1 1 43.26 12.52 Z" />
+            </svg>
             <BrandMark :size="46" />
           </span>
         </div>
@@ -441,29 +443,37 @@ async function clearHistory(): Promise<void> {
   top: 50%;
   left: 50%;
   z-index: 2;
-  display: grid;
-  place-items: center;
   width: 100px;
-  height: 100px;
-  border: 2px solid var(--accent);
-  border-radius: 50%;
-  background: var(--accent);
+  height: 112px;
   color: var(--accent-ink);
   transform: translate(-50%, -50%);
 }
 
-.hub-pointer {
+.hub-shape {
   position: absolute;
-  top: -26px;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 5px 8px color-mix(in srgb, var(--canvas) 55%, transparent));
+}
+
+.hub-shape path {
+  fill: var(--accent);
+  stroke: var(--canvas-elevated);
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+
+.hub > svg:not(.hub-shape) {
+  position: absolute;
+  top: 33px;
   left: 50%;
-  z-index: 0;
-  width: 0;
-  height: 0;
-  border-right: 10px solid transparent;
-  border-bottom: 28px solid var(--accent);
-  border-left: 10px solid transparent;
+  width: 46px;
+  height: 46px;
   transform: translateX(-50%);
 }
+
 
 
 .preview-meta {
