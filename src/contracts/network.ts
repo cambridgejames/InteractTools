@@ -17,6 +17,19 @@ export const networkConfigSchema = z
 
 export type NetworkConfig = z.infer<typeof networkConfigSchema>
 
+/** 部分更新不能带默认值，否则只改代理地址会重置认证/TLS。 */
+export const networkPatchSchema = z
+  .object({
+    proxyMode: z.enum(PROXY_MODES),
+    proxyUrl: z.string().trim().max(2048),
+    proxyUsername: z.string().trim().max(128),
+    proxyPassword: z.string().max(256),
+    proxyBypass: z.string().max(2048),
+    allowInsecureTls: z.boolean()
+  })
+  .partial()
+  .strict()
+
 export const DEFAULT_NETWORK_CONFIG: NetworkConfig = {
   proxyMode: 'none',
   proxyUrl: '',

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_APP_CONFIG, uiConfigSchema } from '@contracts/config'
+import { DEFAULT_APP_CONFIG, uiConfigSchema, uiPatchSchema } from '@contracts/config'
+import { networkPatchSchema } from '@contracts/network'
 import { DEFAULT_VOTE_CONFIG, voteConfigSchema } from '@contracts/vote'
 import { DEFAULT_WHEEL_CONFIG, wheelConfigSchema } from '@contracts/wheel'
 
@@ -30,5 +31,12 @@ describe('默认预设', () => {
       onboardingDone: false
     })
     expect(DEFAULT_APP_CONFIG.ui).toEqual(ui)
+  })
+
+  it('局部更新不会注入默认值，避免切主题重置引导和平台开关', () => {
+    expect(uiPatchSchema.parse({ theme: 'light' })).toEqual({ theme: 'light' })
+    expect(networkPatchSchema.parse({ proxyUrl: 'http://127.0.0.1:7890' })).toEqual({
+      proxyUrl: 'http://127.0.0.1:7890'
+    })
   })
 })

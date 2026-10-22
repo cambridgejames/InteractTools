@@ -3,8 +3,8 @@ import { readFile, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { z } from 'zod'
 import { IPC } from '@contracts/ipc'
-import { networkConfigSchema, type NetworkConfig } from '@contracts/network'
-import { loggingConfigSchema, shortcutsConfigSchema, TOOL_IDS, uiConfigSchema } from '@contracts/config'
+import { networkPatchSchema, type NetworkConfig } from '@contracts/network'
+import { loggingConfigSchema, shortcutsConfigSchema, TOOL_IDS, uiPatchSchema } from '@contracts/config'
 import type { Engine } from '@kernel/engine'
 import type { ControlWindow } from '../windows/control-window'
 import type { NetworkProxy } from '../services/network-proxy'
@@ -34,7 +34,7 @@ export function registerIpc(
   ipcMain.handle(IPC.snapshot, async () => engine.snapshot())
 
   ipcMain.handle(IPC.networkUpdate, async (_event, rawPatch: unknown) => {
-    const parsed = networkConfigSchema.partial().parse(rawPatch)
+    const parsed = networkPatchSchema.parse(rawPatch)
     const patch: Partial<NetworkConfig> = {}
     if (parsed.proxyMode !== undefined) patch.proxyMode = parsed.proxyMode
     if (parsed.proxyUrl !== undefined) patch.proxyUrl = parsed.proxyUrl
@@ -111,7 +111,7 @@ export function registerIpc(
   })
 
   ipcMain.handle(IPC.uiUpdate, async (_event, rawPatch: unknown) => {
-    const parsed = uiConfigSchema.partial().parse(rawPatch)
+    const parsed = uiPatchSchema.parse(rawPatch)
     const patch: {
       theme?: 'dark' | 'light' | 'system'
       showActivePlatforms?: boolean

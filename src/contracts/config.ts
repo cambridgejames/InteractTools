@@ -108,6 +108,18 @@ export const uiConfigSchema = z
 
 export type UiConfig = z.infer<typeof uiConfigSchema>
 
+/** 部分更新不能带默认值，否则只改主题会被其它默认值覆盖。 */
+export const uiPatchSchema = z
+  .object({
+    theme: z.enum(THEME_MODES),
+    showActivePlatforms: z.boolean(),
+    showFeedPlatforms: z.boolean(),
+    showMockLabel: z.boolean(),
+    onboardingDone: z.boolean()
+  })
+  .partial()
+  .strict()
+
 export const DEFAULT_UI_CONFIG: UiConfig = {
   theme: 'dark',
   showActivePlatforms: true,
