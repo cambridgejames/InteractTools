@@ -47,11 +47,38 @@ export type VoteConfig = z.infer<typeof voteConfigSchema>
 
 export const DEFAULT_VOTE_CONFIG: VoteConfig = {
   question: '今晚玩什么？',
-  options: ['方案 A', '方案 B', '方案 C'],
+  options: ['聊天', '唱歌', '游戏', '整活'],
   countdownSeconds: 30,
   commandAliases: ['投票', 'vote'],
   allowRevote: false,
-  presets: []
+  presets: [
+    {
+      "id": "preset-play",
+      "name": "今晚玩什么",
+      "question": "今晚玩什么？",
+      "options": [
+        "聊天",
+        "唱歌",
+        "游戏",
+        "整活"
+      ],
+      "countdownSeconds": 30,
+      "allowRevote": false
+    },
+    {
+      "id": "preset-punish",
+      "name": "惩罚方式",
+      "question": "输了怎么惩罚？",
+      "options": [
+        "唱一句",
+        "做深蹲",
+        "学猫叫",
+        "讲冷笑话"
+      ],
+      "countdownSeconds": 30,
+      "allowRevote": false
+    }
+  ]
 }
 
 export const voteResultSchema = z

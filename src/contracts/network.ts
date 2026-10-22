@@ -6,7 +6,12 @@ export type ProxyMode = (typeof PROXY_MODES)[number]
 export const networkConfigSchema = z
   .object({
     proxyMode: z.enum(PROXY_MODES),
-    proxyUrl: z.string().trim().max(2048)
+    proxyUrl: z.string().trim().max(2048),
+    proxyUsername: z.string().trim().max(128).default(''),
+    proxyPassword: z.string().max(256).default(''),
+    /** 逗号或换行分隔的直连域名。 */
+    proxyBypass: z.string().max(2048).default(''),
+    allowInsecureTls: z.boolean().default(false)
   })
   .strict()
 
@@ -14,7 +19,11 @@ export type NetworkConfig = z.infer<typeof networkConfigSchema>
 
 export const DEFAULT_NETWORK_CONFIG: NetworkConfig = {
   proxyMode: 'none',
-  proxyUrl: ''
+  proxyUrl: '',
+  proxyUsername: '',
+  proxyPassword: '',
+  proxyBypass: '',
+  allowInsecureTls: false
 }
 
 /**
@@ -23,6 +32,16 @@ export const DEFAULT_NETWORK_CONFIG: NetworkConfig = {
  */
 export interface NetworkProxyInfo {
   readonly proxyUrl: string | null
+  readonly allowInsecureTls: boolean
+  readonly bypass: readonly string[]
+}
+
+export interface PlatformProbeResult {
+  readonly platformId: string
+  readonly name: string
+  readonly ok: boolean
+  readonly latencyMs: number
+  readonly message: string
 }
 
 export interface NetworkTestResult {
@@ -30,4 +49,5 @@ export interface NetworkTestResult {
   readonly latencyMs: number
   readonly message: string
   readonly proxyUrl: string | null
+  readonly platforms: readonly PlatformProbeResult[]
 }

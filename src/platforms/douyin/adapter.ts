@@ -9,6 +9,7 @@ import type {
 } from '@contracts/platform'
 import { decodeDouyinFrame, encodeDouyinAck, normalizeDouyinRoom, type DouyinMessage } from './protocol'
 import { LocalDouyinSigner, type DouyinSignResult } from './signer'
+import { proxyUrlFor } from '../probe'
 import { douyinAdapterFactory } from './index'
 
 const RECONNECT_DELAY_MS = 5_000
@@ -35,7 +36,7 @@ export class DouyinAdapter implements PlatformAdapter {
   private readonly signer: LocalDouyinSigner
 
   constructor(private readonly context: PlatformContext) {
-    this.signer = new LocalDouyinSigner(context.network.proxyUrl)
+    this.signer = new LocalDouyinSigner(context.network)
   }
 
   async connect(config: unknown, signal: AbortSignal): Promise<void> {
@@ -85,14 +86,18 @@ export class DouyinAdapter implements PlatformAdapter {
   }
 
   private async openSocket(signed: DouyinSignResult, signal: AbortSignal): Promise<void> {
-    const proxyUrl = this.context.network.proxyUrl
-    const agent = proxyUrl === null ? undefined : new HttpsProxyAgent(proxyUrl)
+    const proxyUrl = proxyUrlFor(signed.wssUrl, this.context.network)
+    const insecure = this.context.network.allowInsecureTls
+    const agent = proxyUrl === null
+      ? undefined
+      : new HttpsProxyAgent(proxyUrl, { rejectUnauthorized: !insecure })
     await new Promise<void>((resolve, reject) => {
       const socket = new WebSocket(signed.wssUrl, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
           ...signed.headers
         },
+        rejectUnauthorized: !insecure,
         ...(agent === undefined ? {} : { agent })
       })
       this.socket = socket

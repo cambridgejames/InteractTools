@@ -7,8 +7,9 @@ import type {
   PlatformStatus
 } from '@contracts/platform'
 import WebSocket from 'ws'
-import { ProxyAgent, fetch as undiciFetch } from 'undici'
+import { Agent, ProxyAgent, fetch as undiciFetch, type Dispatcher } from 'undici'
 import { HttpsProxyAgent } from 'https-proxy-agent'
+import { probeUrl, proxyUrlFor } from '../probe'
 import {
   authBody,
   decodePackets,
@@ -55,8 +56,9 @@ export class BilibiliAdapter implements PlatformAdapter {
   private signal: AbortSignal | null = null
   private wbiKeys: WbiKeys | null = null
   private wbiFetchedAt = 0
-  private proxyDispatcher: ProxyAgent | null = null
+  private proxyDispatcher: Dispatcher | null = null
   private proxyFor: string | null = null
+  private proxyInsecure = false
 
   constructor(private readonly context: PlatformContext) {}
 
@@ -245,14 +247,18 @@ export class BilibiliAdapter implements PlatformAdapter {
   ): Promise<void> {
     const url = 'wss://' + host + (port === 443 ? '' : ':' + port) + '/sub'
 
-    const proxyUrl = this.context.network.proxyUrl
-    const agent = proxyUrl === null ? undefined : new HttpsProxyAgent(proxyUrl)
+    const proxyUrl = proxyUrlFor(url, this.context.network)
+    const insecure = this.context.network.allowInsecureTls
+    const agent = proxyUrl === null
+      ? undefined
+      : new HttpsProxyAgent(proxyUrl, { rejectUnauthorized: !insecure })
     await new Promise<void>((resolve, reject) => {
       const socket = new WebSocket(url, {
         headers: {
           'User-Agent': USER_AGENT,
           Origin: 'https://live.bilibili.com'
         },
+        rejectUnauthorized: !insecure,
         ...(agent === undefined ? {} : { agent })
       })
       this.socket = socket
@@ -413,16 +419,26 @@ export class BilibiliAdapter implements PlatformAdapter {
     this.context.emit({ type: 'status', status })
   }
 
-  private proxyDispatcherFor(proxyUrl: string | null): ProxyAgent | null {
-    if (proxyUrl === null) {
+  private proxyDispatcherFor(proxyUrl: string | null): Dispatcher | null {
+    const insecure = this.context.network.allowInsecureTls
+    if (proxyUrl === null && !insecure) {
       this.closeProxyDispatcher()
       return null
     }
-    if (this.proxyDispatcher !== null && this.proxyFor === proxyUrl) return this.proxyDispatcher
+    if (this.proxyDispatcher !== null && this.proxyFor === proxyUrl && this.proxyInsecure === insecure) {
+      return this.proxyDispatcher
+    }
 
     this.closeProxyDispatcher()
-    this.proxyDispatcher = new ProxyAgent(proxyUrl)
+    this.proxyDispatcher = proxyUrl === null
+      ? new Agent({ connect: { rejectUnauthorized: false } })
+      : new ProxyAgent({
+          uri: proxyUrl,
+          requestTls: { rejectUnauthorized: !insecure },
+          proxyTls: { rejectUnauthorized: !insecure }
+        })
     this.proxyFor = proxyUrl
+    this.proxyInsecure = insecure
     return this.proxyDispatcher
   }
 
@@ -430,6 +446,7 @@ export class BilibiliAdapter implements PlatformAdapter {
     const dispatcher = this.proxyDispatcher
     this.proxyDispatcher = null
     this.proxyFor = null
+    this.proxyInsecure = false
     if (dispatcher !== null) void dispatcher.close().catch(() => undefined)
   }
 
@@ -456,7 +473,7 @@ export class BilibiliAdapter implements PlatformAdapter {
           headers,
           signal: AbortSignal.any([signal, AbortSignal.timeout(API_TIMEOUT_MS)])
         }
-        const dispatcher = this.proxyDispatcherFor(this.context.network.proxyUrl)
+        const dispatcher = this.proxyDispatcherFor(proxyUrlFor(url, this.context.network))
         const response = await (dispatcher === null
           ? fetch(url, options)
           : undiciFetch(url, { ...options, dispatcher }))
@@ -544,6 +561,25 @@ export const bilibiliAdapterFactory: PlatformAdapterFactory = {
     capabilities: ['chat.read', 'gift.read', 'member.read']
   },
   configSchema: bilibiliConfigSchema,
+  async probe(config, context) {
+    const parsed = bilibiliConfigSchema.parse(config)
+    const room = normalizeRoomInput(parsed.roomId) || '6'
+    try {
+      const result = await probeUrl(
+        'https://api.live.bilibili.com/room/v1/Room/room_init?id=' + encodeURIComponent(room),
+        context.network,
+        context.signal,
+        { Accept: 'application/json' }
+      )
+      return {
+        ok: result.status >= 200 && result.status < 400,
+        latencyMs: result.latencyMs,
+        message: 'HTTP ' + String(result.status)
+      }
+    } catch (error) {
+      return { ok: false, latencyMs: 0, message: error instanceof Error ? error.message : String(error) }
+    }
+  },
   create(context) {
     return new BilibiliAdapter(context)
   }

@@ -81,6 +81,16 @@ const presetRows = computed(() =>
   }))
 )
 
+const activePresetId = computed(() => {
+  const config = props.view.config
+  return config.presets.find((preset) =>
+    preset.question === config.question &&
+    preset.countdownSeconds === config.countdownSeconds &&
+    preset.options.length === config.options.length &&
+    preset.options.every((option, index) => option === config.options[index])
+  )?.id
+})
+
 const voteRule = computed(() =>
   props.view.config.allowRevote ? '同一观众以最后一票为准。' : '同一观众只计第一票。'
 )
@@ -315,6 +325,7 @@ async function sendHint(index: number): Promise<void> {
 
         <PresetManager
           :presets="presetRows"
+          :active-id="activePresetId"
           :disabled="locked"
           placeholder="例如 真心话"
           empty-text="把当前投票存成预设，下次一键载入。"

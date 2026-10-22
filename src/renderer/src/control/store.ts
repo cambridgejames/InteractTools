@@ -1,6 +1,6 @@
 import { reactive } from 'vue'
 import type { DiceConfig } from '@contracts/dice'
-import type { ShortcutsConfig } from '@contracts/config'
+import type { ShortcutsConfig, UiConfig } from '@contracts/config'
 import type { ToolAction } from '@contracts/tool'
 import type { EngineEvent } from '@contracts/engine'
 import type { LogEntry } from '@contracts/log'
@@ -30,6 +30,7 @@ export const state = reactive<{
   activeToolId: string
   diceRoll: DiceRollPresentation | null
   resultPopup: DiceResultPresentation | WheelResultPresentation | VoteResultPresentation | null
+  showTour: boolean
 }>({
   snapshot: null,
   logs: [],
@@ -37,7 +38,8 @@ export const state = reactive<{
   loading: true,
   activeToolId: 'dice',
   diceRoll: null,
-  resultPopup: null
+  resultPopup: null,
+  showTour: false
 })
 
 let started = false
@@ -217,6 +219,29 @@ export const actions = {
 
   async setFeedMode(mode: 'full' | 'collapsed' | 'hidden'): Promise<void> {
     await run(() => window.api.setFeedMode(mode))
+  },
+
+  openTour(): void {
+    state.showTour = true
+  },
+
+  async completeTour(): Promise<void> {
+    state.showTour = false
+    try {
+      await window.api.updateUi({ onboardingDone: true })
+    } catch (error) {
+      showToast(errorMessage(error), 'error')
+    }
+  },
+
+  async updateUi(patch: Partial<UiConfig>): Promise<boolean> {
+    try {
+      await window.api.updateUi({ ...patch })
+      return true
+    } catch (error) {
+      showToast(errorMessage(error), 'error')
+      return false
+    }
   },
 
   async updateShortcuts(shortcuts: ShortcutsConfig): Promise<boolean> {

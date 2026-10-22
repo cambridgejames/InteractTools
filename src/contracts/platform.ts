@@ -83,10 +83,23 @@ export interface PlatformAdapter {
   snapshot(): PlatformStatus
 }
 
+export interface PlatformProbeContext {
+  readonly network: NetworkProxyInfo
+  readonly signal: AbortSignal
+}
+
+export interface PlatformProbe {
+  readonly ok: boolean
+  readonly latencyMs: number
+  readonly message: string
+}
+
 export interface PlatformAdapterFactory {
   readonly descriptor: PlatformDescriptor
   readonly configSchema: ZodType
   create(context: PlatformContext): PlatformAdapter
+  /** 可选的连通性探测；新增平台时实现它即可加入网络测试。 */
+  readonly probe?: (config: unknown, context: PlatformProbeContext) => Promise<PlatformProbe>
 }
 
 /** 模拟源额外提供注入能力，供控制台手动发弹幕。 */

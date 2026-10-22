@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import FeedPanel from './components/FeedPanel.vue'
+import OnboardingTour from './components/OnboardingTour.vue'
 import AppIcon from './components/AppIcon.vue'
 import DashboardView from './views/DashboardView.vue'
 import SettingsView from './views/SettingsView.vue'
@@ -22,6 +23,9 @@ const meta: Record<Page, { title: string; subtitle: string }> = {
 
 const current = computed(() => meta[page.value])
 const feedMode = computed(() => state.snapshot?.feedMode ?? 'full')
+const tourVisible = computed(
+  () => state.showTour || (state.snapshot !== null && !state.snapshot.ui.onboardingDone)
+)
 const isMac = window.api.platform === 'darwin'
 
 let unsubscribeNavigate: (() => void) | null = null
@@ -77,6 +81,7 @@ onUnmounted(() => {
       :result="state.resultPopup"
       @close="actions.dismissOverlay"
     />
+    <OnboardingTour v-if="tourVisible" @done="actions.completeTour" />
     <Toast />
   </div>
 </template>

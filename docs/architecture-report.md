@@ -599,10 +599,12 @@ PlatformHost 只保留连接对象，不重复创建。
 
 - 目标 1560×960，按配置的显示器（默认鼠标所在屏）workArea 自动收缩并居中；最小 1120×720。
 - Windows/Linux 使用 `titleBarStyle: 'hidden'` + `titleBarOverlay`，macOS 使用 `hiddenInset`；标题栏消失但系统原生窗口按钮保留。顶栏 `-webkit-app-region: drag`，窗口按钮由系统绘制。
-- 设置页采用顶部水平子页签（平台连接 / 网络 / 界面与窗口 / 数据 / 关于），内容与其它页同宽；平台设置是三个独立卡片，单列全宽，开关统一在 header 右侧。
+- 设置页采用顶部水平子页签（平台连接 / 网络 / 界面与窗口 / 快捷键 / 数据 / 关于），内容与其它页同宽；平台设置是三个独立卡片，单列全宽，开关统一在 header 右侧。
 - 设置页通过 window:displays / window:set-display 选择屏幕；配置持久化到 appConfig.window.display。
 - 「互动工具」页卡片内 dice/wheel/vote 独立开关；关闭后 ToolHost 停用并移出活动视图，但保留在 catalog 中可重新打开。该页支持多关键词/CJK 二元组分词、模糊匹配、命中高亮和相关度排序。
-- 设置页网络代理：none（默认）/system/custom；修改后重连 B站，network:test 返回延迟与错误。
+- 设置页网络代理：none（默认）/system/custom；自定义支持用户名、密码、直连域名和跳过 SSL 证书校验。
+- network:test 不再固定测 B站：每个 PlatformAdapterFactory 可实现 probe，PlatformHost.probeAll 并行返回 platformId/name/ok/latency/message，UI 按平台显示图标。
+- 代理直连域名由 proxyUrlFor 匹配（精确域名或 .suffix）；Electron session 同时设置 proxyBypassRules。
 - 弹幕栏模式配置为 appConfig.feed.mode；snapshot.feedMode 驱动 App 栅格。
 - 开发模式窗口图标读取 `build/icon.png`；打包后从 `extraResources/icon.png` 读取，任务栏不再显示 Electron 默认图标。
 - contextIsolation true，nodeIntegration false。
@@ -635,7 +637,7 @@ PlatformHost 只保留连接对象，不重复创建。
 - tool-panels.ts：工具 id 到面板组件的注册表，Dashboard 用动态 component。
 - 面板：DicePanel、WheelPanel、VotePanel。每个工具 header 下方有测试命令条；骰子 3 个力度 chip，投票按选项数显示投票 chip，转盘无命令。feed 底部不再放工具命令。
 - 历史：HistoryPanel、WheelHistoryPanel、VoteHistoryPanel。
-- 公共：FeedPanel（72px 行高虚拟滚动；上翻时新消息显示「N 条新弹幕」pill，点击回到底部；进场不占消息行，底部 34px ticker 合并最新 3 位；模拟/礼物标签）、ToolSwitcher、ToggleSwitch、StatusPill、Toast、AppIcon。
+- 公共：FeedPanel（72px 行高虚拟滚动；上翻时新消息显示「N 条新弹幕」pill，点击回到底部；进场不占消息行，底部 34px ticker 合并最新 3 位；真实平台标签与模拟标签分别受 config.ui 开关控制）、ToolSwitcher、ToggleSwitch、StatusPill、Toast、AppIcon、OnboardingTour。
 - 复用组件：ToolHeader（三工具统一标题/相位）、PresetManager（转盘/投票共用预设 UI）、AppSelect（深色下拉）。
 - 弹幕栏模式来自 snapshot.feedMode：full 320px / collapsed 44px / hidden；设置页通过 feed:set-mode 持久化。
 - 设置页「清除所有数据」调用 app:clear-all-data：原生确认后删除 config.json、history、logs，relaunch 应用。
@@ -685,7 +687,7 @@ userData 默认是 %APPDATA%/interact-tools；--smoke 时切到 artifacts/smoke/
 
 测试：
 
-- 17 个测试文件（15 个通过、2 个默认跳过），62 个用例通过，2 个真连/集成用例默认跳过。
+- 17 个测试文件（15 个通过、2 个默认跳过），63 个用例通过，2 个真连/集成用例默认跳过。
 - 覆盖骰子 domain、几何、物理、工具、轮盘工具、投票 domain/工具、命令提示总线、MockAdapter、B站协议、WBI。
 - 真连测试：LIVE_BILIBILI=1 npx vitest run tests/bilibili-live.test.ts；最近房间 6 收到 6 条。
 

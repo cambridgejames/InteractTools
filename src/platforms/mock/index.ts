@@ -147,6 +147,9 @@ export const mockAdapterFactory: PlatformAdapterFactory = {
     capabilities: ['chat.read', 'gift.read', 'member.read']
   },
   configSchema: mockConfigSchema,
+  async probe() {
+    return { ok: true, latencyMs: 0, message: '本地模拟无需网络' }
+  },
   create(context) {
     return new MockAdapter(context)
   }

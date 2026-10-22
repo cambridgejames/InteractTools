@@ -146,35 +146,39 @@ export function decodeDouyinFrame(raw: Uint8Array): DouyinFrame {
 
   for (const item of response.messages ?? []) {
     const method = item.method ?? ''
-    if (method === 'WebcastChatMessage') {
-      const chat = ChatMessage.decode(item.payload ?? new Uint8Array())
-      messages.push({
-        kind: 'chat',
-        msgId: String(item.msgId ?? chat.common?.msgId ?? ''),
-        userId: String(chat.user?.id ?? ''),
-        userName: chat.user?.nickname ?? '抖音用户',
-        text: chat.content ?? ''
-      })
-    } else if (method === 'WebcastGiftMessage') {
-      const gift = GiftMessage.decode(item.payload ?? new Uint8Array())
-      const count = Number.parseInt(gift.repeatCount ?? gift.comboCount ?? '1', 10)
-      messages.push({
-        kind: 'gift',
-        msgId: String(item.msgId ?? gift.common?.msgId ?? ''),
-        userId: String(gift.user?.id ?? ''),
-        userName: gift.user?.nickname ?? '抖音用户',
-        giftName: gift.gift?.name ?? '礼物',
-        count: Number.isFinite(count) && count > 0 ? count : 1
-      })
-    } else if (method === 'WebcastMemberMessage') {
-      const member = MemberMessage.decode(item.payload ?? new Uint8Array())
-      messages.push({
-        kind: 'member',
-        msgId: String(item.msgId ?? member.common?.msgId ?? ''),
-        userId: String(member.user?.id ?? ''),
-        userName: member.user?.nickname ?? '抖音用户',
-        memberCount: Number(member.memberCount ?? 0)
-      })
+    try {
+      if (method === 'WebcastChatMessage') {
+        const chat = ChatMessage.decode(item.payload ?? new Uint8Array())
+        messages.push({
+          kind: 'chat',
+          msgId: String(item.msgId ?? chat.common?.msgId ?? ''),
+          userId: String(chat.user?.id ?? ''),
+          userName: chat.user?.nickname ?? '抖音用户',
+          text: chat.content ?? ''
+        })
+      } else if (method === 'WebcastGiftMessage') {
+        const gift = GiftMessage.decode(item.payload ?? new Uint8Array())
+        const count = Number.parseInt(gift.repeatCount ?? gift.comboCount ?? '1', 10)
+        messages.push({
+          kind: 'gift',
+          msgId: String(item.msgId ?? gift.common?.msgId ?? ''),
+          userId: String(gift.user?.id ?? ''),
+          userName: gift.user?.nickname ?? '抖音用户',
+          giftName: gift.gift?.name ?? '礼物',
+          count: Number.isFinite(count) && count > 0 ? count : 1
+        })
+      } else if (method === 'WebcastMemberMessage') {
+        const member = MemberMessage.decode(item.payload ?? new Uint8Array())
+        messages.push({
+          kind: 'member',
+          msgId: String(item.msgId ?? member.common?.msgId ?? ''),
+          userId: String(member.user?.id ?? ''),
+          userName: member.user?.nickname ?? '抖音用户',
+          memberCount: Number(member.memberCount ?? 0)
+        })
+      }
+    } catch {
+      // 单个消息体解析失败不能丢弃同一帧里的其他弹幕。
     }
   }
 

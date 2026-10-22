@@ -10,7 +10,7 @@ const isMac = window.api.platform === 'darwin'
 
 const ROW_HEIGHT = 72
 const OVERSCAN = 4
-const MEMBER_TICKER_TTL_MS = 8_000
+const MEMBER_TICKER_TTL_MS = 5_000
 
 const list = ref<HTMLElement | null>(null)
 const stick = ref(true)
@@ -24,6 +24,8 @@ const now = ref(Date.now())
 let resizeObserver: ResizeObserver | null = null
 let memberClock: ReturnType<typeof setInterval> | null = null
 
+const showFeedPlatforms = computed(() => state.snapshot?.ui.showFeedPlatforms ?? false)
+const showMockLabel = computed(() => state.snapshot?.ui.showMockLabel ?? true)
 const feed = computed(() => state.snapshot?.feed ?? [])
 const chatFeed = computed(() => feed.value)
 const recentMemberNames = computed(() => {
@@ -136,6 +138,12 @@ function feedClass(item: FeedItem): string {
   return 'feed-item kind-' + item.kind
 }
 
+function platformLabel(platform: FeedItem['platform']): string {
+  if (platform === 'bilibili') return 'B站'
+  if (platform === 'douyin') return '抖音'
+  return ''
+}
+
 
 </script>
 
@@ -175,7 +183,13 @@ function feedClass(item: FeedItem): string {
         <div class="content">
           <div class="meta">
             <strong>{{ item.userName }}</strong>
-            <span v-if="item.platform === 'mock'" class="sim-tag">模拟</span>
+            <span v-if="item.platform === 'mock' && showMockLabel" class="sim-tag">模拟</span>
+            <span
+              v-else-if="item.platform !== 'mock' && item.platform !== 'system' && showFeedPlatforms"
+              class="source-tag"
+            >
+              {{ platformLabel(item.platform) }}
+            </span>
             <span v-if="item.kind === 'gift'" class="type-tag">礼物</span>
             <time class="mono">{{ formatTime(item.at) }}</time>
           </div>
@@ -202,8 +216,8 @@ function feedClass(item: FeedItem): string {
       <div class="composer-row">
         <input v-model="name" class="name-input" maxlength="24" aria-label="测试观众名字" />
         <input v-model="text" class="text-input" maxlength="120" placeholder="输入一条模拟弹幕…" aria-label="模拟弹幕内容" />
-        <button class="send" type="submit" :disabled="sending || text.trim().length === 0">
-          <AppIcon name="plus" :size="15" />
+        <button class="send" type="submit" aria-label="发送模拟弹幕" :disabled="sending || text.trim().length === 0">
+          <AppIcon name="send" :size="14" />
         </button>
       </div>
     </form>
@@ -369,7 +383,8 @@ h2 {
 }
 
 .sim-tag,
-.type-tag {
+.type-tag,
+.source-tag {
   flex: 0 0 auto;
   padding: 0 5px;
   border: 1px solid var(--hairline);
@@ -388,6 +403,11 @@ h2 {
   border-color: color-mix(in srgb, var(--warning) 40%, var(--hairline));
   background: color-mix(in srgb, var(--warning) 10%, transparent);
   color: var(--warning);
+}
+
+.source-tag {
+  border-color: var(--hairline);
+  color: var(--mute);
 }
 
 .time {
@@ -500,9 +520,10 @@ p {
 .send {
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
-  flex: 0 0 34px;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  align-self: center;
   border: 1px solid var(--accent);
   border-radius: var(--r-control);
   background: var(--accent);

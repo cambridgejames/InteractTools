@@ -61,6 +61,49 @@ export class PlatformHost {
     return this.statuses.get(id) ?? { phase: 'disconnected' }
   }
 
+  async probeAll(signal: AbortSignal): Promise<readonly {
+    platformId: PlatformId
+    name: string
+    ok: boolean
+    latencyMs: number
+    message: string
+  }[]> {
+    const config = this.options.getConfig()
+    return Promise.all([...this.factories.values()].map(async (factory) => {
+      const startedAt = this.options.clock.now()
+      if (factory.probe === undefined) {
+        return {
+          platformId: factory.descriptor.id,
+          name: factory.descriptor.name,
+          ok: true,
+          latencyMs: 0,
+          message: '无需网络探测'
+        }
+      }
+      try {
+        const result = await factory.probe(config.platforms[factory.descriptor.id], {
+          network: this.options.network,
+          signal
+        })
+        return {
+          platformId: factory.descriptor.id,
+          name: factory.descriptor.name,
+          ok: result.ok,
+          latencyMs: result.latencyMs,
+          message: result.message
+        }
+      } catch (error) {
+        return {
+          platformId: factory.descriptor.id,
+          name: factory.descriptor.name,
+          ok: false,
+          latencyMs: Math.max(0, this.options.clock.now() - startedAt),
+          message: error instanceof Error ? error.message : String(error)
+        }
+      }
+    }))
+  }
+
   async connect(id: PlatformId): Promise<void> {
     const factory = this.factories.get(id)
     if (factory === undefined) throw new Error('未知平台：' + id)

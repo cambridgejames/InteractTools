@@ -113,6 +113,7 @@ export class Engine {
       },
       network: this.requireConfig().network,
       shortcuts: this.requireConfig().shortcuts,
+      ui: this.requireConfig().ui,
       feedMode: this.requireConfig().feed.mode
     }
   }
@@ -141,12 +142,24 @@ export class Engine {
     this.publishSnapshot()
   }
 
+  async updateUi(patch: Partial<AppConfig['ui']>): Promise<void> {
+    const current = this.requireConfig()
+    const next = appConfigSchema.parse({ ...current, ui: { ...current.ui, ...patch } })
+    this.config = next
+    await this.options.store.save(next)
+    this.publishSnapshot()
+  }
+
   async updateShortcuts(shortcuts: AppConfig['shortcuts']): Promise<void> {
     const current = this.requireConfig()
     const next = appConfigSchema.parse({ ...current, shortcuts })
     this.config = next
     await this.options.store.save(next)
     this.publishSnapshot()
+  }
+
+  async testPlatforms(): Promise<readonly { platformId: string; name: string; ok: boolean; latencyMs: number; message: string }[]> {
+    return this.requirePlatformHost().probeAll(AbortSignal.timeout(10_000))
   }
 
   async updateNetworkConfig(patch: Partial<NetworkConfig>): Promise<void> {

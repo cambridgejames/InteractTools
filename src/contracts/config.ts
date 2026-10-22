@@ -85,6 +85,24 @@ export const DEFAULT_SHORTCUTS: ShortcutsConfig = {
   openSettings: { accelerator: '', global: false }
 }
 
+export const uiConfigSchema = z
+  .object({
+    showActivePlatforms: z.boolean().default(true),
+    showFeedPlatforms: z.boolean().default(false),
+    showMockLabel: z.boolean().default(true),
+    onboardingDone: z.boolean().default(false)
+  })
+  .strict()
+
+export type UiConfig = z.infer<typeof uiConfigSchema>
+
+export const DEFAULT_UI_CONFIG: UiConfig = {
+  showActivePlatforms: true,
+  showFeedPlatforms: false,
+  showMockLabel: true,
+  onboardingDone: false
+}
+
 export const overlayConfigSchema = z
   .object({
     alwaysOnTop: z.boolean()
@@ -125,6 +143,7 @@ export const appConfigSchema = z
     }),
     network: networkConfigSchema.default(DEFAULT_NETWORK_CONFIG),
     shortcuts: shortcutsConfigSchema.default(DEFAULT_SHORTCUTS),
+    ui: uiConfigSchema.default(DEFAULT_UI_CONFIG),
     overlay: overlayConfigSchema,
     window: windowConfigSchema,
     feed: feedConfigSchema
@@ -179,6 +198,7 @@ export const DEFAULT_APP_CONFIG: AppConfig = {
     clearFeed: { accelerator: '', global: false },
     openSettings: { accelerator: '', global: false }
   },
+  ui: { ...DEFAULT_UI_CONFIG },
   overlay: {
     alwaysOnTop: true
   },

@@ -8,6 +8,11 @@ export async function runSmoke(application: Application): Promise<void> {
 
   application.controlWindow.show()
   await delay(1_200)
+  await application.engine.updateUi({ onboardingDone: false })
+  await delay(350)
+  await application.controlWindow.capture(join(output, 'control-onboarding.png'))
+  await application.engine.updateUi({ onboardingDone: true })
+  await delay(350)
   await application.controlWindow.capture(join(output, 'control.png'))
 
   await application.controlWindow.browserWindow.webContents.executeJavaScript(
@@ -40,6 +45,11 @@ export async function runSmoke(application: Application): Promise<void> {
   )
   await delay(250)
   await application.controlWindow.capture(join(output, 'control-settings-network.png'))
+  await application.controlWindow.browserWindow.webContents.executeJavaScript(
+    "document.querySelector('.network-actions .secondary')?.click()"
+  )
+  await delay(6000)
+  await application.controlWindow.capture(join(output, 'control-settings-network-test.png'))
   await application.controlWindow.browserWindow.webContents.executeJavaScript(
     "document.querySelector('.app-select .trigger')?.click()"
   )

@@ -7,6 +7,7 @@ import { actions, connectedCount, platformPhaseLabel, state } from '../store'
 defineProps<{ title: string; subtitle: string }>()
 
 const connected = computed(() => connectedCount(state.snapshot))
+const showActivePlatforms = computed(() => state.snapshot?.ui.showActivePlatforms ?? true)
 const activePlatforms = computed(() =>
   (state.snapshot?.platforms ?? []).filter(
     (item) =>
@@ -38,7 +39,7 @@ function platformLabel(id: string): string {
     </div>
 
     <div class="actions">
-      <div class="pills">
+      <div v-if="showActivePlatforms" class="pills">
         <StatusPill
           v-for="platform in activePlatforms"
           :key="platform.descriptor.id"

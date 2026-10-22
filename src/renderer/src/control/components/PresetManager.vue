@@ -10,6 +10,7 @@ interface PresetRow {
 withDefaults(
   defineProps<{
     presets: readonly PresetRow[]
+    activeId?: string | undefined
     disabled?: boolean
     title?: string
     hint?: string
@@ -53,7 +54,7 @@ function submit(): void {
     </div>
 
     <div v-if="presets.length > 0" class="preset-list">
-      <div v-for="preset in presets" :key="preset.id" class="preset-row">
+      <div v-for="preset in presets" :key="preset.id" class="preset-row" :class="{ active: preset.id === activeId }">
         <button class="preset-apply" :disabled="disabled" @click="emit('apply', preset.id)">
           <strong>{{ preset.name }}</strong>
           <small>{{ preset.meta }}</small>
@@ -140,6 +141,11 @@ function submit(): void {
 .preset-row {
   display: flex;
   gap: 4px;
+}
+
+.preset-row.active .preset-apply {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .preset-apply {

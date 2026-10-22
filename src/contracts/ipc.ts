@@ -4,7 +4,7 @@ import type { Presentation } from './presentation'
 import type { ToolAction } from './tool'
 import type { EngineSnapshot } from './view'
 import type { NetworkConfig, NetworkTestResult } from './network'
-import type { BuiltinToolId, ShortcutsConfig } from './config'
+import type { BuiltinToolId, ShortcutsConfig, UiConfig } from './config'
 
 export const IPC = {
   snapshot: 'engine:snapshot',
@@ -29,6 +29,7 @@ export const IPC = {
   networkTest: 'network:test',
   toolSetEnabled: 'tool:set-enabled',
   shortcutsUpdate: 'shortcuts:update',
+  uiUpdate: 'ui:update',
   navigate: 'app:navigate'
 } as const
 
@@ -76,5 +77,6 @@ export interface RendererApi {
   updateNetworkConfig(patch: Partial<NetworkConfig>): Promise<void>
   testNetwork(): Promise<NetworkTestResult>
   updateShortcuts(shortcuts: ShortcutsConfig): Promise<void>
+  updateUi(patch: Partial<UiConfig>): Promise<void>
   readonly platform: 'win32' | 'darwin' | 'linux'
 }

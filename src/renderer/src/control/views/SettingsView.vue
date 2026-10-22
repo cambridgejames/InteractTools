@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { DEFAULT_SHORTCUTS, type FeedMode, type ShortcutAction, type ShortcutsConfig } from '@contracts/config'
+import { DEFAULT_SHORTCUTS, DEFAULT_UI_CONFIG, type FeedMode, type ShortcutAction, type ShortcutsConfig } from '@contracts/config'
 import type { NetworkTestResult, ProxyMode } from '@contracts/network'
 import type { WindowDisplayOption } from '@contracts/ipc'
 import AppIcon from '../components/AppIcon.vue'
 import AppSelect from '../components/AppSelect.vue'
-import PlatformsView from './PlatformsView.vue'
 import ToggleSwitch from '../components/ToggleSwitch.vue'
+import PlatformsView from './PlatformsView.vue'
 import { actions, showToast, state } from '../store'
 
 const GITHUB_URL = 'https://github.com/cambridgejames/InteractTools'
@@ -31,10 +31,16 @@ const sections: Array<{
 const displays = ref<readonly WindowDisplayOption[]>([])
 const selectedDisplay = ref('cursor')
 const selectedFeedMode = ref<FeedMode>('full')
+const ui = computed(() => state.snapshot?.ui ?? DEFAULT_UI_CONFIG)
 const proxyMode = ref<ProxyMode>('none')
 const proxyUrl = ref('')
+const proxyUsername = ref('')
+const proxyPassword = ref('')
+const proxyBypass = ref('')
+const allowInsecureTls = ref(false)
 const testing = ref(false)
 const testResult = ref<NetworkTestResult | null>(null)
+const probeResults = computed(() => (testResult.value?.platforms ?? []).filter((probe) => probe.platformId !== 'mock'))
 const proxyOptions = [
   { value: 'none', label: '不使用代理' },
   { value: 'system', label: '使用系统代理' },
@@ -152,6 +158,10 @@ onMounted(async () => {
   selectedFeedMode.value = state.snapshot?.feedMode ?? 'full'
   proxyMode.value = state.snapshot?.network.proxyMode ?? 'none'
   proxyUrl.value = state.snapshot?.network.proxyUrl ?? ''
+  proxyUsername.value = state.snapshot?.network.proxyUsername ?? ''
+  proxyPassword.value = state.snapshot?.network.proxyPassword ?? ''
+  proxyBypass.value = state.snapshot?.network.proxyBypass ?? ''
+  allowInsecureTls.value = state.snapshot?.network.allowInsecureTls ?? false
   try {
     displays.value = await window.api.windowDisplays()
   } catch (error) {
@@ -179,6 +189,10 @@ async function saveDisplay(): Promise<void> {
   }
 }
 
+async function setUi(patch: Partial<typeof DEFAULT_UI_CONFIG>): Promise<void> {
+  await actions.updateUi(patch)
+}
+
 async function saveFeedMode(): Promise<void> {
   try {
     await window.api.setFeedMode(selectedFeedMode.value)
@@ -203,9 +217,42 @@ async function chooseProxyMode(value: string): Promise<void> {
 async function saveProxyUrl(): Promise<void> {
   if (proxyMode.value !== 'custom') return
   try {
-    await window.api.updateNetworkConfig({ proxyUrl: proxyUrl.value })
+    await window.api.updateNetworkConfig({
+      proxyUrl: proxyUrl.value,
+      proxyUsername: proxyUsername.value,
+      proxyPassword: proxyPassword.value,
+      proxyBypass: proxyBypass.value
+    })
   } catch (error) {
     showToast(error instanceof Error ? error.message : '保存代理地址失败', 'error')
+  }
+}
+
+function platformIcon(id: string): 'bilibili' | 'douyin' | 'platforms' {
+  if (id === 'bilibili') return 'bilibili'
+  if (id === 'douyin') return 'douyin'
+  return 'platforms'
+}
+
+async function saveProxyExtras(): Promise<void> {
+  try {
+    await window.api.updateNetworkConfig({
+      proxyUsername: proxyUsername.value,
+      proxyPassword: proxyPassword.value,
+      proxyBypass: proxyBypass.value
+    })
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : '保存代理设置失败', 'error')
+  }
+}
+
+async function setInsecureTls(value: boolean): Promise<void> {
+  allowInsecureTls.value = value
+  try {
+    await window.api.updateNetworkConfig({ allowInsecureTls: value })
+  } catch (error) {
+    allowInsecureTls.value = !value
+    showToast(error instanceof Error ? error.message : '更新 TLS 设置失败', 'error')
   }
 }
 
@@ -213,7 +260,14 @@ async function testNetwork(): Promise<void> {
   testing.value = true
   testResult.value = null
   try {
-    await window.api.updateNetworkConfig({ proxyMode: proxyMode.value, proxyUrl: proxyUrl.value })
+    await window.api.updateNetworkConfig({
+      proxyMode: proxyMode.value,
+      proxyUrl: proxyUrl.value,
+      proxyUsername: proxyUsername.value,
+      proxyPassword: proxyPassword.value,
+      proxyBypass: proxyBypass.value,
+      allowInsecureTls: allowInsecureTls.value
+    })
     testResult.value = await window.api.testNetwork()
     showToast(testResult.value.ok ? '网络连通正常' : '网络连接失败', testResult.value.ok ? 'success' : 'error')
   } catch (error) {
@@ -282,30 +336,93 @@ async function clearAllData(): Promise<void> {
           />
         </label>
 
-        <label v-if="proxyMode === 'custom'" class="field">
-          <span>代理地址</span>
+        <template v-if="proxyMode === 'custom'">
+          <label class="field">
+            <span>代理地址</span>
+            <input
+              v-model="proxyUrl"
+              class="text-input"
+              placeholder="http://127.0.0.1:7890"
+              spellcheck="false"
+              @blur="saveProxyUrl"
+            />
+          </label>
+
+          <div class="network-grid">
+            <label class="field">
+              <span>用户名</span>
+              <input
+                v-model="proxyUsername"
+                class="text-input"
+                autocomplete="off"
+                spellcheck="false"
+                @blur="saveProxyExtras"
+              />
+            </label>
+            <label class="field">
+              <span>密码</span>
+              <input
+                v-model="proxyPassword"
+                class="text-input"
+                type="password"
+                autocomplete="new-password"
+                @blur="saveProxyExtras"
+              />
+            </label>
+          </div>
+        </template>
+
+        <label v-if="proxyMode !== 'none'" class="field">
+          <span>直连域名</span>
           <input
-            v-model="proxyUrl"
+            v-model="proxyBypass"
             class="text-input"
-            placeholder="http://127.0.0.1:7890"
+            placeholder="localhost, 127.0.0.1, .internal.example.com"
             spellcheck="false"
-            @blur="saveProxyUrl"
+            @blur="saveProxyExtras"
           />
         </label>
+
+        <div v-if="proxyMode !== 'none'" class="switch-row network-switch">
+          <div>
+            <strong>跳过 SSL 证书校验</strong>
+            <span>仅用于内网自签名代理；开启后平台请求不再验证证书。</span>
+          </div>
+          <ToggleSwitch
+            :model-value="allowInsecureTls"
+            label="跳过 SSL 证书校验"
+            @update:model-value="setInsecureTls"
+          />
+        </div>
 
         <div class="network-actions">
           <button class="secondary" :disabled="testing" @click="testNetwork">
             <AppIcon name="refresh" :size="15" />
             {{ testing ? '测试中…' : '测试连通性' }}
           </button>
-          <span v-if="testResult" class="network-result" :class="{ ok: testResult.ok }">
-            {{ testResult.ok ? '连通' : '失败' }} · {{ testResult.latencyMs }}ms
+          <span v-if="testResult" class="network-note">
+            {{ testResult.message }}
           </span>
         </div>
-        <p v-if="testResult" class="network-detail" :class="{ ok: testResult.ok }">
-          {{ testResult.message }}
-        </p>
-        <p v-else class="network-note">测试会请求 B站房间接口，耗时通常不超过 8 秒。</p>
+
+        <div v-if="testResult" class="network-probes">
+          <div
+            v-for="probe in probeResults"
+            :key="probe.platformId"
+            class="network-probe"
+            :class="{ ok: probe.ok }"
+          >
+            <span class="network-probe-icon">
+              <AppIcon :name="platformIcon(probe.platformId)" :size="16" />
+            </span>
+            <div class="network-probe-copy">
+              <strong>{{ probe.name }}</strong>
+              <span>{{ probe.ok ? '连通' : probe.message }}</span>
+            </div>
+            <span class="network-probe-latency">{{ probe.ok ? probe.latencyMs + 'ms' : '失败' }}</span>
+          </div>
+        </div>
+        <p v-else class="network-note">测试会分别请求已注册平台的公开接口；新增平台实现 probe 后会自动加入。</p>
         </section>
       </template>
 
@@ -346,6 +463,49 @@ async function clearAllData(): Promise<void> {
               @update:model-value="chooseFeedMode"
             />
           </label>
+        </section>
+
+        <section class="card">
+          <header>
+            <h2>平台显示</h2>
+            <p>控制平台名称出现的位置；本地模拟可以独立于真实平台显示。</p>
+          </header>
+
+          <div class="setting-switch">
+            <div>
+              <strong>顶部显示正在连接的平台</strong>
+              <span>只显示已连接、连接中或重连中的平台。</span>
+            </div>
+            <ToggleSwitch
+              :model-value="ui.showActivePlatforms"
+              label="顶部显示正在连接的平台"
+              @update:model-value="setUi({ showActivePlatforms: $event })"
+            />
+          </div>
+
+          <div class="setting-switch">
+            <div>
+              <strong>弹幕显示来源平台</strong>
+              <span>在真实平台弹幕旁显示 B站 / 抖音标签。</span>
+            </div>
+            <ToggleSwitch
+              :model-value="ui.showFeedPlatforms"
+              label="弹幕显示来源平台"
+              @update:model-value="setUi({ showFeedPlatforms: $event })"
+            />
+          </div>
+
+          <div class="setting-switch">
+            <div>
+              <strong>显示本地模拟标签</strong>
+              <span>模拟观众独立显示「模拟」，不受真实平台标签开关影响。</span>
+            </div>
+            <ToggleSwitch
+              :model-value="ui.showMockLabel"
+              label="显示本地模拟标签"
+              @update:model-value="setUi({ showMockLabel: $event })"
+            />
+          </div>
         </section>
 
         <section class="card">
@@ -446,6 +606,13 @@ async function clearAllData(): Promise<void> {
           <li>物理结果由 cannon-es 刚体模拟产生，结果动画只回放录制数据。</li>
           <li>视觉规格见 DESIGN.md，组件只使用 tokens.css 的变量。</li>
         </ul>
+        <div class="about-replay">
+          <div>
+            <strong>操作指引</strong>
+            <span>第一次开播的流程：接平台、选玩法、看弹幕、绑快捷键。</span>
+          </div>
+          <button class="secondary" @click="actions.openTour">重新播放</button>
+        </div>
         <div class="links">
           <button class="link" @click="openExternal(GITHUB_URL)">
             <AppIcon name="external" :size="14" />
@@ -592,23 +759,75 @@ header p {
   outline: none;
 }
 
+.setting-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding: var(--s-3) 0;
+  border-top: 1px solid var(--hairline);
+}
+
+.setting-switch:first-of-type {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.setting-switch > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.setting-switch strong {
+  color: var(--body);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.setting-switch span {
+  color: var(--mute);
+  font-size: 12px;
+}
+
+.network-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--s-3);
+}
+
+.network-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding: var(--s-3) 0;
+  border-top: 1px solid var(--hairline);
+}
+
+.network-switch > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.network-switch strong {
+  color: var(--body);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.network-switch span {
+  color: var(--mute);
+  font-size: 12px;
+}
+
 .network-actions {
   display: flex;
   align-items: center;
   gap: var(--s-3);
 }
 
-.network-result {
-  color: var(--danger);
-  font-family: var(--font-mono);
-  font-size: 12px;
-}
-
-.network-result.ok {
-  color: var(--success);
-}
-
-.network-detail,
 .network-note {
   margin: 0;
   color: var(--mute);
@@ -616,7 +835,71 @@ header p {
   overflow-wrap: anywhere;
 }
 
-.network-detail.ok {
+.network-probes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--s-2);
+}
+
+.network-probe {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-width: 0;
+  padding: var(--s-2);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-control);
+  background: var(--inset);
+}
+
+.network-probe.ok {
+  border-color: color-mix(in srgb, var(--success) 35%, var(--hairline));
+}
+
+.network-probe-icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  border-radius: var(--r-icon);
+  background: var(--surface-active);
+  color: var(--mute);
+}
+
+.network-probe.ok .network-probe-icon {
+  color: var(--accent);
+}
+
+.network-probe-copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.network-probe-copy strong {
+  color: var(--body);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.network-probe-copy span {
+  overflow: hidden;
+  color: var(--mute);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.network-probe-latency {
+  flex: none;
+  color: var(--danger);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.network-probe.ok .network-probe-latency {
   color: var(--success);
 }
 
@@ -847,6 +1130,33 @@ header p {
   border-color: var(--accent);
   color: var(--accent);
 }
+.about-replay {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  margin-top: var(--s-3);
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--hairline);
+}
+
+.about-replay > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.about-replay strong {
+  color: var(--body);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.about-replay span {
+  color: var(--mute);
+  font-size: 12px;
+}
+
 .about ul {
   margin: 0;
   padding-left: 18px;

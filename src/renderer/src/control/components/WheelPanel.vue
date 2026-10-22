@@ -138,6 +138,15 @@ const presetRows = computed(() =>
     meta: String(preset.segments.length) + ' 格 · ' + String(preset.spinDurationSeconds) + ' 秒'
   }))
 )
+const activePresetId = computed(() => {
+  const config = props.view.config
+  return config.presets.find((preset) =>
+    preset.spinDurationSeconds === config.spinDurationSeconds &&
+    preset.segments.length === config.segments.length &&
+    preset.segments.every((segment, index) => segment === config.segments[index])
+  )?.id
+})
+
 const phaseText = computed(() => {
   switch (props.view.phase) {
     case 'spinning':
@@ -320,6 +329,7 @@ async function clearHistory(): Promise<void> {
 
         <PresetManager
           :presets="presetRows"
+          :active-id="activePresetId"
           :disabled="spinning"
           placeholder="例如 真心话"
           empty-text="把当前转盘存成预设，下次一键载入。"

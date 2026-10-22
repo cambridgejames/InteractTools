@@ -1,6 +1,8 @@
 import { createHash } from 'node:crypto'
 import vm from 'node:vm'
-import { ProxyAgent, fetch as undiciFetch } from 'undici'
+import { Agent, ProxyAgent, fetch as undiciFetch, type Dispatcher } from 'undici'
+import type { NetworkProxyInfo } from '@contracts/network'
+import { proxyUrlFor } from '../probe'
 import signSource from './assets/sign.js?raw'
 
 const USER_AGENT =
@@ -48,10 +50,18 @@ export function douyinUserAgent(): string {
  * 内置签名脚本生成 WSS signature。除协议心跳和 ack 外不发送用户内容。
  */
 export class LocalDouyinSigner implements DouyinSigner {
-  private readonly dispatcher: ProxyAgent | null
+  constructor(private readonly network: NetworkProxyInfo) {}
 
-  constructor(proxyUrl: string | null) {
-    this.dispatcher = proxyUrl === null ? null : new ProxyAgent(proxyUrl)
+  private dispatcherFor(url: string): Dispatcher | null {
+    const proxyUrl = proxyUrlFor(url, this.network)
+    if (proxyUrl === null && !this.network.allowInsecureTls) return null
+    return proxyUrl === null
+      ? new Agent({ connect: { rejectUnauthorized: false } })
+      : new ProxyAgent({
+          uri: proxyUrl,
+          requestTls: { rejectUnauthorized: !this.network.allowInsecureTls },
+          proxyTls: { rejectUnauthorized: !this.network.allowInsecureTls }
+        })
   }
 
   async sign(roomId: string, signal: AbortSignal): Promise<DouyinSignResult> {
@@ -78,10 +88,11 @@ export class LocalDouyinSigner implements DouyinSigner {
     init: { readonly headers?: Record<string, string>; readonly method?: string },
     signal: AbortSignal
   ): Promise<Awaited<ReturnType<typeof undiciFetch>>> {
+    const dispatcher = this.dispatcherFor(url)
     const response = await undiciFetch(url, {
       ...init,
       signal: AbortSignal.any([signal, AbortSignal.timeout(REQUEST_TIMEOUT_MS)]),
-      ...(this.dispatcher === null ? {} : { dispatcher: this.dispatcher })
+      ...(dispatcher === null ? {} : { dispatcher })
     })
     if (!response.ok) throw new Error('抖音请求返回 HTTP ' + String(response.status))
     return response

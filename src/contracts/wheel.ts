@@ -53,7 +53,20 @@ export const wheelResultSchema = z
   .strict()
 
 export const DEFAULT_WHEEL_CONFIG: WheelConfig = {
-  segments: ['一等奖', '二等奖', '三等奖', '谢谢参与', '再来一次', '幸运奖'],
+  segments: ["最近一次熬夜到几点？","手机里最舍不得删的照片","今年最想完成的一件事","最近单曲循环的歌","直播时最社死的一件事","如果明天放假一天","最想和谁连麦","最近被哪条弹幕逗笑"],
   spinDurationSeconds: 5,
-  presets: []
+  presets: [
+    {
+      id: 'preset-truth',
+      name: '真心话',
+      segments: ["最近一次熬夜到几点？","手机里最舍不得删的照片","今年最想完成的一件事","最近单曲循环的歌","直播时最社死的一件事","如果明天放假一天","最想和谁连麦","最近被哪条弹幕逗笑"],
+      spinDurationSeconds: 5
+    },
+    {
+      id: 'preset-dare',
+      name: '大冒险',
+      segments: ["用夹子音说一句晚安","模仿一个动物叫","清唱一句最近的歌","用方言夸一句观众","做五个深蹲","给榜一点一首歌","现场学一个表情包","闭眼十秒再睁眼"],
+      spinDurationSeconds: 5
+    }
+  ]
 }

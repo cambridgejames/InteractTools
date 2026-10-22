@@ -54,6 +54,7 @@ const api: RendererApi = {
   updateNetworkConfig: (patch) => ipcRenderer.invoke(IPC.networkUpdate, patch),
   testNetwork: () => ipcRenderer.invoke(IPC.networkTest),
   updateShortcuts: (shortcuts) => ipcRenderer.invoke(IPC.shortcutsUpdate, shortcuts),
+  updateUi: (patch) => ipcRenderer.invoke(IPC.uiUpdate, patch),
   platform: process.platform === 'darwin' ? 'darwin' : process.platform === 'linux' ? 'linux' : 'win32'
 }
 

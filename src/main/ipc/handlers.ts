@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { z } from 'zod'
 import { IPC } from '@contracts/ipc'
 import { networkConfigSchema } from '@contracts/network'
-import { shortcutsConfigSchema, TOOL_IDS } from '@contracts/config'
+import { shortcutsConfigSchema, TOOL_IDS, uiConfigSchema } from '@contracts/config'
 import type { Engine } from '@kernel/engine'
 import type { ControlWindow } from '../windows/control-window'
 import type { NetworkProxy } from '../services/network-proxy'
@@ -39,7 +39,17 @@ export function registerIpc(
     await engine.updateNetworkConfig(patch)
   })
 
-  ipcMain.handle(IPC.networkTest, async () => network.test())
+  ipcMain.handle(IPC.networkTest, async () => {
+    const platforms = await engine.testPlatforms()
+    const ok = platforms.some((item) => item.ok)
+    return {
+      ok,
+      latencyMs: platforms.reduce((max, item) => Math.max(max, item.latencyMs), 0),
+      message: ok ? '平台连通性测试完成' : '所有平台均不可达',
+      proxyUrl: network.proxyUrl,
+      platforms
+    }
+  })
 
   ipcMain.handle(IPC.toolSetEnabled, async (_event, rawId: unknown, rawEnabled: unknown) => {
     await engine.setToolEnabled(toolIdSchema.parse(rawId), z.boolean().parse(rawEnabled))
@@ -59,6 +69,21 @@ export function registerIpc(
     const parsed = shortcutsConfigSchema.parse(rawShortcuts)
     await shortcuts.apply(parsed)
     await engine.updateShortcuts(parsed)
+  })
+
+  ipcMain.handle(IPC.uiUpdate, async (_event, rawPatch: unknown) => {
+    const parsed = uiConfigSchema.partial().parse(rawPatch)
+    const patch: {
+      showActivePlatforms?: boolean
+      showFeedPlatforms?: boolean
+      showMockLabel?: boolean
+      onboardingDone?: boolean
+    } = {}
+    if (parsed.showActivePlatforms !== undefined) patch.showActivePlatforms = parsed.showActivePlatforms
+    if (parsed.showFeedPlatforms !== undefined) patch.showFeedPlatforms = parsed.showFeedPlatforms
+    if (parsed.showMockLabel !== undefined) patch.showMockLabel = parsed.showMockLabel
+    if (parsed.onboardingDone !== undefined) patch.onboardingDone = parsed.onboardingDone
+    await engine.updateUi(patch)
   })
 
   ipcMain.handle(IPC.clearAllData, async () => {

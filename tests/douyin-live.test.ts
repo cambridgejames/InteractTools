@@ -10,7 +10,7 @@ afterEach(() => controller.abort())
 
 describe.skipIf(room === undefined)('Douyin local signer integration', () => {
   it('obtains a signed WSS URL and receives a decoded chat message', async () => {
-    const signer = new LocalDouyinSigner(null)
+    const signer = new LocalDouyinSigner({ proxyUrl: null, allowInsecureTls: false, bypass: [] })
     const signed = await signer.sign(room ?? '', controller.signal)
     expect(signed.wssUrl).toContain('signature=')
     expect(signed.roomId).toMatch(/^\d+$/)
