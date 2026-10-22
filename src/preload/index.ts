@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 import type { EngineEvent } from '@contracts/engine'
 import { IPC, type RendererApi } from '@contracts/ipc'
 import type { Presentation } from '@contracts/presentation'
+import type { UpdateState } from '@contracts/update'
 
 const api: RendererApi = {
   snapshot: () => ipcRenderer.invoke(IPC.snapshot),
@@ -58,6 +59,19 @@ const api: RendererApi = {
   updateLogging: (level) => ipcRenderer.invoke(IPC.loggingUpdate, level),
   collectLogs: () => ipcRenderer.invoke(IPC.collectLogs),
   getChangelog: () => ipcRenderer.invoke(IPC.changelog),
+  updateState: () => ipcRenderer.invoke(IPC.updateState),
+  checkForUpdates: () => ipcRenderer.invoke(IPC.updateCheck),
+  downloadUpdate: () => ipcRenderer.invoke(IPC.updateDownload),
+  installUpdate: () => ipcRenderer.invoke(IPC.updateInstall),
+  setUpdatePrefs: (patch) => ipcRenderer.invoke(IPC.updatePrefs, patch),
+
+  onUpdate(listener) {
+    const handler = (_event: IpcRendererEvent, state: UpdateState): void => listener(state)
+    ipcRenderer.on(IPC.updateEvent, handler)
+    return () => {
+      ipcRenderer.removeListener(IPC.updateEvent, handler)
+    }
+  },
   applyTheme: (theme, mode) => ipcRenderer.invoke(IPC.themeApply, theme, mode),
   platform: process.platform === 'darwin' ? 'darwin' : process.platform === 'linux' ? 'linux' : 'win32'
 }

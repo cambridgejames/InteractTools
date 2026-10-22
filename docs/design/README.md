@@ -14,3 +14,4 @@
 | 平台：只读适配器、统一事件、probe | [platforms.md](platforms.md) |
 | 弹幕流：虚拟滚动、进场 ticker、未读提示 | [feed.md](feed.md) |
 | 设置与操作指引：命名、分组、spotlight 流程 | [settings.md](settings.md) |
+| 检查更新：GitHub Release、自动检查 / 下载、安装 | [updates.md](updates.md) |

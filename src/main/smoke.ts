@@ -51,7 +51,7 @@ export async function runSmoke(application: Application): Promise<void> {
   await application.controlWindow.browserWindow.webContents.executeJavaScript(
     "document.querySelector('.network-actions .secondary')?.click()"
   )
-  await delay(6000)
+  await delay(10_000)
   await application.controlWindow.capture(join(output, 'control-settings-network-test.png'))
   await application.controlWindow.browserWindow.webContents.executeJavaScript(
     "document.querySelector('.app-select .trigger')?.click()"

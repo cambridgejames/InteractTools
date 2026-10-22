@@ -4,7 +4,8 @@ import type { Presentation } from './presentation'
 import type { ToolAction } from './tool'
 import type { EngineSnapshot } from './view'
 import type { NetworkConfig, NetworkTestResult } from './network'
-import type { BuiltinToolId, ShortcutsConfig, UiConfig } from './config'
+import type { BuiltinToolId, ShortcutsConfig, UiConfig, UpdatesConfig } from './config'
+import type { UpdateState } from './update'
 
 export const IPC = {
   snapshot: 'engine:snapshot',
@@ -33,6 +34,12 @@ export const IPC = {
   loggingUpdate: 'logging:update',
   collectLogs: 'app:collect-logs',
   changelog: 'app:changelog',
+  updateState: 'update:state',
+  updateEvent: 'update:event',
+  updateCheck: 'update:check',
+  updateDownload: 'update:download',
+  updateInstall: 'update:install',
+  updatePrefs: 'update:prefs',
   themeApply: 'theme:apply',
   navigate: 'app:navigate'
 } as const
@@ -85,6 +92,12 @@ export interface RendererApi {
   updateLogging(level: 'debug' | 'info' | 'warn' | 'error'): Promise<void>
   collectLogs(): Promise<string>
   getChangelog(): Promise<readonly string[]>
+  updateState(): Promise<UpdateState>
+  checkForUpdates(): Promise<UpdateState>
+  downloadUpdate(): Promise<UpdateState>
+  installUpdate(): Promise<void>
+  setUpdatePrefs(patch: Partial<UpdatesConfig>): Promise<void>
+  onUpdate(listener: (state: UpdateState) => void): () => void
   applyTheme(theme: 'dark' | 'light', mode: 'dark' | 'light' | 'system'): Promise<void>
   readonly platform: 'win32' | 'darwin' | 'linux'
 }

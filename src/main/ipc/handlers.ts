@@ -4,13 +4,15 @@ import { join } from 'node:path'
 import { z } from 'zod'
 import { IPC } from '@contracts/ipc'
 import { networkPatchSchema, type NetworkConfig } from '@contracts/network'
-import { loggingConfigSchema, shortcutsConfigSchema, TOOL_IDS, uiPatchSchema } from '@contracts/config'
+import { loggingConfigSchema, shortcutsConfigSchema, TOOL_IDS, uiPatchSchema, updatesPatchSchema } from '@contracts/config'
 import type { Engine } from '@kernel/engine'
 import type { ControlWindow } from '../windows/control-window'
 import type { NetworkProxy } from '../services/network-proxy'
 import { externalUrlSchema } from './external-url'
 import type { ShortcutManager } from '../services/shortcut-manager'
+import { probeGitHub } from '../services/github-probe'
 import type { AppLogger } from '../services/logger'
+import type { UpdateService } from '../services/update-service'
 
 const platformIdSchema = z.enum(['bilibili', 'douyin', 'mock'])
 const toolIdSchema = z.enum(TOOL_IDS)
@@ -29,7 +31,8 @@ export function registerIpc(
   controlWindow: ControlWindow,
   network: NetworkProxy,
   shortcuts: ShortcutManager,
-  logger: AppLogger
+  logger: AppLogger,
+  updater: UpdateService
 ): void {
   ipcMain.handle(IPC.snapshot, async () => engine.snapshot())
 
@@ -46,14 +49,18 @@ export function registerIpc(
   })
 
   ipcMain.handle(IPC.networkTest, async () => {
-    const platforms = await engine.testPlatforms()
-    const ok = platforms.some((item) => item.ok)
+    const [platforms, github] = await Promise.all([
+      engine.testPlatforms(),
+      probeGitHub(network)
+    ])
+    const all = [...platforms, github]
+    const ok = all.some((item) => item.ok)
     return {
       ok,
-      latencyMs: platforms.reduce((max, item) => Math.max(max, item.latencyMs), 0),
+      latencyMs: all.reduce((max, item) => Math.max(max, item.latencyMs), 0),
       message: ok ? '平台连通性测试完成' : '所有平台均不可达',
       proxyUrl: network.proxyUrl,
-      platforms
+      platforms: all
     }
   })
 
@@ -89,10 +96,25 @@ export function registerIpc(
     return file
   })
 
+  ipcMain.handle(IPC.updateState, async () => updater.stateNow())
+  ipcMain.handle(IPC.updateCheck, async () => updater.check(true))
+  ipcMain.handle(IPC.updateDownload, async () => updater.download())
+  ipcMain.handle(IPC.updateInstall, async () => updater.install())
+  ipcMain.handle(IPC.updatePrefs, async (_event, rawPatch: unknown) => {
+    const parsed = updatesPatchSchema.parse(rawPatch)
+    const patch: { autoCheck?: boolean; autoDownload?: boolean } = {}
+    if (parsed.autoCheck !== undefined) patch.autoCheck = parsed.autoCheck
+    if (parsed.autoDownload !== undefined) patch.autoDownload = parsed.autoDownload
+    const current = engine.snapshot().updates
+    const next = { ...current, ...patch }
+    await engine.updateUpdates(patch)
+    updater.setConfig(next)
+  })
+
   ipcMain.handle(IPC.changelog, async () => {
     try {
       const text = await readFile(join(app.getAppPath(), 'CHANGELOG.md'), 'utf8')
-      const section = text.split('## [Unreleased]')[1]?.split('## [')[0] ?? ''
+      const section = text.match(/^## \[[^\]]+\][^\n]*\n([\s\S]*?)(?=^## \[|$)/m)?.[1] ?? ''
       return section
         .split('\n')
         .filter((line) => line.startsWith('- '))

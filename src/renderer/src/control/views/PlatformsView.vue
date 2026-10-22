@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, watch } from 'vue'
 import AppIcon from '../components/AppIcon.vue'
+import PlatformGlyph from '../components/PlatformGlyph.vue'
 import StatusPill from '../components/StatusPill.vue'
 import ToggleSwitch from '../components/ToggleSwitch.vue'
 import { actions, selectPlatform, state } from '../store'
@@ -229,7 +230,7 @@ async function openRoom(host: 'bilibili' | 'douyin'): Promise<void> {
     <section class="card">
       <header>
         <div class="platform-title">
-          <span class="icon bili"><AppIcon name="bilibili" :size="20" /></span>
+          <PlatformGlyph id="bilibili" />
           <div>
             <h2>哔哩哔哩</h2>
             <p>匿名只读弹幕 · 不登录、不发消息</p>
@@ -273,7 +274,7 @@ async function openRoom(host: 'bilibili' | 'douyin'): Promise<void> {
     <section class="card">
       <header>
         <div class="platform-title">
-          <span class="icon douyin"><AppIcon name="douyin" :size="20" /></span>
+          <PlatformGlyph id="douyin" />
           <div>
             <h2>抖音</h2>
             <p>匿名只读弹幕 · 不登录、不发送内容</p>
@@ -319,7 +320,7 @@ async function openRoom(host: 'bilibili' | 'douyin'): Promise<void> {
     <section class="card">
       <header>
         <div class="platform-title">
-          <span class="icon"><AppIcon name="users" :size="20" /></span>
+          <PlatformGlyph id="mock" />
           <div>
             <h2>本地模拟</h2>
             <p>离线演示 · 自动观众会发送力度指令</p>
@@ -459,24 +460,6 @@ header {
   display: flex;
   align-items: center;
   gap: var(--s-3);
-}
-
-.icon {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--r-icon);
-  background: var(--surface-active);
-  color: var(--accent);
-}
-
-.icon.bili {
-  color: var(--bilibili);
-}
-
-.icon.douyin {
-  color: var(--ink);
 }
 
 h2 {

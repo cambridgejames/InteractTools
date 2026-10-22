@@ -116,6 +116,7 @@ export class Engine {
       shortcuts: this.requireConfig().shortcuts,
       ui: this.requireConfig().ui,
       logging: this.requireConfig().logging,
+      updates: this.requireConfig().updates,
       feedMode: this.requireConfig().feed.mode
     }
   }
@@ -157,6 +158,15 @@ export class Engine {
     const next = appConfigSchema.parse({ ...current, shortcuts })
     this.config = next
     await this.options.store.save(next)
+    this.publishSnapshot()
+  }
+
+  async updateUpdates(patch: Partial<AppConfig['updates']>): Promise<void> {
+    const current = this.requireConfig()
+    const next = appConfigSchema.parse({ ...current, updates: { ...current.updates, ...patch } })
+    this.config = next
+    await this.options.store.save(next)
+    this.options.logger.info('update', '更新偏好已保存')
     this.publishSnapshot()
   }
 

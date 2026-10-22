@@ -18,6 +18,7 @@ import { SystemClock } from './services/clock'
 import { registerIpc } from './ipc/handlers'
 import { NetworkProxy } from './services/network-proxy'
 import { ShortcutManager } from './services/shortcut-manager'
+import { UpdateService } from './services/update-service'
 
 export interface Application {
   readonly engine: Engine
@@ -69,20 +70,28 @@ export async function createApplication(): Promise<Application> {
   })
 
   await engine.start()
+  const updater = new UpdateService(
+    network,
+    logger,
+    config.updates,
+    (state) => controlWindow.send({ type: 'update', state })
+  )
   const shortcutManager = new ShortcutManager(controlWindow, engine)
   try {
     await shortcutManager.apply((await store.load()).shortcuts)
   } catch (error) {
     logger.warn('shortcuts', '快捷键注册失败，已保留为空', String(error))
   }
-  registerIpc(engine, controlWindow, network, shortcutManager, logger)
+  registerIpc(engine, controlWindow, network, shortcutManager, logger, updater)
   await controlWindow.load()
+  updater.start()
 
   return {
     engine,
     controlWindow,
     logger,
     async dispose() {
+      updater.dispose()
       shortcutManager.dispose()
       await engine.shutdown()
     }

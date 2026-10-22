@@ -67,7 +67,7 @@
 
 ## 发布
 
-标签 `v*` 触发 `.github/workflows/release.yml`：guard 校验 tag 在 main/master 且与 `package.json` 一致 → 三平台构建 → `scripts/release-notes.mjs` 从 `CHANGELOG.md` 生成 Release body → `action-gh-release`。
+版本号与 CHANGELOG 由 `release-please` 维护：合并到 main 后生成版本 PR，更新 `package.json` 与 `CHANGELOG.md`；合并 PR 后创建 `v*` tag。标签触发 `.github/workflows/release.yml`：guard 校验 tag 在 main/master 且与 `package.json` 一致 → 三平台构建 → `scripts/release-notes.mjs` 从 `CHANGELOG.md` 生成 Release body → `action-gh-release`。
 
 发布说明不猜提交内容，也不自动改 CHANGELOG；条目由人写进 `[Unreleased]`，CI 只负责把上次 tag 之后的条目带到 Release。
 

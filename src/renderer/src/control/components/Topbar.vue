@@ -8,6 +8,7 @@ defineProps<{ title: string; subtitle: string }>()
 
 const connected = computed(() => connectedCount(state.snapshot))
 const showActivePlatforms = computed(() => state.snapshot?.ui.showActivePlatforms ?? true)
+const updateAvailable = computed(() => state.update?.phase === 'available')
 const activePlatforms = computed(() =>
   (state.snapshot?.platforms ?? []).filter(
     (item) =>
@@ -47,6 +48,10 @@ function platformLabel(id: string): string {
           :label="platformLabel(platform.descriptor.id) + ' · ' + platformPhaseLabel(platform.status.phase)"
         />
       </div>
+      <button v-if="updateAvailable" class="update-pill" @click="actions.openUpdate">
+        <AppIcon name="refresh" :size="14" />
+        新版本 v{{ state.update?.latestVersion }}
+      </button>
       <button class="preview" @click="actions.previewActiveTool()">
         <AppIcon name="eye" :size="16" />
         预览结果
@@ -144,6 +149,23 @@ p {
 .pills {
   display: flex;
   gap: var(--s-2);
+}
+
+.update-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 var(--s-3);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--hairline));
+  border-radius: var(--r-control);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 12px;
+}
+
+.update-pill:hover {
+  border-color: var(--accent);
 }
 
 .preview {

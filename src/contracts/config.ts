@@ -86,6 +86,20 @@ export const DEFAULT_SHORTCUTS: ShortcutsConfig = {
 }
 
 export const LOG_LEVELS = ['debug', 'info', 'warn', 'error'] as const
+export const updatesConfigSchema = z
+  .object({
+    autoCheck: z.boolean().default(true),
+    autoDownload: z.boolean().default(false)
+  })
+  .strict()
+
+export type UpdatesConfig = z.infer<typeof updatesConfigSchema>
+export const DEFAULT_UPDATES_CONFIG: UpdatesConfig = { autoCheck: true, autoDownload: false }
+export const updatesPatchSchema = z
+  .object({ autoCheck: z.boolean(), autoDownload: z.boolean() })
+  .partial()
+  .strict()
+
 export const loggingConfigSchema = z
   .object({ level: z.enum(LOG_LEVELS).default('info') })
   .strict()
@@ -170,6 +184,7 @@ export const appConfigSchema = z
     shortcuts: shortcutsConfigSchema.default(DEFAULT_SHORTCUTS),
     ui: uiConfigSchema.default(DEFAULT_UI_CONFIG),
     logging: loggingConfigSchema.default(DEFAULT_LOGGING_CONFIG),
+    updates: updatesConfigSchema.default(DEFAULT_UPDATES_CONFIG),
     overlay: overlayConfigSchema,
     window: windowConfigSchema,
     feed: feedConfigSchema
@@ -226,6 +241,7 @@ export const DEFAULT_APP_CONFIG: AppConfig = {
   },
   ui: { ...DEFAULT_UI_CONFIG },
   logging: { ...DEFAULT_LOGGING_CONFIG },
+  updates: { ...DEFAULT_UPDATES_CONFIG },
   overlay: {
     alwaysOnTop: true
   },

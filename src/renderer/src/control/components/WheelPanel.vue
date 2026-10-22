@@ -185,21 +185,7 @@ watch(
 )
 
 const wheelStyle = computed(() => {
-  const segments = props.view.segments
-  const step = 360 / Math.max(1, segments.length)
-  const gap = 0.8
-  const stops = segments
-    .map((_, index) => {
-      const start = index * step
-      const end = (index + 1) * step
-      return (
-        'var(--wheel-gap) ' + start.toFixed(2) + 'deg ' + (start + gap).toFixed(2) + 'deg, ' +
-        'var(' + paletteVar(index) + ') ' + (start + gap).toFixed(2) + 'deg ' + end.toFixed(2) + 'deg'
-      )
-    })
-    .join(', ')
   return {
-    background: 'conic-gradient(' + stops + ')',
     transform: 'rotate(' + wheelRotation.value + 'deg)',
     transitionDuration: spinDuration.value + 'ms',
     transitionTimingFunction:
@@ -208,6 +194,21 @@ const wheelStyle = computed(() => {
         : 'cubic-bezier(0.08, 0.62, 0.12, 1)'
   }
 })
+
+function segmentPath(index: number): string {
+  const count = Math.max(1, props.view.segments.length)
+  const step = 360 / count
+  const gap = 0.8
+  const start = index * step + gap / 2
+  const end = (index + 1) * step - gap / 2
+  const radius = 198
+  const point = (angle: number): string => {
+    const radians = ((angle - 90) * Math.PI) / 180
+    return (200 + Math.cos(radians) * radius).toFixed(2) + ' ' + (200 + Math.sin(radians) * radius).toFixed(2)
+  }
+  const large = end - start > 180 ? 1 : 0
+  return 'M 200 200 L ' + point(start) + ' A ' + radius + ' ' + radius + ' 0 ' + large + ' 1 ' + point(end) + ' Z'
+}
 
 function paletteVar(index: number): string {
   const palette = ['--wheel-1', '--wheel-2', '--wheel-3', '--wheel-4', '--wheel-5', '--wheel-6', '--wheel-7', '--wheel-8']
@@ -276,6 +277,15 @@ async function clearHistory(): Promise<void> {
       <div class="left">
         <div class="wheel-frame">
           <div class="wheel-disc" :style="wheelStyle">
+            <svg class="wheel-art" viewBox="0 0 400 400" aria-hidden="true">
+              <path
+                v-for="(segment, index) in view.segments"
+                :key="'segment-' + index"
+                :data-label="segment"
+                :d="segmentPath(index)"
+                :fill="'var(' + paletteVar(index) + ')'"
+              />
+            </svg>
             <span
               v-for="(segment, index) in view.segments"
               :key="index"
@@ -400,8 +410,17 @@ async function clearHistory(): Promise<void> {
   inset: 0;
   overflow: hidden;
   border-radius: 50%;
+  background: var(--wheel-gap);
   transition-property: transform;
   transition-timing-function: cubic-bezier(0.12, 0.7, 0.15, 1);
+}
+
+.wheel-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  shape-rendering: geometricPrecision;
 }
 
 .wheel-label {

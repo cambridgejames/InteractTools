@@ -2,6 +2,10 @@ appId: studio.interact1017.app
 productName: 互动工坊
 directories:
   output: release
+publish:
+  provider: github
+  owner: cambridgejames
+  repo: InteractTools
   buildResources: build
 files:
   - out/**

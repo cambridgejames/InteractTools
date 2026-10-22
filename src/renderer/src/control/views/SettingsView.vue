@@ -5,6 +5,7 @@ import type { NetworkTestResult, ProxyMode } from '@contracts/network'
 import type { WindowDisplayOption } from '@contracts/ipc'
 import AppIcon from '../components/AppIcon.vue'
 import AppSelect from '../components/AppSelect.vue'
+import PlatformGlyph from '../components/PlatformGlyph.vue'
 import ToggleSwitch from '../components/ToggleSwitch.vue'
 import PlatformsView from './PlatformsView.vue'
 import { actions, showToast, state } from '../store'
@@ -35,6 +36,19 @@ const displays = ref<readonly WindowDisplayOption[]>([])
 const selectedDisplay = ref('cursor')
 const selectedFeedMode = ref<FeedMode>('full')
 const ui = computed(() => state.snapshot?.ui ?? DEFAULT_UI_CONFIG)
+const update = computed(() => state.update)
+const updatePrefs = computed(() => state.snapshot?.updates ?? { autoCheck: true, autoDownload: false })
+const updateStatus = computed(() => {
+  switch (update.value?.phase) {
+    case 'checking': return '正在检查更新…'
+    case 'available': return '发现新版本 v' + (update.value.latestVersion ?? '')
+    case 'downloading': return '正在下载 ' + String(update.value.progress ?? 0) + '%'
+    case 'downloaded': return '更新已下载，重启后安装'
+    case 'not-available': return '已是最新版本'
+    case 'error': return update.value.message ?? '检查更新失败'
+    default: return '尚未检查'
+  }
+})
 const proxyMode = ref<ProxyMode>('none')
 const proxyUrl = ref('')
 const proxyUsername = ref('')
@@ -254,12 +268,6 @@ async function saveProxyUrl(): Promise<void> {
   }
 }
 
-function platformIcon(id: string): 'bilibili' | 'douyin' | 'platforms' {
-  if (id === 'bilibili') return 'bilibili'
-  if (id === 'douyin') return 'douyin'
-  return 'platforms'
-}
-
 async function saveProxyExtras(): Promise<void> {
   try {
     await window.api.updateNetworkConfig({
@@ -276,6 +284,10 @@ async function chooseLogLevel(value: string): Promise<void> {
   if (value !== 'debug' && value !== 'info' && value !== 'warn' && value !== 'error') return
   logLevel.value = value
   await actions.updateLogging(value)
+}
+
+async function setUpdatePrefs(patch: { autoCheck?: boolean; autoDownload?: boolean }): Promise<void> {
+  await actions.setUpdatePrefs(patch)
 }
 
 async function setInsecureTls(value: boolean): Promise<void> {
@@ -449,9 +461,7 @@ async function clearAllData(): Promise<void> {
             class="network-probe"
             :class="{ ok: probe.ok }"
           >
-            <span class="network-probe-icon">
-              <AppIcon :name="platformIcon(probe.platformId)" :size="16" />
-            </span>
+            <PlatformGlyph :id="probe.platformId" :size="30" :active="probe.ok" />
             <div class="network-probe-copy">
               <strong>{{ probe.name }}</strong>
               <span>{{ probe.ok ? '连通' : probe.message }}</span>
@@ -693,34 +703,91 @@ async function clearAllData(): Promise<void> {
       <template v-else>
         <header class="section-head">
           <h2>关于</h2>
-          <p>互动工坊 v0.1.0</p>
+          <p>互动工坊 v{{ update?.currentVersion ?? '—' }}</p>
         </header>
-        <section class="card about">
-        <ul>
-          <li>本地优先：B站匿名弹幕、抖音只读弹幕 + 本地模拟，不依赖自建服务端。</li>
-          <li>物理结果由 cannon-es 刚体模拟产生，结果动画只回放录制数据。</li>
-          <li>视觉规格见 docs/design/ui-guidelines.md，组件只使用 tokens.css 的变量。</li>
-        </ul>
-        <div class="about-replay">
-          <div>
-            <strong>操作指引</strong>
-            <span>第一次开播的流程：接平台、选玩法、看弹幕、绑快捷键。</span>
+
+        <section class="card">
+          <header>
+            <h2>更新</h2>
+            <p>检查 GitHub Release 最新版本，与当前安装版本比较。</p>
+          </header>
+
+          <div class="update-summary">
+            <div>
+              <strong>当前版本 v{{ update?.currentVersion ?? '—' }}</strong>
+              <span>{{ updateStatus }}</span>
+            </div>
+            <span class="update-chip" :class="'is-' + (update?.phase ?? 'idle')">
+              {{ update?.phase === 'available' ? '可更新' : update?.phase === 'not-available' ? '最新' : '检查' }}
+            </span>
           </div>
-          <button class="secondary" @click="actions.openTour">重新播放</button>
-        </div>
-        <div v-if="changelogEntries.length > 0" class="about-changelog">
-          <strong>最近更新</strong>
-          <ul>
+
+          <div class="data-actions">
+            <button class="secondary" :disabled="update?.phase === 'checking'" @click="actions.checkUpdates">
+              <AppIcon name="refresh" :size="15" />
+              检查更新
+            </button>
+            <button v-if="update?.phase === 'available'" class="secondary" @click="actions.downloadUpdate">下载更新</button>
+            <button v-if="update?.phase === 'downloaded'" class="secondary" @click="actions.installUpdate">重启安装</button>
+            <button v-if="update?.releaseUrl" class="link" @click="actions.openUpdate">打开发布页</button>
+          </div>
+
+          <div class="setting-switch">
+            <div>
+              <strong>自动检查更新</strong>
+              <span>启动后静默检查 GitHub Release；发现新版本时在顶部提示。</span>
+            </div>
+            <ToggleSwitch
+              :model-value="updatePrefs.autoCheck"
+              label="自动检查更新"
+              @update:model-value="setUpdatePrefs({ autoCheck: $event })"
+            />
+          </div>
+          <div class="setting-switch">
+            <div>
+              <strong>自动下载更新包</strong>
+              <span>默认关闭；开启后发现新版本会自动下载，安装仍由你确认。</span>
+            </div>
+            <ToggleSwitch
+              :model-value="updatePrefs.autoDownload"
+              label="自动下载更新包"
+              @update:model-value="setUpdatePrefs({ autoDownload: $event })"
+            />
+          </div>
+        </section>
+
+        <section class="card">
+          <header>
+            <h2>操作指引</h2>
+            <p>第一次开播的流程：接平台、选玩法、看弹幕、绑快捷键。</p>
+          </header>
+          <div class="data-actions">
+            <button class="secondary" @click="actions.openTour">重新播放操作指引</button>
+          </div>
+        </section>
+
+        <section v-if="changelogEntries.length > 0" class="card">
+          <header>
+            <h2>最近更新</h2>
+            <p>来自 CHANGELOG.md 的未发布条目。</p>
+          </header>
+          <ul class="about-changelog-list">
             <li v-for="entry in changelogEntries" :key="entry">{{ entry }}</li>
           </ul>
-        </div>
-        <div class="links">
-          <button class="link" @click="openExternal(GITHUB_URL)">
-            <AppIcon name="external" :size="14" />
-            GitHub 仓库
-          </button>
-          <button class="link" @click="openExternal(GITHUB_ISSUES_URL)">问题反馈</button>
-        </div>
+        </section>
+
+        <section class="card">
+          <header>
+            <h2>链接</h2>
+            <p>问题反馈请附带设置 → 数据 → 收集日志生成的 zip。</p>
+          </header>
+          <div class="links">
+            <button class="link" @click="openExternal(GITHUB_URL)">
+              <AppIcon name="external" :size="14" />
+              GitHub 仓库
+            </button>
+            <button class="link" @click="openExternal(GITHUB_ISSUES_URL)">问题反馈</button>
+          </div>
         </section>
       </template>
     </div>
@@ -955,21 +1022,6 @@ header p {
 
 .network-probe.ok {
   border-color: color-mix(in srgb, var(--success) 35%, var(--hairline));
-}
-
-.network-probe-icon {
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  flex: 0 0 30px;
-  border-radius: var(--r-icon);
-  background: var(--surface-active);
-  color: var(--mute);
-}
-
-.network-probe.ok .network-probe-icon {
-  color: var(--accent);
 }
 
 .network-probe-copy {
@@ -1235,20 +1287,60 @@ header p {
   border-color: var(--accent);
   color: var(--accent);
 }
-.about-changelog {
-  margin-top: var(--s-3);
-  padding-top: var(--s-3);
-  border-top: 1px solid var(--hairline);
+.update-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding: var(--s-3);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-control);
+  background: var(--inset);
 }
 
-.about-changelog > strong {
+.update-summary > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.update-summary strong {
   color: var(--body);
   font-size: 13px;
   font-weight: 500;
 }
 
-.about-changelog ul {
-  margin: var(--s-2) 0 0;
+.update-summary span {
+  color: var(--mute);
+  font-size: 12px;
+}
+
+.update-chip {
+  flex: none;
+  padding: 2px 8px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-chip);
+  color: var(--mute);
+  font-size: 12px;
+}
+
+.update-chip.is-available {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--hairline));
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.update-chip.is-error {
+  border-color: color-mix(in srgb, var(--danger) 40%, var(--hairline));
+  color: var(--danger);
+}
+
+.about-changelog-list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--mute);
+  font-size: 12px;
+  line-height: 19px;
 }
 
 .about-replay {

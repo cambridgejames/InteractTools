@@ -1,6 +1,7 @@
 import { reactive } from 'vue'
 import type { DiceConfig } from '@contracts/dice'
-import type { ShortcutsConfig, UiConfig } from '@contracts/config'
+import type { ShortcutsConfig, UiConfig, UpdatesConfig } from '@contracts/config'
+import type { UpdateState } from '@contracts/update'
 import type { ToolAction } from '@contracts/tool'
 import type { EngineEvent } from '@contracts/engine'
 import type { LogEntry } from '@contracts/log'
@@ -31,6 +32,7 @@ export const state = reactive<{
   diceRoll: DiceRollPresentation | null
   resultPopup: DiceResultPresentation | WheelResultPresentation | VoteResultPresentation | null
   showTour: boolean
+  update: UpdateState | null
 }>({
   snapshot: null,
   logs: [],
@@ -39,7 +41,8 @@ export const state = reactive<{
   activeToolId: 'dice',
   diceRoll: null,
   resultPopup: null,
-  showTour: false
+  showTour: false,
+  update: null
 })
 
 let started = false
@@ -51,6 +54,10 @@ export async function initStore(): Promise<void> {
   started = true
   try {
     applySnapshot(await window.api.snapshot())
+    state.update = await window.api.updateState()
+    window.api.onUpdate((next) => {
+      state.update = next
+    })
     window.api.onEvent(handleEvent)
     window.api.onPresentation(handlePresentation)
   } catch (error) {
@@ -222,6 +229,31 @@ export const actions = {
     await run(() => window.api.setFeedMode(mode))
   },
 
+  async checkUpdates(): Promise<void> {
+    await run(async () => {
+      state.update = await window.api.checkForUpdates()
+    })
+  },
+
+  async downloadUpdate(): Promise<void> {
+    await run(async () => {
+      state.update = await window.api.downloadUpdate()
+    })
+  },
+
+  async installUpdate(): Promise<void> {
+    await run(() => window.api.installUpdate())
+  },
+
+  async setUpdatePrefs(patch: Partial<UpdatesConfig>): Promise<void> {
+    await run(() => window.api.setUpdatePrefs(patch))
+  },
+
+  openUpdate(): void {
+    const url = state.update?.releaseUrl
+    if (url !== undefined) void window.api.openExternal(url).catch(() => undefined)
+  },
+
   openTour(): void {
     state.showTour = true
   },
@@ -321,6 +353,9 @@ function handleEvent(event: EngineEvent): void {
       state.snapshot = { ...snapshot, recentMembers: event.members }
       return
     }
+    case 'update':
+      state.update = event.state
+      return
     case 'log':
       state.logs = [event.entry, ...state.logs].slice(0, 100)
       return
