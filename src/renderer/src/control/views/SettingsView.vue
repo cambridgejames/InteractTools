@@ -359,7 +359,7 @@ async function clearAllData(): Promise<void> {
       <template v-if="section === 'platforms'">
         <header class="section-head">
           <h2>平台连接</h2>
-          <p>连接弹幕来源。所有平台只读；平台名称不会出现在实时弹幕和未激活状态里。</p>
+          <p>连接弹幕来源。所有平台只读，不会发送弹幕、礼物或关注。</p>
         </header>
         <PlatformsView />
       </template>
@@ -469,7 +469,7 @@ async function clearAllData(): Promise<void> {
             <span class="network-probe-latency">{{ probe.ok ? probe.latencyMs + 'ms' : '失败' }}</span>
           </div>
         </div>
-        <p v-else class="network-note">测试会分别请求已注册平台的公开接口；新增平台实现 probe 后会自动加入。</p>
+        <p v-else class="network-note">分别测试 B站、抖音和 GitHub 的连接。</p>
         </section>
       </template>
 
@@ -676,7 +676,7 @@ async function clearAllData(): Promise<void> {
         <section class="card">
           <header>
             <h2>日志</h2>
-            <p>按天 + 20MB 分文件，历史压缩，最多保留 20 个；日志留在本机。</p>
+            <p>日志按天和大小自动分文件，最多保留 20 个历史文件；只保存在本机。</p>
           </header>
 
           <label class="field">
@@ -688,7 +688,7 @@ async function clearAllData(): Promise<void> {
               @update:model-value="chooseLogLevel"
             />
           </label>
-          <p class="data-note warn-note">除非排查问题，不要改成 Debug；它会显著增加日志体积。</p>
+          <p class="data-note warn-note">Debug 仅用于排查问题，会显著增加日志体积。</p>
 
           <div class="data-actions">
             <button class="secondary" @click="actions.collectLogs()">
@@ -709,7 +709,7 @@ async function clearAllData(): Promise<void> {
         <section class="card">
           <header>
             <h2>更新</h2>
-            <p>检查 GitHub Release 最新版本，与当前安装版本比较。</p>
+            <p>从 GitHub 检查最新版本。</p>
           </header>
 
           <div class="update-summary">
@@ -735,7 +735,7 @@ async function clearAllData(): Promise<void> {
           <div class="setting-switch">
             <div>
               <strong>自动检查更新</strong>
-              <span>启动后静默检查 GitHub Release；发现新版本时在顶部提示。</span>
+              <span>启动时自动检查，发现新版本会在顶部提示。</span>
             </div>
             <ToggleSwitch
               :model-value="updatePrefs.autoCheck"
@@ -746,7 +746,7 @@ async function clearAllData(): Promise<void> {
           <div class="setting-switch">
             <div>
               <strong>自动下载更新包</strong>
-              <span>默认关闭；开启后发现新版本会自动下载，安装仍由你确认。</span>
+              <span>开启后自动下载更新包，安装前仍会确认。</span>
             </div>
             <ToggleSwitch
               :model-value="updatePrefs.autoDownload"
@@ -769,9 +769,9 @@ async function clearAllData(): Promise<void> {
         <section v-if="changelogEntries.length > 0" class="card">
           <header>
             <h2>最近更新</h2>
-            <p>来自 CHANGELOG.md 的未发布条目。</p>
+            <p>最近的版本变更。</p>
           </header>
-          <ul class="about-changelog-list">
+          <ul class="about-changelog-list selectable">
             <li v-for="entry in changelogEntries" :key="entry">{{ entry }}</li>
           </ul>
         </section>
@@ -779,7 +779,7 @@ async function clearAllData(): Promise<void> {
         <section class="card">
           <header>
             <h2>链接</h2>
-            <p>问题反馈请附带设置 → 数据 → 收集日志生成的 zip。</p>
+            <p>反馈问题时请附上日志包（设置 → 数据 → 收集日志）。</p>
           </header>
           <div class="links">
             <button class="link" @click="openExternal(GITHUB_URL)">
@@ -788,6 +788,7 @@ async function clearAllData(): Promise<void> {
             </button>
             <button class="link" @click="openExternal(GITHUB_ISSUES_URL)">问题反馈</button>
           </div>
+          <p class="data-note font-notice">界面字体：HarmonyOS Sans，版权 Huawei Device Co., Ltd.，依据 HarmonyOS Sans Fonts License 使用。</p>
         </section>
       </template>
     </div>
@@ -1058,6 +1059,10 @@ header p {
 
 .warn-note {
   color: var(--warning);
+}
+
+.font-notice {
+  margin-top: var(--s-3);
 }
 
 .data-actions {

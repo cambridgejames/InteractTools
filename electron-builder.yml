@@ -20,6 +20,8 @@ extraResources:
     to: douyin-sign/LICENSE
   - from: THIRD_PARTY_NOTICES.md
     to: THIRD_PARTY_NOTICES.md
+  - from: src/renderer/src/assets/fonts/HarmonyOS_SANS_LICENSE.txt
+    to: licenses/HarmonyOS-SANS.txt
 win:
   icon: build/icon.png
   target:

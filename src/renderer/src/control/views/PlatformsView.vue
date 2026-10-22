@@ -222,7 +222,7 @@ async function openRoom(host: 'bilibili' | 'douyin'): Promise<void> {
     <div v-if="!anyEnabled" class="platform-hint">
       <div>
         <strong>当前没有启用平台</strong>
-        <span>填写房间号并打开开关，或先用本地模拟跑通弹幕链路。</span>
+        <span>填写房间号并打开开关，或先在本地模拟里试一遍。</span>
       </div>
       <button class="hint-action" type="button" @click="setMockEnabled(true)">启用本地模拟</button>
     </div>
@@ -230,7 +230,7 @@ async function openRoom(host: 'bilibili' | 'douyin'): Promise<void> {
     <section class="card">
       <header>
         <div class="platform-title">
-          <PlatformGlyph id="bilibili" />
+          <PlatformGlyph id="bilibili" active />
           <div>
             <h2>哔哩哔哩</h2>
             <p>匿名只读弹幕 · 不登录、不发消息</p>
@@ -274,7 +274,7 @@ async function openRoom(host: 'bilibili' | 'douyin'): Promise<void> {
     <section class="card">
       <header>
         <div class="platform-title">
-          <PlatformGlyph id="douyin" />
+          <PlatformGlyph id="douyin" active />
           <div>
             <h2>抖音</h2>
             <p>匿名只读弹幕 · 不登录、不发送内容</p>
@@ -303,7 +303,7 @@ async function openRoom(host: 'bilibili' | 'douyin'): Promise<void> {
 
       <div class="platform-footer">
         <p class="platform-note">
-          本地匿名签名，无需额外配置；抖音调整签名算法时随应用版本更新。
+          本地完成签名，无需登录，也不会上传凭据。
         </p>
         <button
           class="room-link"
@@ -320,10 +320,10 @@ async function openRoom(host: 'bilibili' | 'douyin'): Promise<void> {
     <section class="card">
       <header>
         <div class="platform-title">
-          <PlatformGlyph id="mock" />
+          <PlatformGlyph id="mock" active />
           <div>
             <h2>本地模拟</h2>
-            <p>离线演示 · 自动观众会发送力度指令</p>
+            <p>离线演示 · 模拟观众会发送力度指令</p>
           </div>
         </div>
         <div class="card-controls">
@@ -344,19 +344,19 @@ async function openRoom(host: 'bilibili' | 'douyin'): Promise<void> {
         <div class="switch-stack">
           <div class="switch-row">
             <div>
-              <strong>自动观众</strong>
+              <strong>模拟观众</strong>
               <span>按间隔发送力度指令</span>
             </div>
             <ToggleSwitch
               v-model="botsEnabled"
-              label="自动观众"
+              label="模拟观众"
               @update:modelValue="setBotsEnabled"
             />
           </div>
         </div>
         <div class="mock-limits">
           <label class="field compact">
-            <span>用户数量</span>
+            <span>模拟人数</span>
             <div class="unit">
               <input v-model.number="userCount" type="number" min="1" max="100" />
               <em>人</em>

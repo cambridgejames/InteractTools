@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppIcon from './AppIcon.vue'
 import BrandMark from './BrandMark.vue'
-import { actions } from '../store'
+import { state } from '../store'
 
 const isMac = window.api.platform === 'darwin'
 
@@ -10,10 +10,9 @@ type Page = 'dashboard' | 'tools' | 'settings'
 defineProps<{ page: Page }>()
 const emit = defineEmits<{ navigate: [page: Page] }>()
 
-const nav: Array<{ id: Page; label: string; icon: 'dashboard' | 'tools' | 'settings' }> = [
+const nav: Array<{ id: Page; label: string; icon: 'dashboard' | 'tools' }> = [
   { id: 'dashboard', label: '控制台', icon: 'dashboard' },
-  { id: 'tools', label: '互动工具', icon: 'tools' },
-  { id: 'settings', label: '设置', icon: 'settings' }
+  { id: 'tools', label: '互动工具', icon: 'tools' }
 ]
 </script>
 
@@ -23,7 +22,7 @@ const nav: Array<{ id: Page; label: string; icon: 'dashboard' | 'tools' | 'setti
       <div class="brand-mark"><BrandMark :size="24" /></div>
       <div class="brand-text">
         <strong>互动工坊</strong>
-        <span>直播互动工具集</span>
+        <span>直播间互动控制台</span>
       </div>
     </div>
 
@@ -33,7 +32,6 @@ const nav: Array<{ id: Page; label: string; icon: 'dashboard' | 'tools' | 'setti
         :key="item.id"
         class="nav-item"
         :class="{ active: page === item.id }"
-        :data-tour="item.id === 'settings' ? 'nav-settings' : undefined"
         :aria-current="page === item.id ? 'page' : undefined"
         @click="emit('navigate', item.id)"
       >
@@ -43,11 +41,17 @@ const nav: Array<{ id: Page; label: string; icon: 'dashboard' | 'tools' | 'setti
     </nav>
 
     <div class="sidebar-foot">
-      <button class="data-link" @click="actions.openDataFolder()">
-        <AppIcon name="folder" :size="14" />
-        <span>数据目录</span>
+      <button
+        class="nav-item settings-link"
+        :class="{ active: page === 'settings' }"
+        data-tour="nav-settings"
+        :aria-current="page === 'settings' ? 'page' : undefined"
+        @click="emit('navigate', 'settings')"
+      >
+        <AppIcon name="settings" :size="18" />
+        <span>设置</span>
       </button>
-      <span class="version mono">v0.1.0</span>
+      <span class="version mono">v{{ state.update?.currentVersion ?? '—' }}</span>
     </div>
   </aside>
 </template>
@@ -147,26 +151,16 @@ const nav: Array<{ id: Page; label: string; icon: 'dashboard' | 'tools' | 'setti
   flex-direction: column;
   gap: var(--s-2);
   margin-top: auto;
-  padding: var(--s-4);
+  padding: var(--s-2);
   border-top: 1px solid var(--hairline);
 }
 
-.data-link {
-  display: flex;
-  align-items: center;
-  gap: var(--s-2);
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--mute);
-  font-size: 13px;
-}
-
-.data-link:hover {
-  color: var(--body);
+.settings-link {
+  width: 100%;
 }
 
 .version {
+  padding-left: var(--s-3);
   color: var(--faint);
   font-size: 12px;
 }

@@ -155,7 +155,7 @@ export class UpdateService {
         signal: AbortSignal.timeout(10_000),
         ...(dispatcher === null ? {} : { dispatcher })
       })
-      if (!response.ok) throw new Error('GitHub Release 返回 HTTP ' + String(response.status))
+      if (!response.ok) throw new Error('无法获取最新版本（HTTP ' + String(response.status) + '）')
       return releaseSchema.parse(await response.json())
     } finally {
       if (dispatcher !== null) void dispatcher.close().catch(() => undefined)

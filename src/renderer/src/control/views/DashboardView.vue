@@ -34,7 +34,7 @@ const panel = computed(() => (active.value === null ? null : TOOL_PANELS[active.
           {{
             tools.length === 0
               ? '到「互动工具」页重新打开；弹幕和平台连接不受影响。'
-              : '在 renderer/src/control/tool-panels.ts 注册组件，框架和结果窗不用改。'
+              : '该工具暂时没有控制面板，请更新应用后再试。'
           }}
         </span>
       </section>

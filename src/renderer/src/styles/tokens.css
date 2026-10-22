@@ -1,3 +1,11 @@
+@font-face {
+  font-family: 'HarmonyOS Sans SC';
+  src: url('../assets/fonts/HarmonyOS_SansSC_Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root,
 :root[data-theme='dark'] {
   color-scheme: dark;
@@ -99,7 +107,7 @@
 
 :root {
   /* type */
-  --font-ui: Inter, "Segoe UI", "SF Pro Display", "PingFang SC", "Microsoft YaHei UI", sans-serif;
+  --font-ui: "HarmonyOS Sans SC", Inter, "Segoe UI", "SF Pro Display", "PingFang SC", "Microsoft YaHei UI", sans-serif;
   --font-mono: "SF Mono", "Cascadia Code", "JetBrains Mono", Consolas, monospace;
 
   /* spacing */

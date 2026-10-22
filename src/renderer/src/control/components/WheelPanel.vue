@@ -315,7 +315,7 @@ async function clearHistory(): Promise<void> {
             预览
           </button>
         </div>
-        <p class="hint">没有命令、没有倒计时。主播点一下，转盘就在这里旋转；停稳后再弹结果。</p>
+        <p class="hint">点击开始旋转，停稳后显示结果。</p>
       </div>
 
       <div class="right">

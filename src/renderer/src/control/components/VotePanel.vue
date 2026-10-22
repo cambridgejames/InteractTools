@@ -224,7 +224,7 @@ async function preview(): Promise<void> {
 
 async function sendHint(index: number): Promise<void> {
   const alias = props.view.config.commandAliases[0] ?? '投票'
-  await actions.simulateChat('测试观众', '!' + alias + ' ' + String(index))
+  await actions.simulateChat('示例观众', '!' + alias + ' ' + String(index))
 }
 </script>
 
@@ -239,7 +239,7 @@ async function sendHint(index: number): Promise<void> {
     />
 
     <div class="command-hints">
-      <span class="hint-label">测试命令</span>
+      <span class="hint-label">命令示例</span>
       <button
         v-for="index in view.options.length"
         :key="index"
@@ -250,7 +250,7 @@ async function sendHint(index: number): Promise<void> {
       >
         !{{ view.config.commandAliases[0] ?? '投票' }} {{ index }}
       </button>
-      <span class="hint-note">投票中才会被计数</span>
+      <span class="hint-note">仅投票阶段计数</span>
     </div>
 
     <div class="body">

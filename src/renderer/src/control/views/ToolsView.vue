@@ -110,24 +110,8 @@ function nameParts(item: { tool: ToolCatalogItem; pinyinMatch: boolean }): Retur
       <footer>
         <span class="meta">{{ historyOf(item.tool) }}</span>
         <button class="open" :disabled="!item.tool.enabled" @click="openTool(item.tool)">
-          {{ item.tool.enabled ? '去控制台' : '启用后使用' }}
+          {{ item.tool.enabled ? '去控制台' : '未启用' }}
         </button>
-      </footer>
-    </section>
-
-    <section v-if="query.length === 0" class="tool-card muted-card">
-      <header>
-        <span class="icon"><AppIcon name="gift" :size="20" /></span>
-        <span class="status soon">即将推出</span>
-      </header>
-      <h2>礼物答谢</h2>
-      <p>礼物队列、防刷屏、语音播报。等第一个工具稳定后接入。</p>
-      <div class="tags">
-        <span class="tag">礼物</span>
-        <span class="tag">TTS</span>
-      </div>
-      <footer>
-        <span class="meta">规划中</span>
       </footer>
     </section>
 

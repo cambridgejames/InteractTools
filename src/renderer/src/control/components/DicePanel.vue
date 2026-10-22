@@ -94,7 +94,7 @@ async function direct(): Promise<void> {
 
 async function sendHint(power: number): Promise<void> {
   const alias = props.view.config.commandAliases[0] ?? '力度'
-  await actions.simulateChat('测试观众', '!' + alias + ' ' + String(power))
+  await actions.simulateChat('示例观众', '!' + alias + ' ' + String(power))
 }
 
 function isAggregation(value: string): value is Aggregation {
@@ -152,7 +152,7 @@ function participantPower(value: number): string {
     />
 
     <div class="command-hints">
-      <span class="hint-label">测试命令</span>
+      <span class="hint-label">命令示例</span>
       <button
         v-for="power in [30, 60, 90]"
         :key="power"
@@ -163,7 +163,7 @@ function participantPower(value: number): string {
       >
         !{{ view.config.commandAliases[0] ?? '力度' }} {{ power }}
       </button>
-      <span class="hint-note">0–100 整数 · 收集时才计数</span>
+      <span class="hint-note">输入 0–100 的整数，收集阶段才计数</span>
     </div>
 
     <div class="card-body">

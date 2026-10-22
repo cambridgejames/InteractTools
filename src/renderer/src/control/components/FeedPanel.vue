@@ -17,7 +17,7 @@ const stick = ref(true)
 const unread = ref(0)
 const scrollTop = ref(0)
 const viewportHeight = ref(0)
-const name = ref('测试观众')
+const name = ref('观众')
 const text = ref('')
 const sending = ref(false)
 const now = ref(Date.now())
@@ -109,7 +109,7 @@ async function send(): Promise<void> {
   const value = text.value.trim()
   if (value.length === 0 || sending.value) return
   sending.value = true
-  const ok = await actions.simulateChat(name.value.trim() || '测试观众', value)
+  const ok = await actions.simulateChat(name.value.trim() || '观众', value)
   sending.value = false
   if (ok) {
     text.value = ''
@@ -157,7 +157,7 @@ function platformLabel(platform: FeedItem['platform']): string {
     </header>
 
     <div class="feed-tools">
-      <button class="mini" @click="fill">填充 8 条</button>
+      <button class="mini" @click="fill">示例弹幕</button>
       <button class="mini" @click="actions.clearFeed()">清空</button>
       <button class="mini collapse" title="收起弹幕栏" @click="emit('collapse')">
         <AppIcon name="chevron" :size="14" />
@@ -169,7 +169,7 @@ function platformLabel(platform: FeedItem['platform']): string {
       <div v-if="chatFeed.length === 0" class="empty">
         <AppIcon name="platforms" :size="28" />
         <strong>{{ recentMemberNames.length > 0 ? '观众正在进入' : '还没有弹幕' }}</strong>
-        <span>连接平台后，弹幕会实时出现在这里。</span>
+        <span>连接平台后，消息会实时显示在这里。</span>
       </div>
 
       <div :style="{ height: topPad + 'px' }" />
@@ -214,7 +214,7 @@ function platformLabel(platform: FeedItem['platform']): string {
 
     <form class="composer" @submit.prevent="send">
       <div class="composer-row">
-        <input v-model="name" class="name-input" maxlength="24" aria-label="测试观众名字" />
+        <input v-model="name" class="name-input" maxlength="24" aria-label="观众名字" />
         <input v-model="text" class="text-input" maxlength="120" placeholder="输入一条模拟弹幕…" aria-label="模拟弹幕内容" />
         <button class="send" type="submit" aria-label="发送模拟弹幕" :disabled="sending || text.trim().length === 0">
           <AppIcon name="send" :size="14" />

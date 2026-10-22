@@ -18,7 +18,7 @@ interface TourStep {
 const steps: readonly TourStep[] = [
   {
     icon: 'settings',
-    title: '先打开设置',
+    title: '先连接直播间',
     body: '点左侧「设置」，所有平台连接、网络和外观都在这里。这个高亮就是入口。',
     hint: '所有平台都只读，不会替你发言或送礼。',
     page: 'dashboard',
@@ -34,7 +34,7 @@ const steps: readonly TourStep[] = [
   },
   {
     icon: 'vote',
-    title: '眼睛看右边',
+    title: '弹幕在右侧',
     body: '这里就是实时弹幕。向上翻历史时不会强制拉回底部，有新消息会出现提示按钮。',
     hint: '进场观众只占底部一行，不抢聊天历史。',
     page: 'dashboard',
@@ -42,7 +42,7 @@ const steps: readonly TourStep[] = [
   },
   {
     icon: 'globe',
-    title: '网络在这里测',
+    title: '网络与连通性',
     body: '进入设置 → 网络，点「测试连通性」会分别显示 B站和抖音的连通状态与延迟。',
     hint: '内网自签名代理可以打开 SSL 跳过校验。',
     page: 'settings',

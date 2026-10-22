@@ -53,7 +53,7 @@ function handleKeydown(event: KeyboardEvent): void {
           <strong>{{ dice.value }}</strong>
           <span>点</span>
         </div>
-        <p v-if="!dice.settled" class="warn">未完全停稳，取最近面</p>
+        <p v-if="!dice.settled" class="warn">骰子尚未完全停稳，已取最近一面</p>
         <div class="stats">
           <div><span>参与</span><strong>{{ dice.stats.count }}</strong><em>人</em></div>
           <div><span>力度</span><strong>{{ formatPower(dice.power) }}</strong></div>
@@ -70,13 +70,13 @@ function handleKeydown(event: KeyboardEvent): void {
       </template>
 
       <template v-else-if="wheel">
-        <span class="eyebrow">WHEEL / {{ wheel.segments.length }} 格</span>
+        <span class="eyebrow">转转盘 / {{ wheel.segments.length }} 格</span>
         <strong class="wheel-label">{{ wheel.label }}</strong>
         <p class="sub">第 {{ wheel.index + 1 }} 格 · 主播手动触发</p>
       </template>
 
       <template v-else-if="vote">
-        <span class="eyebrow">VOTE / {{ vote.options.length }} 项 · {{ vote.totalVotes }} 票</span>
+        <span class="eyebrow">弹幕投票 / {{ vote.options.length }} 项 · {{ vote.totalVotes }} 票</span>
         <p class="vote-question">{{ vote.question || '本轮投票' }}</p>
         <strong class="wheel-label vote-label">{{ voteLabel }}</strong>
         <div class="tally">

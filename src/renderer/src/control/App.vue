@@ -16,9 +16,9 @@ type Page = 'dashboard' | 'tools' | 'settings'
 
 const page = ref<Page>('dashboard')
 const meta: Record<Page, { title: string; subtitle: string }> = {
-  dashboard: { title: '控制台', subtitle: '把弹幕变成今晚的节目' },
-  tools: { title: '互动工具', subtitle: '一个内核，多个玩法' },
-  settings: { title: '设置', subtitle: '平台、网络、窗口与数据' }
+  dashboard: { title: '控制台', subtitle: '连接直播间，开始互动' },
+  tools: { title: '互动工具', subtitle: '选择今晚的互动玩法' },
+  settings: { title: '设置', subtitle: '平台、网络、外观与更新' }
 }
 
 const current = computed(() => meta[page.value])
@@ -70,7 +70,7 @@ onUnmounted(() => {
     />
     <div class="app-main">
       <main class="app-content">
-        <div v-if="state.loading" class="loading">正在连接内核…</div>
+        <div v-if="state.loading" class="loading">正在启动…</div>
         <template v-else>
           <DashboardView v-if="page === 'dashboard'" @navigate="page = $event" />
           <ToolsView v-else-if="page === 'tools'" @navigate="page = $event" />

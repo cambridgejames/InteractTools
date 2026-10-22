@@ -8,9 +8,16 @@ body,
   height: 100%;
 }
 
+html,
+body {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 body {
   margin: 0;
   background: var(--canvas);
+  cursor: default;
   color: var(--body);
   font-family: var(--font-ui);
   font-size: 14px;
@@ -25,6 +32,19 @@ select,
 textarea {
   font: inherit;
   color: inherit;
+}
+
+input,
+textarea,
+[contenteditable='true'],
+.selectable {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+input,
+textarea {
+  cursor: text;
 }
 
 button {
