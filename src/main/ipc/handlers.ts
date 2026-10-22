@@ -114,9 +114,19 @@ export function registerIpc(
   ipcMain.handle(IPC.changelog, async () => {
     try {
       const text = await readFile(join(app.getAppPath(), 'CHANGELOG.md'), 'utf8')
-      const section = text.match(/^## \[[^\]]+\][^\n]*\n([\s\S]*?)(?=^## \[|$)/m)?.[1] ?? ''
-      return section
-        .split('\n')
+      const lines = text.split('\n')
+      const start = lines.findIndex((line) => line.startsWith('## ['))
+      if (start < 0) return []
+      let end = lines.length
+      for (let index = start + 1; index < lines.length; index += 1) {
+        const line = lines[index]
+        if (line !== undefined && line.startsWith('## [')) {
+          end = index
+          break
+        }
+      }
+      return lines
+        .slice(start + 1, end)
         .filter((line) => line.startsWith('- '))
         .slice(0, 8)
         .map((line) => line.slice(2))
