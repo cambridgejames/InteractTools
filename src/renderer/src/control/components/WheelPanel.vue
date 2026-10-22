@@ -297,8 +297,8 @@ async function clearHistory(): Promise<void> {
             </span>
           </div>
           <span class="hub">
-            <BrandMark :size="46" />
             <span class="hub-pointer" />
+            <BrandMark :size="46" />
           </span>
         </div>
         <div class="preview-meta">
@@ -447,24 +447,24 @@ async function clearHistory(): Promise<void> {
   height: 100px;
   border: 2px solid var(--accent);
   border-radius: 50%;
-  background: var(--canvas);
-  color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
   transform: translate(-50%, -50%);
 }
 
 .hub-pointer {
   position: absolute;
-  top: -16px;
+  top: -26px;
   left: 50%;
+  z-index: 0;
   width: 0;
   height: 0;
   border-right: 10px solid transparent;
-  border-bottom: 18px solid var(--accent);
+  border-bottom: 28px solid var(--accent);
   border-left: 10px solid transparent;
-  filter: drop-shadow(0 0 1px var(--canvas)) drop-shadow(0 3px 6px var(--canvas));
   transform: translateX(-50%);
-  z-index: 3;
 }
+
 
 .preview-meta {
   display: flex;
