@@ -206,8 +206,8 @@ const wheelStyle = computed(() => {
 })
 
 function paletteVar(index: number): string {
-  const palette = ['--accent', '--info', '--bilibili', '--surface-active', '--success', '--warning', '--accent-strong']
-  return palette[index % palette.length] ?? '--surface-active'
+  const palette = ['--wheel-1', '--wheel-2', '--wheel-3', '--wheel-4', '--wheel-5', '--wheel-6', '--wheel-7']
+  return palette[index % palette.length] ?? '--wheel-4'
 }
 
 function maxLabelFont(count: number): number {
@@ -237,7 +237,7 @@ function labelStyle(index: number): Record<string, string> {
     top: 'calc(50% + ' + Math.sin(radians) * radius + 'px)',
     // 沿半径排布，文字跟着扇形一起转；超过半圈时翻转，减少倒着读。
     transform: 'translate(-50%, -50%) rotate(' + (angle - 90 + (angle > 180 ? 180 : 0)) + 'deg)',
-    color: index % 7 === 3 ? 'var(--ink)' : 'var(--canvas)',
+    color: index % 7 === 3 ? 'var(--wheel-text-alt)' : 'var(--wheel-text)',
     width: width + 'px',
     fontSize: fontSize.toFixed(1) + 'px'
   }

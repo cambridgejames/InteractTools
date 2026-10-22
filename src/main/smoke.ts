@@ -113,6 +113,11 @@ export async function runSmoke(application: Application): Promise<void> {
   )
   await delay(400)
   await application.controlWindow.capture(join(output, 'control-wheel.png'))
+  await application.engine.updateUi({ theme: 'light' })
+  await delay(300)
+  await application.controlWindow.capture(join(output, 'control-wheel-light.png'))
+  await application.engine.updateUi({ theme: 'dark' })
+  await delay(300)
 
   await application.engine.updateFeedMode('collapsed')
   await delay(300)
@@ -150,6 +155,11 @@ export async function runSmoke(application: Application): Promise<void> {
   )
   await delay(250)
   await application.controlWindow.capture(join(output, 'control-vote.png'))
+  await application.engine.updateUi({ theme: 'light' })
+  await delay(300)
+  await application.controlWindow.capture(join(output, 'control-vote-light.png'))
+  await application.engine.updateUi({ theme: 'dark' })
+  await delay(300)
 
   await application.engine.updateToolConfig('vote', {
     question: '今晚玩什么？',

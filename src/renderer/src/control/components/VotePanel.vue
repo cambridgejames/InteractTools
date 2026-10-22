@@ -351,8 +351,6 @@ async function sendHint(index: number): Promise<void> {
 .card {
   display: flex;
   flex-direction: column;
-  gap: var(--s-4);
-  padding: var(--s-5);
   border: 1px solid var(--hairline);
   border-radius: var(--r-card);
   background: var(--surface);
@@ -363,6 +361,7 @@ async function sendHint(index: number): Promise<void> {
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
+  padding: var(--s-3) var(--s-5) 0;
 }
 
 .hint-label {
@@ -409,6 +408,7 @@ async function sendHint(index: number): Promise<void> {
   display: grid;
   grid-template-columns: minmax(320px, 1.1fr) minmax(300px, 0.9fr);
   gap: var(--s-5);
+  padding: var(--s-5);
 }
 
 .live {
