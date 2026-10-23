@@ -54,6 +54,7 @@ mac:
 linux:
   icon: build/icon.png
   category: Utility
+  maintainer: CambridgeJames <cambridgejames@users.noreply.github.com>
   target:
     - target: AppImage
     - target: deb

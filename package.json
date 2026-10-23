@@ -12,7 +12,10 @@
     "interaction"
   ],
   "main": "./out/main/index.js",
-  "author": "CambridgeJames",
+  "author": {
+    "name": "CambridgeJames",
+    "email": "cambridgejames@users.noreply.github.com"
+  },
   "license": "MIT",
   "repository": {
     "type": "git",
