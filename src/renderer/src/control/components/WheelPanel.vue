@@ -149,7 +149,7 @@ watch(
     const delta = (targetMod - currentMod + 360) % 360
 
     spinDuration.value = spin.durationMs
-    const turns = (spin.stopEasing === 'glide' ? 6 : 4) + Math.round(spin.stopOffset * 4)
+    const turns = 10 + Math.round(spin.stopOffset * 3)
     wheelRotation.value += 360 * turns + delta
   }
 )

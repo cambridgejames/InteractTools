@@ -32,8 +32,6 @@ export class WheelTool implements InteractionTool {
   private history: WheelResult[] = []
   private resultTimer: Cancellable | null = null
   private generation = 0
-  private bag: number[] = []
-  private bagCount = 0
 
   async activate(context: ToolContext, config: unknown): Promise<void> {
     this.context = context
@@ -44,15 +42,11 @@ export class WheelTool implements InteractionTool {
         return parsed.success ? [parsed.data] : []
       })
       .slice(0, HISTORY_LIMIT)
-    this.bag = []
-    this.bagCount = 0
     context.notifyChange()
   }
 
   async updateConfig(config: unknown): Promise<void> {
     this.config = wheelConfigSchema.parse(config)
-    this.bag = []
-    this.bagCount = 0
     this.notify()
   }
 
@@ -62,8 +56,6 @@ export class WheelTool implements InteractionTool {
     this.resultTimer = null
     this.phase = 'idle'
     this.currentSpin = null
-    this.bag = []
-    this.bagCount = 0
     const context = this.context
     this.context = null
     if (context !== null) {
@@ -118,10 +110,8 @@ export class WheelTool implements InteractionTool {
     const segments = this.config.segments
     if (segments.length < 2) throw new Error('转盘至少需要两个格子')
 
-    // 持久旋转从洗牌袋抽签：每格都轮到过一次才重新洗牌，避免短期高度集中。
-    const index = persist
-      ? this.drawIndex(segments.length)
-      : Math.min(segments.length - 1, Math.floor(context.random.next() * segments.length))
+    // 每次独立随机：结果不参考上一轮，也不使用会累计偏差的洗牌袋。
+    const index = Math.min(segments.length - 1, Math.floor(context.random.next() * segments.length))
     const label = segments[index] ?? ''
     // 不再每次都停在扇区正中：0.18–0.82 的落点既保留正确结果，也能看出
     // 指针压线、擦边和最后一段滑行，避免“每次都是黑幕”的观感。
@@ -172,30 +162,6 @@ export class WheelTool implements InteractionTool {
     )
   }
 
-  private drawIndex(count: number): number {
-    if (this.bag.length === 0 || this.bagCount !== count) {
-      this.bagCount = count
-      this.bag = Array.from({ length: count }, (_, index) => index)
-      for (let index = this.bag.length - 1; index > 0; index -= 1) {
-        const swap = Math.floor(this.requireContext().random.next() * (index + 1))
-        const value = this.bag[index]
-        this.bag[index] = this.bag[swap] ?? 0
-        this.bag[swap] = value ?? 0
-      }
-    }
-
-    let next = this.bag.pop() ?? 0
-    // 新一袋的第一签如果和上一轮相同，和袋内另一签交换，避免跨袋连击。
-    if (next === this.lastResult?.index && this.bag.length > 0) {
-      const swap = Math.floor(this.requireContext().random.next() * this.bag.length)
-      this.bag.push(next)
-      next = this.bag[swap] ?? next
-      this.bag[swap] = this.bag[this.bag.length - 1] ?? 0
-      this.bag.pop()
-    }
-    return next
-  }
-
   private reset(): void {
     this.generation += 1
     this.resultTimer?.cancel()
@@ -203,8 +169,6 @@ export class WheelTool implements InteractionTool {
     this.phase = 'idle'
     this.currentSpin = null
     this.lastResult = null
-    this.bag = []
-    this.bagCount = 0
     this.notify()
   }
 

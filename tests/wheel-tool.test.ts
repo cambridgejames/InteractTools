@@ -153,42 +153,6 @@ describe('WheelTool', () => {
     expect(history.entries).toHaveLength(1)
     expect(announcements.some((item) => item.includes('B'))).toBe(true)
 
-    await tool.handleAction({ type: 'spin' })
-    const second = tool.view()
-    if (second.toolId !== 'wheel') throw new Error('expected wheel view')
-    expect(second.currentSpin?.resultIndex).toBe(3)
-
-    await tool.deactivate()
-  })
-
-  it('draws every segment once before reshuffling', async () => {
-    const clock = new FakeClock()
-    const timers = new FakeTimers(clock)
-    const random: RandomSource = { next: () => 0.37 }
-    const context: ToolContext = {
-      clock,
-      timer: timers,
-      random,
-      logger,
-      history: new MemoryHistory(),
-      present: async () => undefined,
-      notifyChange: () => undefined,
-      announce: () => undefined,
-      publishCommandHint: () => undefined
-    }
-    const tool = new WheelTool()
-    await tool.activate(context, { ...DEFAULT_WHEEL_CONFIG, segments: ['A', 'B', 'C', 'D'] })
-
-    const seen: number[] = []
-    for (let index = 0; index < 4; index += 1) {
-      await tool.handleAction({ type: 'spin' })
-      const view = tool.view()
-      if (view.toolId !== 'wheel') throw new Error('expected wheel view')
-      seen.push(view.currentSpin?.resultIndex ?? -1)
-      await timers.advance(8_000)
-    }
-
-    expect(new Set(seen).size).toBe(4)
     await tool.deactivate()
   })
 })
