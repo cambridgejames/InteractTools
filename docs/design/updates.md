@@ -34,7 +34,7 @@ release.yml → 三平台构建 → release-notes.mjs → GitHub Release + lates
   → 顶部提示 / 设置 → 关于 → 更新
        ↓
 electron-updater（仅安装包）→ 下载 → update-downloaded → 重启安装
-       ↳ zip/便携解压版 → 下载 zip → 退出后 PowerShell 解压覆盖 → 重启
+       ↳ zip 解压版 → 下载 zip → 退出后 PowerShell 解压覆盖 → 重启
 ```
 
 ## 3. 关键规则
