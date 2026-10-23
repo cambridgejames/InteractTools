@@ -159,9 +159,10 @@ const wheelStyle = computed(() => {
     transform: 'rotate(' + wheelRotation.value + 'deg)',
     transitionDuration: spinDuration.value + 'ms',
     transitionTimingFunction:
+      // 曲线 y 值必须 ≤ 1；超过 1 会先转过头再回弹，看起来就是倒转。
       props.view.currentSpin?.stopEasing === 'brake'
-        ? 'cubic-bezier(0.02, 0.9, 0.18, 1)'
-        : 'cubic-bezier(0.12, 0.78, 0.1, 1.03)'
+        ? 'cubic-bezier(0.12, 0.88, 0.24, 1)'
+        : 'cubic-bezier(0.16, 0.72, 0.14, 1)'
   }
 })
 
@@ -408,7 +409,7 @@ async function clearHistory(): Promise<void> {
   z-index: 2;
   width: 100px;
   height: 136px;
-  color: var(--hub-mark);
+  color: var(--accent-ink);
   transform: translate(-50%, calc(-50% - 16px)) scale(0.84);
 }
 
@@ -422,8 +423,8 @@ async function clearHistory(): Promise<void> {
 }
 
 .hub-shape path {
-  fill: var(--hub-mark);
-  stroke: var(--hub-mark);
+  fill: var(--accent);
+  stroke: var(--accent-ink);
   stroke-width: 2.5;
   stroke-linejoin: miter;
   stroke-linecap: round;
@@ -431,7 +432,7 @@ async function clearHistory(): Promise<void> {
 
 .hub-shape circle {
   fill: var(--accent);
-  stroke: var(--hub-mark);
+  stroke: var(--accent-ink);
   stroke-width: 2.5;
 }
 
