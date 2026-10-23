@@ -1,7 +1,7 @@
 # 检查更新与安装
 
 **状态**：现行架构
-**最后更新**：2026-10-23
+**最后更新**：2026-10-24
 
 ---
 
@@ -17,6 +17,7 @@
 | 日期 | 变更 | 原因 |
 |---|---|---|
 | 2026-10-23 | 首次定稿 | 接入 release-please、GitHub Release 检查与 electron-updater |
+| 2026-10-24 | 补充 zip 更新 | 支持解压运行的 Windows 版本下载 zip 并在退出后覆盖 |
 
 ---
 
@@ -33,6 +34,7 @@ release.yml → 三平台构建 → release-notes.mjs → GitHub Release + lates
   → 顶部提示 / 设置 → 关于 → 更新
        ↓
 electron-updater（仅安装包）→ 下载 → update-downloaded → 重启安装
+       ↳ zip/便携解压版 → 下载 zip → 退出后 PowerShell 解压覆盖 → 重启
 ```
 
 ## 3. 关键规则
@@ -43,6 +45,9 @@ electron-updater（仅安装包）→ 下载 → update-downloaded → 重启安
 - 自动检查失败不打断主流程，只在「关于 → 更新」显示错误。
 - GitHub 连通性由 `probeGitHub` 单独加入网络测试，不伪装成平台适配器。
 - 下载包必须带 `latest*.yml` 与 blockmap；release workflow 负责上传。
+- Windows Release 同时上传 zip；从 zip 解压运行的版本由 `zip-update.ts` 更新：下载当前架构的 zip、校验可选 sha256 digest、退出后由独立 PowerShell 等待进程退出并解压覆盖。
+- zip 更新只在 Windows、目录可写且没有 `Uninstall*.exe` 时启用；NSIS 仍走 electron-updater，便携单文件版不进入 zip 目录替换。
+- zip 更新失败只影响更新卡片，不删用户数据，也不阻塞直播。
 
 ## 4. 改动时的检查点
 

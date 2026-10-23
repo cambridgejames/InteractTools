@@ -24,9 +24,11 @@ extraResources:
     to: licenses/HarmonyOS-SANS.txt
 win:
   icon: build/icon.png
+  artifactName: Interact-Studio-${version}-win-${arch}.${ext}
   target:
     - target: nsis
     - target: portable
+    - target: zip
 nsis:
   oneClick: false
   perMachine: false
