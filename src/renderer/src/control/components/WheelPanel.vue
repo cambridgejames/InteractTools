@@ -298,7 +298,7 @@ async function clearHistory(): Promise<void> {
           </div>
           <span class="hub">
             <svg class="hub-shape" viewBox="0 0 100 112" aria-hidden="true">
-              <path d="M50 -24 L75.3 20 A44 44 0 1 1 24.7 20 Z" />
+              <path d="M50 -4 L64 14 Q70 18 75.3 20 A44 44 0 1 1 24.7 20 Q30 18 36 14 Z" />
             </svg>
             <BrandMark :size="46" />
           </span>
