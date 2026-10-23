@@ -10,6 +10,7 @@
 [![Electron](https://img.shields.io/badge/Electron-44-47848F?logo=electron&logoColor=white)](https://www.electronjs.org/)
 [![Vue](https://img.shields.io/badge/Vue-3.5-4FC08D?logo=vue.js&logoColor=white)](https://vuejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Release](https://img.shields.io/github/v/release/cambridgejames/InteractTools?color=c8ff3d)](https://github.com/cambridgejames/InteractTools/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 [English overview](README.en.md) · [快速开始](#快速开始) · [文档](#文档)
@@ -29,8 +30,21 @@
 - **只读接入**：B站、抖音只读取弹幕、礼物和进场，不登录、不发消息、不刷量。
 - **直播时不添乱**：结果弹窗手动关闭，弹幕区可折叠 / 隐藏，OBS 直接采集控制台窗口。
 
+## 下载
+
+当前 MVP：[互动工坊 v0.1.0](https://github.com/cambridgejames/InteractTools/releases/tag/v0.1.0)
+
+| 平台 | 产物 |
+| --- | --- |
+| Windows x64 / arm64 | NSIS 安装包、portable、zip |
+| macOS x64 / arm64 | dmg、zip |
+| Linux x64 | AppImage、deb |
+
+Windows 与 macOS 的安装包支持检查更新；zip 解压版会下载新 zip，退出后替换并重启。
+
 ## 目录
 
+- [下载](#下载)
 - [界面](#界面)
 - [功能](#功能)
 - [工作流程](#工作流程)
