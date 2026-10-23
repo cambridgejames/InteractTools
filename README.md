@@ -12,6 +12,18 @@
 
 目前包含「投骰子」「转转盘」「弹幕投票」三个工具。
 
+## 界面
+
+| 控制台（深色） | 控制台（浅色） |
+| --- | --- |
+| ![控制台深色主题](docs/assets/dashboard-dark.png) | ![控制台浅色主题](docs/assets/dashboard-light.png) |
+| **转转盘** | **互动工具** |
+| ![转转盘](docs/assets/wheel.png) | ![互动工具](docs/assets/tools.png) |
+
+| 网络与连通性 |
+| --- |
+| ![网络设置](docs/assets/settings-network.png) |
+
 投骰子：
 
 - 观众发送 `!力度 80` 设置力度；同一观众只取最后一条。
@@ -69,7 +81,7 @@ npm run lint         # ESLint + 依赖边界 + 设计 token
 npm run test         # Vitest
 npm run build        # 构建
 npm run smoke        # 启动 Electron 并截图到 artifacts/smoke
-npm run package:win  # Windows x64 + arm64（NSIS / portable）
+npm run package:win  # Windows x64 + arm64（NSIS / portable / zip）
 npm run package:mac  # macOS x64 + arm64（dmg / zip）
 npm run package:linux # Linux x64 + arm64（AppImage / deb）
 ```
