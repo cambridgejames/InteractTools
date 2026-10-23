@@ -298,7 +298,7 @@ async function clearHistory(): Promise<void> {
           </div>
           <span class="hub">
             <svg class="hub-shape" viewBox="0 0 100 112" aria-hidden="true">
-              <path d="M50 -4 L64 14 Q70 18 75.3 20 A44 44 0 1 1 24.7 20 Q30 18 36 14 Z" />
+              <path d="M50 0 C54 0 59 10 64 22 C70 36 88 40 88 58 C88 80 71 98 50 98 C29 98 12 80 12 58 C12 40 30 36 36 22 C41 10 46 0 50 0 Z" />
             </svg>
             <BrandMark :size="46" />
           </span>
@@ -446,7 +446,7 @@ async function clearHistory(): Promise<void> {
   width: 100px;
   height: 112px;
   color: var(--accent-ink);
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) scale(0.84);
 }
 
 .hub-shape {
@@ -460,8 +460,8 @@ async function clearHistory(): Promise<void> {
 
 .hub-shape path {
   fill: var(--accent);
-  stroke: var(--canvas-elevated);
-  stroke-width: 4.5;
+  stroke: var(--accent-strong);
+  stroke-width: 2.5;
   stroke-linejoin: round;
   stroke-linecap: round;
 }
