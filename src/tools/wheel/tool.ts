@@ -113,10 +113,10 @@ export class WheelTool implements InteractionTool {
     // 每次独立随机：结果不参考上一轮，也不使用会累计偏差的洗牌袋。
     const index = Math.min(segments.length - 1, Math.floor(context.random.next() * segments.length))
     const label = segments[index] ?? ''
-    // 落点角度独立随机，但避开正中：0.12–0.38 或 0.62–0.88 个扇区宽。
+    // 落点角度独立随机，但避开正中：0.10–0.30 或 0.70–0.90 个扇区宽。
     // 扇区宽度由格数自动计算，所以不同格数下都不会压线或停在正中心。
     const side = context.random.next() < 0.5 ? -1 : 1
-    const stopOffset = 0.5 + side * (0.12 + context.random.next() * 0.26)
+    const stopOffset = 0.5 + side * (0.2 + context.random.next() * 0.2)
     const stopEasing = context.random.next() < 0.5 ? 'glide' : 'brake'
     const now = context.clock.now()
     const spinId = 'wheel-' + now.toString(36) + '-' + index
