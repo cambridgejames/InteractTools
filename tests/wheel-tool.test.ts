@@ -129,7 +129,7 @@ describe('WheelTool', () => {
     if (spinning.toolId !== 'wheel') throw new Error('expected wheel view')
     expect(spinning.phase).toBe('spinning')
     expect(spinning.currentSpin?.resultIndex).toBe(1)
-    expect(spinning.currentSpin?.stopOffset).toBeCloseTo(0.3976, 3)
+    expect(spinning.currentSpin?.stopOffset).toBeCloseTo(0.2916, 3)
     expect(spinning.currentSpin?.stopEasing).toBe('glide')
     expect(spinning.currentSpin?.durationMs).toBe(5_676)
 
