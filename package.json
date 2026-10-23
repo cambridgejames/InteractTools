@@ -38,9 +38,9 @@
     "test:watch": "vitest",
     "build": "npm run typecheck && electron-vite build",
     "smoke": "npm run build && node scripts/launch-electron.mjs . --smoke",
-    "package:win": "npm run build && electron-builder --win --x64 --arm64",
-    "package:mac": "npm run build && electron-builder --mac --x64 --arm64",
-    "package:linux": "npm run build && electron-builder --linux --x64 --arm64",
+    "package:win": "npm run build && electron-builder --win --x64 --arm64 --publish never",
+    "package:mac": "npm run build && electron-builder --mac --x64 --arm64 --publish never",
+    "package:linux": "npm run build && electron-builder --linux --x64 --arm64 --publish never",
     "check:design": "node scripts/check-design-tokens.mjs",
     "release:notes": "node scripts/release-notes.mjs"
   },
