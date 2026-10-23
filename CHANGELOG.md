@@ -2,6 +2,13 @@
 
 本文件记录互动工坊的重要变更。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.2.0](https://github.com/cambridgejames/InteractTools/compare/v0.1.0...v0.2.0) (2026-10-23)
+
+
+### Features
+
+* **ui:** refine motion rhythm and transitions ([980d289](https://github.com/cambridgejames/InteractTools/commit/980d2896a754cec062f6663ce02c4acbf5045837))
+
 ## [0.1.0] - 2026-10-24
 
 首个 MVP 版本，面向直播现场的桌面互动控制台。首次发布，没有历史版本需要迁移。
