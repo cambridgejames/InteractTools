@@ -80,19 +80,21 @@ onUnmounted(() => document.removeEventListener('pointerdown', onPointerDown))
       <AppIcon name="chevron" :size="14" />
     </button>
 
-    <ul v-if="open" class="menu" :class="{ up: placement === 'up' }" role="listbox">
-      <li v-for="option in options" :key="option.value">
-        <button
-          type="button"
-          role="option"
-          :aria-selected="option.value === modelValue"
-          :class="{ selected: option.value === modelValue }"
-          @click="choose(option.value)"
-        >
-          {{ option.label }}
-        </button>
-      </li>
-    </ul>
+    <Transition name="select-menu">
+      <ul v-if="open" class="menu" :class="{ up: placement === 'up' }" role="listbox">
+        <li v-for="option in options" :key="option.value">
+          <button
+            type="button"
+            role="option"
+            :aria-selected="option.value === modelValue"
+            :class="{ selected: option.value === modelValue }"
+            @click="choose(option.value)"
+          >
+            {{ option.label }}
+          </button>
+        </li>
+      </ul>
+    </Transition>
   </div>
 </template>
 
@@ -158,11 +160,46 @@ onUnmounted(() => document.removeEventListener('pointerdown', onPointerDown))
   background: var(--surface);
   box-shadow: var(--shadow-pop);
   list-style: none;
+  transform-origin: top center;
 }
 
 .menu.up {
   top: auto;
   bottom: calc(100% + 4px);
+  transform-origin: bottom center;
+}
+
+.select-menu-enter-active {
+  transition: opacity 150ms var(--ease-out), transform 150ms var(--ease-out);
+}
+
+.select-menu-leave-active {
+  transition: opacity 100ms var(--ease-out), transform 100ms var(--ease-out);
+}
+
+.select-menu-enter-from,
+.select-menu-leave-to {
+  opacity: 0;
+  transform: translateY(-4px) scale(0.98);
+}
+
+.menu.up.select-menu-enter-from,
+.menu.up.select-menu-leave-to {
+  transform: translateY(4px) scale(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .select-menu-enter-active,
+  .select-menu-leave-active {
+    transition-duration: 1ms;
+  }
+
+  .select-menu-enter-from,
+  .select-menu-leave-to,
+  .menu.up.select-menu-enter-from,
+  .menu.up.select-menu-leave-to {
+    transform: none;
+  }
 }
 
 .menu button {

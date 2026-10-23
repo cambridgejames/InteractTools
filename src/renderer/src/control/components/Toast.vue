@@ -39,14 +39,29 @@ import { state } from '../store'
   border-left-color: var(--info);
 }
 
-.toast-enter-active,
-.toast-leave-active {
+.toast-enter-active {
   transition: opacity var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out);
+}
+
+.toast-leave-active {
+  transition: opacity var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
 }
 
 .toast-enter-from,
 .toast-leave-to {
   opacity: 0;
   transform: translateY(8px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast-enter-active,
+  .toast-leave-active {
+    transition-duration: 1ms;
+  }
+
+  .toast-enter-from,
+  .toast-leave-to {
+    transform: none;
+  }
 }
 </style>

@@ -72,9 +72,11 @@ onUnmounted(() => {
       <main class="app-content">
         <div v-if="state.loading" class="loading">正在启动…</div>
         <template v-else>
-          <DashboardView v-if="page === 'dashboard'" @navigate="page = $event" />
-          <ToolsView v-else-if="page === 'tools'" @navigate="page = $event" />
-          <SettingsView v-else />
+          <Transition name="page" mode="out-in">
+            <DashboardView v-if="page === 'dashboard'" @navigate="page = $event" />
+            <ToolsView v-else-if="page === 'tools'" @navigate="page = $event" />
+            <SettingsView v-else />
+          </Transition>
         </template>
       </main>
     </div>
@@ -93,11 +95,13 @@ onUnmounted(() => {
       <span>弹幕</span>
       <strong>{{ state.snapshot?.feed.length ?? 0 }}</strong>
     </aside>
-    <ResultOverlay
-      v-if="state.resultPopup"
-      :result="state.resultPopup"
-      @close="actions.dismissOverlay"
-    />
+    <Transition name="result">
+      <ResultOverlay
+        v-if="state.resultPopup"
+        :result="state.resultPopup"
+        @close="actions.dismissOverlay"
+      />
+    </Transition>
     <OnboardingTour v-if="tourVisible" @done="actions.completeTour" @navigate="page = $event" />
     <Toast />
   </div>
@@ -211,6 +215,30 @@ onUnmounted(() => {
   overflow: auto;
   padding: var(--s-6) 28px var(--s-8);
   scroll-behavior: smooth;
+}
+
+.page-enter-active {
+  transition: opacity var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+}
+
+.page-leave-active {
+  transition: opacity 80ms var(--ease-out);
+}
+
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+.page-leave-to {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-content { scroll-behavior: auto; }
+  .page-enter-active,
+  .page-leave-active { transition-duration: 1ms; }
+  .page-enter-from { transform: none; }
 }
 
 .loading {

@@ -237,7 +237,7 @@ onUnmounted(() => {
   border-radius: var(--r-control);
   box-shadow: 0 0 0 3px var(--accent-soft), var(--glow-accent);
   pointer-events: none;
-  transition: all var(--dur-fast) var(--ease-out);
+  transition: box-shadow var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
 }
 
 .tour-card {
@@ -250,6 +250,16 @@ onUnmounted(() => {
   background: var(--canvas-elevated);
   box-shadow: var(--shadow-pop);
   pointer-events: auto;
+  animation: tour-card-in var(--dur-base) var(--ease-out);
+}
+
+@keyframes tour-card-in {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-card { animation: none; }
 }
 
 .tour-head {
