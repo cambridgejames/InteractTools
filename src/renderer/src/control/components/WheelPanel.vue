@@ -12,7 +12,6 @@ import { formatTime } from '../../shared/format'
 const props = defineProps<{ view: WheelToolView }>()
 
 const segmentsText = ref(props.view.config.segments.join('\n'))
-const duration = ref(props.view.config.spinDurationSeconds)
 let saveTimer: ReturnType<typeof setTimeout> | null = null
 
 watch(
@@ -21,15 +20,7 @@ watch(
     segmentsText.value = segments.join('\n')
   }
 )
-watch(
-  () => props.view.config.spinDurationSeconds,
-  (value) => {
-    duration.value = value
-  }
-)
-
 watch(segmentsText, () => scheduleSegments())
-watch(duration, () => scheduleDuration())
 
 onUnmounted(() => {
   if (saveTimer !== null) clearTimeout(saveTimer)
@@ -43,27 +34,11 @@ function scheduleSegments(): void {
   }, 500)
 }
 
-function scheduleDuration(): void {
-  const raw = Number(duration.value)
-  const next = Number.isFinite(raw)
-    ? Math.min(10, Math.max(2, Math.round(raw)))
-    : props.view.config.spinDurationSeconds
-  if (next === props.view.config.spinDurationSeconds) return
-  void actions.updateToolConfig('wheel', { spinDurationSeconds: next })
-}
-
 function readSegments(): string[] {
   return segmentsText.value
     .split(/[\n,，]/)
     .map((segment) => segment.trim())
     .filter((segment) => segment.length > 0)
-}
-
-function readDuration(): number {
-  const raw = Number(duration.value)
-  return Number.isFinite(raw)
-    ? Math.min(10, Math.max(2, Math.round(raw)))
-    : props.view.config.spinDurationSeconds
 }
 
 async function persistSegments(showError: boolean): Promise<boolean> {
@@ -103,7 +78,7 @@ async function savePreset(name: string): Promise<void> {
     id: existing?.id ?? crypto.randomUUID(),
     name,
     segments,
-    spinDurationSeconds: readDuration()
+    spinDurationSeconds: props.view.config.spinDurationSeconds
   }
   const presets = existing === undefined
     ? [...props.view.config.presets, preset]
@@ -117,11 +92,7 @@ async function applyPreset(id: string): Promise<void> {
   const preset = props.view.config.presets.find((item) => item.id === id)
   if (preset === undefined) return
   segmentsText.value = preset.segments.join('\n')
-  duration.value = preset.spinDurationSeconds
-  const ok = await actions.updateToolConfig('wheel', {
-    segments: preset.segments,
-    spinDurationSeconds: preset.spinDurationSeconds
-  })
+  const ok = await actions.updateToolConfig('wheel', { segments: preset.segments })
   if (ok) showToast('已载入「' + preset.name + '」', 'success')
 }
 
@@ -135,13 +106,12 @@ const presetRows = computed(() =>
   props.view.config.presets.map((preset) => ({
     id: preset.id,
     name: preset.name,
-    meta: String(preset.segments.length) + ' 格 · ' + String(preset.spinDurationSeconds) + ' 秒'
+    meta: String(preset.segments.length) + ' 格'
   }))
 )
 const activePresetId = computed(() => {
   const config = props.view.config
   return config.presets.find((preset) =>
-    preset.spinDurationSeconds === config.spinDurationSeconds &&
     preset.segments.length === config.segments.length &&
     preset.segments.every((segment, index) => segment === config.segments[index])
   )?.id
@@ -179,7 +149,7 @@ watch(
     const delta = (targetMod - currentMod + 360) % 360
 
     spinDuration.value = spin.durationMs
-    const turns = 4 + Math.round(spin.stopOffset * 4)
+    const turns = (spin.stopEasing === 'glide' ? 6 : 4) + Math.round(spin.stopOffset * 4)
     wheelRotation.value += 360 * turns + delta
   }
 )
@@ -190,8 +160,8 @@ const wheelStyle = computed(() => {
     transitionDuration: spinDuration.value + 'ms',
     transitionTimingFunction:
       props.view.currentSpin?.stopEasing === 'brake'
-        ? 'cubic-bezier(0.18, 0.92, 0.3, 1)'
-        : 'cubic-bezier(0.08, 0.62, 0.12, 1)'
+        ? 'cubic-bezier(0.02, 0.9, 0.18, 1)'
+        : 'cubic-bezier(0.12, 0.78, 0.1, 1.03)'
   }
 })
 
@@ -298,14 +268,14 @@ async function clearHistory(): Promise<void> {
           </div>
           <span class="hub">
             <svg class="hub-shape" viewBox="0 0 100 136" aria-hidden="true">
-              <path d="M50 10 L76.5 40 A48 48 0 1 1 23.5 40 Z" />
+              <path d="M50 16 L70.9 40 L29.1 40 Z" />
+              <circle cx="50" cy="84" r="48" />
             </svg>
             <BrandMark :size="46" />
           </span>
         </div>
         <div class="preview-meta">
           <span>{{ view.segments.length }} 格</span>
-          <span>{{ duration }} 秒</span>
         </div>
         <div class="actions">
           <button class="btn primary" :disabled="spinning" @click="spin">
@@ -333,13 +303,6 @@ async function clearHistory(): Promise<void> {
         </label>
 
         <div class="inline-fields">
-          <label>
-            <span>旋转时长</span>
-            <div class="unit">
-              <input v-model.number="duration" type="number" min="2" max="10" />
-              <em>秒</em>
-            </div>
-          </label>
           <span class="auto-save">自动保存</span>
         </div>
 
@@ -445,7 +408,7 @@ async function clearHistory(): Promise<void> {
   z-index: 2;
   width: 100px;
   height: 136px;
-  color: var(--die-pip);
+  color: var(--hub-mark);
   transform: translate(-50%, calc(-50% - 16px)) scale(0.84);
 }
 
@@ -459,11 +422,17 @@ async function clearHistory(): Promise<void> {
 }
 
 .hub-shape path {
-  fill: var(--die-face);
-  stroke: var(--die-pip);
-  stroke-width: 4;
-  stroke-linejoin: round;
+  fill: var(--hub-mark);
+  stroke: var(--hub-mark);
+  stroke-width: 2.5;
+  stroke-linejoin: miter;
   stroke-linecap: round;
+}
+
+.hub-shape circle {
+  fill: var(--accent);
+  stroke: var(--hub-mark);
+  stroke-width: 2.5;
 }
 
 .hub > svg:not(.hub-shape) {

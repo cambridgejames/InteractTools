@@ -110,10 +110,12 @@ export class WheelTool implements InteractionTool {
     const segments = this.config.segments
     if (segments.length < 2) throw new Error('转盘至少需要两个格子')
 
-    const index = Math.min(
-      segments.length - 1,
-      Math.floor(context.random.next() * segments.length)
-    )
+    const previousIndex = this.lastResult?.index ?? -1
+    let index = Math.min(segments.length - 1, Math.floor(context.random.next() * segments.length))
+    // 直播里连续两次同名结果很像“没随机”；多格时避开上一轮，单格不受影响。
+    if (segments.length > 1 && index === previousIndex) {
+      index = (index + 1 + Math.floor(context.random.next() * (segments.length - 1))) % segments.length
+    }
     const label = segments[index] ?? ''
     // 不再每次都停在扇区正中：0.18–0.82 的落点既保留正确结果，也能看出
     // 指针压线、擦边和最后一段滑行，避免“每次都是黑幕”的观感。
@@ -122,7 +124,10 @@ export class WheelTool implements InteractionTool {
     const now = context.clock.now()
     const spinId = 'wheel-' + now.toString(36) + '-' + index
     const result: WheelResult = { spinId, label, index, at: now }
-    const durationMs = Math.round(this.config.spinDurationSeconds * 1000)
+    // 结果在点击瞬间就已确定；时长只服务观感，滑步更长，急停更短。
+    const durationMs = stopEasing === 'glide'
+      ? 5_200 + Math.round(context.random.next() * 1_400)
+      : 3_600 + Math.round(context.random.next() * 900)
     const generation = ++this.generation
 
     this.phase = 'spinning'

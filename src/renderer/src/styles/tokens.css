@@ -33,6 +33,7 @@
   --accent-strong: #dcff7a;
   --accent-ink: #0a0c08;
   --accent-soft: rgba(200, 255, 61, 0.12);
+  --hub-mark: #f7f1de;
   --info: #64d8ff;
   --bilibili: #fb7299;
   --success: #3ddc97;
@@ -82,6 +83,7 @@
   --accent-strong: #789a00;
   --accent-ink: #ffffff;
   --accent-soft: rgba(92, 120, 0, 0.1);
+  --hub-mark: #171612;
   --info: #087e9e;
   --bilibili: #d94b76;
   --success: #167d40;

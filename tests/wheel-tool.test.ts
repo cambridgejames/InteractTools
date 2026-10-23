@@ -131,9 +131,9 @@ describe('WheelTool', () => {
     expect(spinning.currentSpin?.resultIndex).toBe(1)
     expect(spinning.currentSpin?.stopOffset).toBeCloseTo(0.3976, 3)
     expect(spinning.currentSpin?.stopEasing).toBe('glide')
-    expect(spinning.currentSpin?.durationMs).toBe(5_000)
+    expect(spinning.currentSpin?.durationMs).toBe(5_676)
 
-    await timers.advance(6_000)
+    await timers.advance(6_500)
     await new Promise((resolve) => setImmediate(resolve))
 
     const result = presentations.find((item) => item.kind === 'wheel.result')
@@ -152,6 +152,11 @@ describe('WheelTool', () => {
     expect(view.history).toHaveLength(1)
     expect(history.entries).toHaveLength(1)
     expect(announcements.some((item) => item.includes('B'))).toBe(true)
+
+    await tool.handleAction({ type: 'spin' })
+    const second = tool.view()
+    if (second.toolId !== 'wheel') throw new Error('expected wheel view')
+    expect(second.currentSpin?.resultIndex).toBe(3)
 
     await tool.deactivate()
   })
