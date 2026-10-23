@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process'
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { accessSync, constants, mkdirSync, writeFileSync } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
 import { app, shell } from 'electron'
 import { autoUpdater } from 'electron-updater'
@@ -152,6 +152,15 @@ export class UpdateService {
     if (asset === null) {
       await shell.openExternal(releaseUrl)
       this.set({ phase: 'available', message: '这个版本没有提供 zip 包，已打开 Release 页面' })
+      return this.state
+    }
+
+    const installDir = dirname(app.getPath('exe'))
+    try {
+      accessSync(installDir, constants.W_OK)
+    } catch {
+      await shell.openExternal(releaseUrl)
+      this.set({ phase: 'available', message: '安装目录不可写，请手动下载 zip 覆盖' })
       return this.state
     }
 

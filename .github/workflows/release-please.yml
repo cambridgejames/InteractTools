@@ -18,5 +18,8 @@ jobs:
     steps:
       - uses: googleapis/release-please-action@v4
         with:
+          # 用 PAT 时，release-please 创建的 tag 才能触发 release.yml；
+          # 没配 secret 时退回 GITHUB_TOKEN，至少可以创建版本 PR。
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json

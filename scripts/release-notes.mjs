@@ -51,7 +51,7 @@ process.stdout.write(
   '## 更新详情\n\n' +
   (body || '本次没有可展示的更新条目。') + '\n\n' +
   '## 下载\n\n' +
-  '选择对应平台与架构的安装包；Windows 提供 setup 与 portable。\n\n' +
+  '选择对应平台与架构的安装包；Windows 提供 setup、portable 与 zip。\n\n' +
   '完整历史：[CHANGELOG.md](https://github.com/' + repo + '/blob/main/CHANGELOG.md)\n'
 )
 if (previous === '') {

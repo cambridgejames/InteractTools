@@ -49,7 +49,22 @@ electron-updater（仅安装包）→ 下载 → update-downloaded → 重启安
 - zip 更新只在 Windows、目录可写且没有 `Uninstall*.exe` 时启用；NSIS 仍走 electron-updater，便携单文件版不进入 zip 目录替换。
 - zip 更新失败只影响更新卡片，不删用户数据，也不阻塞直播。
 
-## 4. 改动时的检查点
+## 4. 发布配置
+
+- 仓库设置 `Settings → Actions → General → Workflow permissions` 必须允许 GitHub Actions 创建/批准 PR；否则 release-please 无法开版本 PR。
+- 完整自动链路需要 `RELEASE_PLEASE_TOKEN`（PAT，contents + pull requests 写权限）。`GITHUB_TOKEN` 创建的 tag 不会触发 `release.yml`；没配 PAT 时用下面的手动 tag。
+- 手动兜底：合并版本 PR 后，确保 `package.json` 版本已更新，然后推送同名 tag：
+
+  ```bash
+  git tag v0.2.0
+  git push origin v0.2.0
+  ```
+
+  手动 tag 由人推送，会正常触发 `release.yml`；如果 tag 已由 `GITHUB_TOKEN` 创建但没有触发，可在 Actions → Release → Run workflow 里输入该 tag 手动发布。
+
+- `package:win` / `package:mac` / `package:linux` 一次构建 x64 + arm64，避免分两次运行覆盖 `latest*.yml`。
+
+## 5. 改动时的检查点
 
 - 新平台/新架构是否进入 release 矩阵与更新元数据？
 - 手动检查是否仍然比较 GitHub 最新 Release，而不是只调 electron-updater？
@@ -57,7 +72,7 @@ electron-updater（仅安装包）→ 下载 → update-downloaded → 重启安
 - 版本标签是否由 release-please 生成，并与 package.json 一致？
 - 下载失败是否只影响更新卡片，不影响直播？
 
-## 5. 已知取舍
+## 6. 已知取舍
 
 | 取舍 | 代价 |
 |---|---|
