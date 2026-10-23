@@ -49,7 +49,7 @@
 - Electron 44 + electron-vite 6 + Vue 3 + TypeScript strict
 - contracts / kernel / platforms / tools / main / renderer 分层
 - Vitest 单测、ESLint、依赖边界与设计 token 检查
-- Windows NSIS / portable / zip、macOS dmg / zip、Linux AppImage / deb，均为 x64 + arm64
+- Windows NSIS / portable / zip、macOS dmg / zip 为 x64 + arm64；Linux AppImage / deb 为 x64
 - GitHub Actions 校验与 tag 自动发布
 
 [0.1.0]: https://github.com/cambridgejames/InteractTools/releases/tag/v0.1.0

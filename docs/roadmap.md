@@ -60,7 +60,7 @@
 
 ## M6 发布
 
-- [x] Windows / macOS / Linux 的 x64 + arm64 打包配置
+- [x] Windows / macOS 的 x64 + arm64 打包配置；Linux x64
 - [x] 打包后冒烟
 - [x] 使用文档与故障排查
 - [ ] 安装包实机安装验证

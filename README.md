@@ -124,7 +124,7 @@ npm run smoke        # 启动 Electron 并截图到 artifacts/smoke
 
 npm run package:win  # Windows x64 + arm64（NSIS / portable / zip）
 npm run package:mac  # macOS x64 + arm64（dmg / zip）
-npm run package:linux # Linux x64 + arm64（AppImage / deb）
+npm run package:linux # Linux x64（AppImage / deb）
 ```
 
 ## 技术栈
@@ -198,7 +198,7 @@ docs/
 
 已实现、待实机验证：
 
-- 三平台打包配置与 zip 解压更新流程。
+- 三平台打包配置（Windows / macOS 为 x64 + arm64，Linux 为 x64）与 zip 解压更新流程。
 - 安装包实机安装与自动更新。
 - OBS 采集与长时间直播稳定性。
 - 抖音真实弹幕内容解析。

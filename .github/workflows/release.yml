@@ -75,7 +75,7 @@ jobs:
             script: package:mac
             artifact: macos
           - os: ubuntu-latest
-            name: Linux x64 + arm64
+            name: Linux x64
             script: package:linux
             artifact: linux
     runs-on: ${{ matrix.os }}

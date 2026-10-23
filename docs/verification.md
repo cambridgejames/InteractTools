@@ -43,7 +43,7 @@
 
 - Windows x64/arm64：`Interact-Studio-0.1.0-{arch}-setup.exe`、`-portable.exe`
 - macOS x64/arm64：`Interact-Studio-0.1.0-{arch}.dmg` / `.zip`
-- Linux x64/arm64：`Interact-Studio-0.1.0-{arch}.AppImage` / `.deb`
+- Linux x64：`Interact-Studio-0.1.0-x64.AppImage` / `.deb`
 
 ## 覆盖范围
 

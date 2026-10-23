@@ -154,7 +154,7 @@ B站 `getDanmuInfo` 需要 WBI 签名，适配器会自动从 `nav` 取密钥并
 ```bash
 npm run package:win   # Windows x64/arm64
 npm run package:mac   # macOS x64/arm64
-npm run package:linux # Linux x64/arm64
+npm run package:linux # Linux x64
 ```
 
 产物在 `release/`。安装包与免安装版二选一。

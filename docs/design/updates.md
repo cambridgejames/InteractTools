@@ -62,7 +62,7 @@ electron-updater（仅安装包）→ 下载 → update-downloaded → 重启安
 
   手动 tag 由人推送，会正常触发 `release.yml`；如果 tag 已由 `GITHUB_TOKEN` 创建但没有触发，可在 Actions → Release → Run workflow 里输入该 tag 手动发布。
 
-- `package:win` / `package:mac` / `package:linux` 一次构建 x64 + arm64，避免分两次运行覆盖 `latest*.yml`。
+- `package:win` / `package:mac` 一次构建 x64 + arm64；Linux 当前构建 x64，避免分两次运行覆盖 `latest*.yml`。
 
 ## 5. 改动时的检查点
 
