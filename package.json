@@ -50,7 +50,7 @@
   "dependencies": {
     "archiver": "^7.0.1",
     "cannon-es": "^0.20.0",
-    "electron-updater": "^6.8.9",
+    "electron-updater": "^6.8.11",
     "https-proxy-agent": "^9.1.0",
     "pinyin-pro": "^3.29.5",
     "protobufjs": "^8.8.1",
